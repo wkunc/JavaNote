@@ -1,0 +1,43 @@
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <properties resource="org/mybatis/example/config.properties">
+        <property name="username" value="dev_user"/>
+        <property name="password" value="F2Fa3!33TYyg"/>
+    </properties>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC">
+                <property name="..." value="..."/>
+            </transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--
+        关键点
+        默认的环境 ID（比如:default="development"）。
+        每个 environment 元素定义的环境 ID（比如:id="development"）。
+        事务管理器的配置（比如:type="JDBC"）。
+        数据源的配置（比如:type="POOLED"）。
+    -->
+	<mappers>
+		<mapper resource="mapping/userMapper.xml"/>
+		<mapper class="mapping.UserMapperI"/>
+	</mappers>
+    <!--
+    起了别名的javabean在sql映射文件xml中就可以用别名
+    -->
+    <typeAliases>
+        <typeAlias alias="Author" type="domain.blog.Author"/>
+        <typeAlias alias="Blog" type="domain.blog.Blog"/>
+        <typeAlias alias="Comment" type="domain.blog.Comment"/>
+        <typeAlias alias="Post" type="domain.blog.Post"/>
+        <typeAlias alias="Section" type="domain.blog.Section"/>
+        <typeAlias alias="Tag" type="domain.blog.Tag"/>
+    </typeAliases>
+</configuration>

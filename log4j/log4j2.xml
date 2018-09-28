@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+    <!--定义所有的Appender(附加器)-->
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <!--
+    和log4j.properties文件一样   都要定义root日志
+    Logger节点用来单独指定日志的形式，比如要为指定包下的class指定不同的日志级别等。
+    level:日志输出级别 All < Trace < Debug < Info < Warn < Error < Fatal < OFF.
+    name:用来指定该Logger所适用的类或者类所在的包全路径,继承自Root节点.
+    AppenderRef: 用来指定该日志输出到哪个Appender,如果没有指定，就会默认继承自Root.如果指定了，
+    那么会在指定的这个Appender和Root的Appender中都会输出，此时我们可以设置Logger的additivity="false"只在自定义的Appender中进行输出。
+    -->
+    <Loggers>
+        <Logger name="org.springframework" level="Debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.mybatis" level="Debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Root level="all">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

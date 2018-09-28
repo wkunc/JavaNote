@@ -1,0 +1,25 @@
+11.2基本概念
+    1.Collection
+        一个独立元素的序列, 这些元素都要服从一条或多条规则
+        List 必须按照插入的顺序保存, 而Set不能有重复元素
+        Queue按照排队规则来确定对象产生的顺序(通常与它们被插入的顺序相同)
+    
+    2.Map
+        一组成对的 "键值对" 对象, 允许你使用键来查找值
+
+11.5List
+    List承诺可以将元素维护在特定的序列中. 
+    List接口在Collection的基础上添加了大量的方法, 使得可以在List中间插入和移除元素
+
+    ArrayList
+        它长于随机访问元素, 但是在List中间插入和移除数据时较慢
+    LinkedList
+        在随机访问方面比较慢, 但是它的特性集较ArrayList更大
+
+11.9Set
+    HashSet对快速查找做了特殊优化
+    TreeSet 可以通过 comparator (比较器)排序的
+    LinkedHashSet
+
+11.11Queue
+    1.PriorityQueue

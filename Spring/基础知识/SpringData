@@ -1,0 +1,11 @@
+DataSource的概念不清楚
+一.JDBC
+    Spring对JDBC提供了三个模板类供选择
+    jdbc.core.JdbcTemplate
+        最基本的SpringJDBC模板
+        这个模板支持简单的JDBC数据库访问功能,以及基于索引参数的查询
+    NamedParamenterJdbcTemplate:
+        使用该模板类执行查询时可以将值以命名参数的形式绑定到SQL中，而不是使用简单的索引参数
+    SimpleJdbcTemplate：
+        该模板类利用了java5的一些特性，如自动装箱，泛型以及可变参数列表来简化JDBC模板的使用
+        

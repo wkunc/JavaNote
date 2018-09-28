@@ -1,0 +1,2 @@
+1.assertThat(actual,mathcer)可替代其他assert方法
+实际值，规则匹配器

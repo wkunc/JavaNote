@@ -1,0 +1,8 @@
+@AspectJ
+
+@pointcut("execution (** concert.Performance.perform(..))")
+@Before
+@After
+@AfterThrowing
+@AfterReturning
+@Around

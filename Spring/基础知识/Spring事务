@@ -1,0 +1,22 @@
+事务的概念
+    j2ee中事务是对数据库的事务的抽象
+    1.全局事务
+        JTA（）
+    2.本地事务
+        就是调用数据库中的事务
+        不同的数据库的事务不同，会导致不能跨数据库
+    
+
+Spring事务
+    编程式事务
+    声明式事务
+
+使用
+    @Transactional
+
+    @Transactional注解的默认设置:
+        传播设置是PROPAGATION_REQUIRED.
+        隔离等级是ISOLATION_DEFAULT.
+        事务是可读可写的.
+        事务超时是使用底层事务系统的默认值, 或者在不支持时没有.
+        任何的RuntimeException触发回滚, 并且所有的检查的Exception不触发.

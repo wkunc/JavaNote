@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+<!--
+bean的属性有
+name,   bean的唯一标识符
+class,  关联到bean的类
+scope,  bean的范围默认singleton(单例) 其他属性值(prototype,request,session,global-session)
+lazy-initialization mode,   延迟初始化的bean
+initialization,     在bean的所有必需的属性被容器设置之后,调用回调方法(建议不要使用)
+destruction,        当包含该 bean 的容器被销毁时,使用回调方法(建议不要使用)
+-->
+<!--
+BeanPostProcessor
+Bean类implement BeanPostProcessor
+添加一些方法
+然后在init-method绑定
+-->
+<!--
+bean中的子标签
+constructor-arg,    用来注入依赖(通过构造器的注入)<constructor-arg ref="spellChecker"/>
+    最后，如果你想要向一个对象传递一个引用，你需要使用标签的 ref 属性，如果你想要直接传递值就使用value 属性
+properties,         用来注入依赖(通过setter的注入)<property name="spellChecker" ref="spellChecker"/>
+    其他和constructor-arg一致,还可以通过p-namespace来让配置变得简单一点
+autowiring mode(bean中的属性),    用来注入依赖(自动装配)    属性值(no,byName,byType,constructor,autodetect)
+-->
+<!--
+内部bean的注入
+-->
+<!--
+注入集合
+-->
+
+
+</beans>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+</beans>

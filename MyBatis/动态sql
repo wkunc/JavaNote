@@ -1,0 +1,88 @@
+基本元素<if>
+    if 标签可以实现传参判定,
+    判断是否传入某个参数,如果有拼接 <if>包含的语句 
+    <select id="findActiveBlogWithTitleLike" resultType="Blog">
+        SELECT * FROM BLOG 
+        WHERE state = ‘ACTIVE’ 
+        <if test="title != null">
+            AND title like #{title}
+        </if>
+    </select>
+
+choose, when, otherwise
+可以在多个选择中添加一个
+如果提供了“title”就按“title”查找，提供了“author”就按“author”查找
+    <select id="findActiveBlogLike" resultType="Blog">
+    SELECT * FROM BLOG WHERE state = ‘ACTIVE’
+        <choose>
+            <when test="title != null">
+                AND title like #{title}
+            </when>
+            <when test="author != null and author.name != null">
+                AND author_name like #{author.name}
+            </when>
+            <otherwise>
+                AND featured = 1
+            </otherwise>
+        </choose>
+    </select>
+
+拼接动态sql时会出现,如果传入了参数就没问题,
+但是一旦没有传入相应的参数就会导致sql变成   SELECT * FROM BLOG WHERE
+导致失败
+<select id="findActiveBlogLike" resultType="Blog">
+    SELECT * FROM BLOG 
+    WHERE 
+    <if test="state != null">
+        state = #{state}
+    </if> 
+    <if test="title != null">
+        AND title like #{title}
+    </if>
+    <if test="author != null and author.name != null">
+        AND author_name like #{author.name}
+    </if>
+</select>
+
+为了避免上述问题Mybatis提供了trim, where, set标签
+
+where 元素只会在至少有一个子元素的条件返回 SQL 子句的情况下才去插入“WHERE”子句。
+而且，若语句的开头为“AND”或“OR”，where 元素也会将它们去除。
+<select id="findActiveBlogLike" resultType="Blog">
+    SELECT * FROM BLOG 
+    <where> 
+        <if test="state != null">
+            state = #{state}
+        </if> 
+        <if test="title != null">
+            AND title like #{title}
+        </if>
+        <if test="author != null and author.name != null">
+            AND author_name like #{author.name}
+        </if>
+    </where>
+</select>
+set标签用在update中
+
+trim标签用于自定义
+如：这么写可以等价与 <where> 和 <set> 标签
+<trim prefix="WHERE" prefixOverrides="AND |OR ">
+  ... 
+</trim>
+<trim prefix="SET" suffixOverrides=",">
+  ...
+</trim>
+
+foreach标签用于遍历
+数组    index 是当前迭代的次数，item 的值是本次迭代获取的元素
+Map (或者 Map.Entry 对象的集合)时，index 是键，item 是值。
+
+<select id="selectPostIn" resultType="domain.blog.Post">
+    SELECT *
+    FROM POST P
+    WHERE ID in
+    <foreach item="item" index="index" collection="list"
+        open="(" separator="," close=")">
+            #{item}
+    </foreach>
+</select>

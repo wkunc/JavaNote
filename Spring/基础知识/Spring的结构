@@ -1,0 +1,38 @@
+概述
+    Spring框架的各个特性被分成20多个模块，这些模块被分组成
+        Core Container(核心容器),
+        Data Access/Integration(数据访问/集成),
+        Web(网络端),AOP(Aspect Oriented Programming),
+        Instrumentaion,Messaging(消息),
+        Test(测试)
+
+1.Core Container(核心容器)
+    核心容器包含了spring-core,spring-beans,spring-context,and spring-expression(Spring表达式语言)四个模块
+        spring-cor和spring-beans模块提供了整个框架最基础的部分了包括了IoC(控制反转)和Dependency Injection(依赖注入)
+
+        Context(spring-context)模块建立在Core and Beans 模块提供的基础上:它提供了框架式访问对象的方式，类似JNDI注册
+        ApplicationContext接口是Context模块的重点
+    Spring-expression模块提供了一种强大的运用在查询操作对象的表达式语言
+
+2.AOP和Instrumentation
+    Spring-aop
+    spring-aspects
+    spring-instrument
+
+3.Messaging
+
+4.Data Access/integration
+    spring-jdbc
+    spring-tx
+    spring-orm
+    spring-oxm
+    spring-jms
+
+5.Web
+    spring-web
+    spring-webmvc
+    spring-websocket
+    spring-webmvc-portlet
+
+6.Test
+    spring-test
