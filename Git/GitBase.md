@@ -6,7 +6,8 @@ git init
 ```
 这个命令会在当前位置创建一个名为 .git 的隐藏目录
 
-到这里我们就成功的将项目变成一个 Git repository 但是这里我们只是初始化了我们的仓库, 项目里面的文件并没有被 track(追踪)
+到这里我们就成功的将项目变成一个 Git repository 但是这里我们只是初始化了我们的仓库, 
+项目里面的文件并没有被 track(追踪)
 ## 克隆现有仓库
 可以使用 git clone [url] 的命令来 clone 一个现有的仓库
 ```
@@ -62,3 +63,88 @@ Date:   Fri Sep 28 19:59:24 2018 +0800
 
     commit message
 ```
+
+# 撤销操作
+## 
+有时候我们提交完了才发现漏掉了几个文件没有添加, 或者提交信息写错了
+此时可以运行带有 **--amend** 选项的提交命令
+```
+git commit --amend
+```
+这个命令会将暂存区的文件提交, 如果自上次提交以来你还未做出任何修改, 
+那么快照会保持不变而你所修改的只是提交信息
+
+文本编辑器启动后你可以看到之前的提交信息. 编辑后保存就会覆盖原来的提交信息
+
+例如: 你提交之后发现忘记暂存某些需要的修改, 可以像下面这样操作
+```
+git commit -m "initial commit"
+git add forgotten_file
+git commit --amend
+```
+
+最终你将会只有一个提交, 第二个提交替代第一个提交
+
+### 取消暂存文件
+比如你已经修改了两个文件并且想将它们作为连个独立的修改提交, 但是却不小心暂存了两个文件.
+如何取消暂存中的一个呢? **git status** 命令会提示你
+```
+$ git add *
+$ git status
+On branch master
+# 这里就是提示
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    renamed:    README.md -> README
+    modified:   CONTRIBUTING.md
+```
+使用 **git reset HEAD<file>...** 来取消暂存, 所以我们这样来取消暂存 CONTRIBUTING.md
+```
+$ git reset HEAD CONTRIBUTING.md
+Unstaged changes after reset:
+M	CONTRIBUTING.md
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    renamed:    README.md -> README
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    modified:   CONTRIBUTING.md
+```
+
+> 虽然在调用时加上 --hard 选项可以令 git reset 
+> 成为一个危险的命令译注: (可能导致工作目录中所有当前进度丢失!), 但本例中工作目录内的文件并不会被修改.
+> 不加选项地调用 git reset 并不危险 — 它只会修改暂存区域
+
+## 撤销对文件的修改
+如果你并不想保留对 CONTRIBUTING.md 文件的修改怎么办? 
+你该如何方便地撤消修改 - 将它还原成上次提交时的样子(或者刚克隆完的样子, 或者刚把它放入工作目录时的样子)?
+幸运的是, git status 也告诉了你应该如何做 在最后一个例子中，未暂存区域是这样：
+
+使用 git checkout -- <file> 可以做到
+```
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+    modified:   CONTRIBUTING.md
+它非常清楚地告诉了你如何撤消之前所做的修改。 让我们来按照提示执行：
+$ git checkout -- CONTRIBUTING.md
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+    renamed:    README.md -> README
+```
+可以看到那些修改已经被撤消了。
+
+### 注意
+你需要知道 git checkout -- [file] 是一个危险的命令,这很重要 你对那个文件做的任何修改都会消失 
+- 你只是拷贝了另一个文件来覆盖它 除非你确实清楚不想要那个文件了, 否则不要使用这个命令
