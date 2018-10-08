@@ -27,11 +27,11 @@ public class RootConfig {
 ```
 * 用在 @Bean 方法上
 ```java
-@Profile("QA")
 @Configuration
 @ComponentScan("entity")
 public class RootConfig {
     @Bean(destroyMethod ="close")
+    @Profile("QA")
     public DataSource dataSource(){
         BasicDataSource dataSource = new BasicDataSource();
         dataSource.setUrl("jdbc:mysql://localhost:3306/wkc");

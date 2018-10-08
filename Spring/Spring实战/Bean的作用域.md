@@ -50,7 +50,6 @@
 ```
 
 ## 第二步 通过 Spring Environment 使用属性值
-在基于java 的配置中可以用 @PropertySource 来引入属性文件
 ```java
     @PropertySource("classpath:/resources/app.properties")
     @Configuration

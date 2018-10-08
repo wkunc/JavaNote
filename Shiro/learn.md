@@ -124,5 +124,5 @@ Authericator 如果有多个 Realm 就根据 AuthenticationStrategy(认证策略
 ## Save Time
 实现 Realm 接口是困难的,大多数人都选择继承 abstract AuthorizingRealm 类, 这个类实现了共同的 认证 和 授权流程
 
-#Credntials Matching(凭证匹配)
+# Credntials Matching(凭证匹配)
 

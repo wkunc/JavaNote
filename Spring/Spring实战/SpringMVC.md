@@ -75,11 +75,11 @@ RootContext配置
 # Controller 细节
 |注解|描述
 |----|---
-|@RequestMapping()|
-|@RequestParame()|
-|@RequestHeader()|
-|@CookieValue()|
-|@SessionAttributes()|
+|@RequestMapping()|控制url映射关系
+|@RequestParame()|获取请求参数
+|@RequestHeader()|获取请求头
+|@CookieValue()|获取cookie值
+|@SessionAttributes()|获取session值
 |@ModelAttribute()|
 
 # Java Validaion API (JSR-303)
@@ -229,4 +229,4 @@ public class UserNotFoundException extends RuntimeException {
 ```
 这样我们就不用在每一个控制器中编写 那些重复的方法
 
-@ControllerAdvice 注解已经使用了 @Component 注解, 所以 Spring 也会通过组件扫描获取到 被标注的类
+@ControllerAdvice 注解已经使用了 @Component 注解, 所以 Spring 也会通过组件扫描获取到被标注的类
