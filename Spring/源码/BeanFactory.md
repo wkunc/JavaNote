@@ -14,6 +14,7 @@ public interface HierarchicalBeanFactory extends BeanFactory{
     BeanFactory getParentBeanFactory();
     // 判断当前 BeanFactory 中是否有指定名字的 Bean ,忽略父容器中的
     boolean containsLocalBean(String name);
+}
 ```
 
 # ConfigurableBeanFactroy
