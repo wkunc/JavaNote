@@ -19,3 +19,11 @@ getRole
 getDescription
 getResourceDescription
 getOriginatingBeanDefinition
+
+# BeanPostProcessor
+Factory hook 允许自定义的修改新的 bean 实例
+比如: 检测标记接口 或者 用代理包装它
+```java
+Object postProcessBeforeInitialization (Object bean, String beanName)
+Object postProcessAfterInitialization (Object bean, String beanName)
+```

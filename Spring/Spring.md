@@ -21,3 +21,10 @@ Spring IoC contanier 本身完全与与实际编写此配置元数据的格式�
 
 # Bean Overview
 
+## Instantiating Beans
+A bean definition is essentially a recipe for creating one or more object
+
+### Instantiation with a Constructor
+
+### Instantiation with a Static Factory Method
+
