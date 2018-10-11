@@ -28,3 +28,73 @@ A bean definition is essentially a recipe for creating one or more object
 
 ### Instantiation with a Static Factory Method
 
+```
+<bean id = "clientService" class="examples.ClientService" factory-method="createInstance"/>
+```
+### Instantiation by Using an Instance Factory Method
+和静态工厂方法类似, 使用实例工厂方法进行实例化会从容器调用现有 bean 的实例方法来创建新的 bean
+```xml
+<!-- the factory bean, which contains a method called createInstance() -->
+<bean id="serviceLocator" class="examples.DefaultServiceLocator">
+    <!-- inject any dependencies required by this locator bean -->
+</bean>
+
+<!-- the bean to be created via the factory bean -->
+<bean id="clientService"
+    factory-bean="serviceLocator"
+    factory-method="createClientServiceInstance"/>
+```
+
+# Dependencies
+## Dependency Injection(DI)
+### 构造器注入
+```
+<bean id="exampleBean" class="examples.ExampleBean">
+    <constructor-arg type="int" value="7500000"/>
+    <constructor-arg type="java.lang.String" value="42"/>
+</bean>
+<bean id="exampleBean" class="examples.ExampleBean">
+    <constructor-arg index="0" value="7500000"/>
+    <constructor-arg index="1" value="42"/>
+</bean>
+<!--有特殊要求的 -->
+<bean id="exampleBean" class="examples.ExampleBean">
+    <constructor-arg name="years" value="7500000"/>
+    <constructor-arg name="ultimateAnswer" value="42"/>
+</bean>
+```
+@ConstructorProperties
+### 属性注入
+
+### Dependency Resolution Process(依赖 解决 过程)
+
+## Dependencies and Configuration in Detail
+You can also configure a java.util.Properties instance, as follows:
+```
+<bean id="mappings"
+    class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+
+    <!-- typed as a java.util.Properties -->
+    <property name="properties">
+        <value>
+            jdbc.driver.className=com.mysql.jdbc.Driver
+            jdbc.url=jdbc:mysql://localhost:3306/mydb
+        </value>
+    </property>
+</bean>
+```
+Spring容器通过使用JavaBeans PropertyEditor机制将\<value/>元素内的文本转换为java.util.Properties实例。
+
+
+
+# Customizing the Nature of a Bean (定制Bean)
+spring 提供l许多可用于自定义bean特性的接口
+
+* Lifecycle Ballbacks
+* ApplicationContextAware and BeanNameAware
+* Other Aware Interface
+## Lifecycle Ballbacks
+要与容器的bean生命周期管理进行交互, 可以实现Spring*InitializingBean*和*DisposableBean*接口.
+容器为前者调用afterPropertiesSet(), 为后者调用destroy(), 让bean在初始化和销毁bean时执行某些操作
+
+

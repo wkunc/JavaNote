@@ -25,10 +25,42 @@
         return new User();
     }
 ```
+如果你使用 xml 来配置spring的话那么 bean 标签的 scope 属性可以达到一样的效果
 
-### session 和 request 作用域比较特殊
+### 使用会话和请求作用域
+在 Web 应用中, 如果能够实例化在会话和请求范围内共享的 bean,
+那将是非常有价值的事情.例如在典型的电子商务应用中, 
+可能会有一个 bean 代表用户的购物车, 这个购物车就非常适合采用会话作用域
+```java
+@Component
+@Scope(
+    value=WebApplicationContext.SCOPE_SESSION,
+    ProxyMode=ScopedProxyMode.INTERFACES)
+public ShoppingCart cart(){...}
+```
+------
+注意*Scope*注解同时还有一个 proxyMode 属性
+这个属性解决了将会话或请求域的 bean 注入到 bean 中所遇到的问题
 
-下次写
+假设我们要将 ShoppingCart bean 注入到单例 StoreService bean 的 Setter方法中
+```java
+@Component
+public class StoreService {
+    @Autowired
+    public void setShoppingCart (ShoppingCart shoppingCart){
+        this.shoppingCart = shoppingCart
+    }
+}
+```
+StoreService 是一个单例的 bean ,会在 Spring 上下文加载的时候创建, 
+当它创建的时候, Spring 会视图将 ShoppingCart bean 注入到 setShoppingCart()中,
+但是 ShoppingCart bean 是会话域的, 此时并不存在. 直到某个用户进入系统, 
+创建了会话之后, 才会出现 ShoppingCart 实例
+
+另外,系统中会有多个 ShoppingCart 实例. 我们并不希望 Spring 注入某个固定的 
+ShoppingCart 实例到 StoreService 中.
+我们希望的是当 StoreService 处理购物车功能时, 
+它所用的 ShoppingCart 实例恰好是当前会话对应的那一个.
 
 # 运行时值注入
 
@@ -105,6 +137,7 @@ PropertyPlaceholderConfigurer 或者 PropertySourcesPlaceholderConfiguer. 从 Sp
             this.name = name;
         }
         //其他部分...
+    }
 ```
 显式的声明 和 自动扫描时 @Value 注解标注的位置不一样
 
@@ -124,9 +157,10 @@ PropertyPlaceholderConfigurer 或者 PropertySourcesPlaceholderConfiguer. 从 Sp
 SpEL 是 **属性占位符** 的升级版, 它能做到许多属性占位符做不到的事
 
 ## SpEL 特性列表
-> * 使用 bean 的ID 来引用 bean
-> * 调用方法和访问对象的属性
-> * 对值进行算术, 关系和逻辑运算
-> * 正则表达式匹配
-> * 集合操作
-> 
+* 使用 bean 的ID 来引用 bean
+* 调用方法和访问对象的属性
+* 对值进行算术, 关系和逻辑运算
+* 正则表达式匹配
+* 集合操作
+
+SpEl 和属性占位符类似用 #{...} 框起来
