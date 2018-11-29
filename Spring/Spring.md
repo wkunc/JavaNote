@@ -200,8 +200,6 @@ dependency-resoluction logic(依赖解决逻辑)
 你能配置多个 BeanPostProcessor 实例, 并且你也可以控制这些 BeanPostProcessor 实例的执行顺序,
 通过设置 **order** 属性. 你可以设置这个属性只有在 BeanPostProcessor 实现类 **Oredered** 接口
 ```java
-package org.springframework.beans.factory.config
-
 public interface BeanPostProcessor {
     Object postProcessBeforeInitialization(Object bean, String beanName);
     Object postProcessAfterInitialization(Object bean, String baenName);

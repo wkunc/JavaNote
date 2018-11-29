@@ -53,3 +53,18 @@ public interface Controller {
     ModelAndView HandleRequest(HttpServletRequest request, HttpServletResponse) throws Exceptoin;
 }
 ```
+
+# ViewResolver
+```java
+public interface ViewResolver {
+    View resolveViewName(String viewName, Locale locale) throws Exception;
+}
+
+public interface View {
+    String getContentType();
+
+    void render(Map<String,?> model,
+                HttpServletRequest request,
+                HttpServletResponse response) throws Exception;
+}
+```
