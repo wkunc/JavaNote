@@ -26,6 +26,5 @@ core.bare=false
 core.logallrefupdates=true
 core.symlinks=false
 core.ignorecase=true
-...
 ```
 也可以用 git config \<key> 来检查某一项配置
