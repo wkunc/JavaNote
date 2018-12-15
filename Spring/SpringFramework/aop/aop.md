@@ -56,7 +56,32 @@ public void forumCGLibTest(){
 
 # ProxyFactory
 Spring 定义了 org.springframework.aop.framework.AopProxy 接口, 并提供了两个 final 类型的实现类.
+这个接口定义了返回生成的代理对象.
+```java
+public interface AopProxy {
 
+	/**
+	 * Create a new proxy object.
+	 * <p>Uses the AopProxy's default class loader (if necessary for proxy creation):
+	 * usually, the thread context class loader.
+	 * @return the new proxy object (never {@code null})
+	 * @see Thread#getContextClassLoader()
+	 */
+	Object getProxy();
+
+	/**
+	 * Create a new proxy object.
+	 * <p>Uses the given class loader (if necessary for proxy creation).
+	 * {@code null} will simply be passed down and thus lead to the low-level
+	 * proxy facility's default, which is usually different from the default chosen
+	 * by the AopProxy implementation's {@link #getProxy()} method.
+	 * @param classLoader the class loader to create the proxy with
+	 * (or {@code null} for the low-level proxy facility's default)
+	 * @return the new proxy object (never {@code null})
+	 */
+	Object getProxy(ClassLoader classLoader);
+}
+```
 
 # 创建切面
 Spring 通过 org.springframework.aop.Pointcut 接口描述切点
@@ -88,3 +113,22 @@ Spring 定义了**6种**切点类型
 6. 复合切点:
 
 
+## 切面类型
+由于 Advice 既包含横切代码, 又包含部分连接点信息(方法前, 方法后等访问信息),
+所以可以仅通过 Advice 类生成一个切面.
+但是 PointCut 仅代表目标类连接点的部分信息(类和方法的定位),
+所以仅有切点无法制作出一个切面, 必须结合 Advice 才能制作出切面
+
+Spring 使用 org.springframework.aop.Advisor 接口表示切面的概念.
+一个切面同时包含横切代码和连接点信息. 
+切面可以分为3类: 一般切面, 切点切面和引介切面
+
+Advisor: 代表一般切面, 仅包含一个 Advice. 因为 Advice 包含了横切代码和连接点信息,
+所以 Advice 本身就是一个 Advisor, 只不过它代表的横切的连接点是所有目标类的所有方法.
+因为这个横切面太宽泛, 所以一般不会直接使用.
+
+PointcutAdvisor: 代表具有切点的切面, 包含 Advice 和 Pointcut 连个类,
+这样就可以通过类, 方法名以及方法方位(在Advice中)等信息灵活的定义切面的连接点.
+
+IntroductionAdvisor: 代表引介切面. 引介切面是对应引介增强的特殊切面, 它应用于类层面上,
+所以引介切点使用 ClassFilter 进行定义.

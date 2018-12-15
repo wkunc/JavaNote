@@ -108,6 +108,7 @@ public class RootConfig {
         return order;
     }
 ````
+
 虽然这时我们在 spring 中配置了 两个User 类型的对象,但是 spring 通过 变量名 user 判断 为第一个User对象然后将其 注入 Order 类中. 如何更好的解决 bean 不唯一将在高级装配中讲到
 
 ### 总结

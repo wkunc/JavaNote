@@ -16,3 +16,12 @@ public interface BeanFactoryPostProcessor {
     void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
 }
 ```
+
+# ImportBeanDefinitionRegistrar
+```java
+public interface ImportBeanDefinitionRegistrar {
+    public void registerBeanDefinitions(
+            AnnotationMetadata importingClassMetadata,
+            BeanDefinitionRegistry registry);
+}
+```

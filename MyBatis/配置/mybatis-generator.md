@@ -22,7 +22,6 @@ MyBatis / iBATIS格式的SQL Map文件
 >|tableName|	The name of the database table(数据库表名)
 
 >### Optional Attributes(可选参数)
->***
 >|Attribute|Description
 >|---------|-----------
 >|schema(模式)| not required(不是必须的,如果你的数据库不存在模式)

@@ -1,4 +1,4 @@
-# The IoC contatiner
+# The IoC Container
 org.springframework.beans 和 org.springframework.context 包是 Spring IoC 容器的基础
 
 BeanFactory 接口提供了一种能够管理任何对象的高级配置机制
@@ -16,7 +16,7 @@ ApplicationContext 是 BeanFactory 的完整超集
 Configuration metadata 代表你如何告诉Spring 容器在应用程序中 instantiate(实例化), 
 configure (配置) 和 assemble(组装对象)
 
-Spring IoC contanier 本身完全与与实际编写此配置元数据的格式分离
+Spring IoC container 本身完全与与实际编写此配置元数据的格式分离
 
 # Bean Overview
 
@@ -69,7 +69,7 @@ A bean definition is essentially a recipe for creating one or more object
 
 ## Dependencies and Configuration in Detail
 You can also configure a java.util.Properties instance, as follows:
-```
+```xml
 <bean id="mappings"
     class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 
@@ -211,7 +211,7 @@ public interface BeanPostProcessor {
 CustomAutowireConfigurer is a BeanFactoryPostProcessor
 
 # Environment Abstraction
-The Enviroment interface is an absetraction integerated in the conainer 
+The Environment interface is an absetraction integerated in the conainer 
 that models two key aspectes of the application environment : profiles and properties
 
 环境接口被集成在容器中, 他提前了两个方面的关键抽象: profiles 和 properties

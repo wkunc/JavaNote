@@ -26,7 +26,12 @@ Resouce接口的实现类很多, 直接使用的话要根据具体的 Resouce �
 通过它来屏蔽不同的子类的构造. 由它负责自动的辨别路径使用对应资源的子类
 
 它是一个策略接口(ps:ResourceLoader类上的注释讲的)
-
+```java
+public interface ResourceLoader {
+    String CLASSPATH_URL_PREFIX = ResourceUtils.CLASSPATH_URL_PREFIX;
+    Resource getResource(String location);
+    ClassLoader getClassLoader();
+```
 ApplicationContext 必须提供这个功能, 扩展继承于**ResoucePatternResolver**
 
 DefaultResoucLoader 是一个独立实现, 它通常在ApplicationContext外部使用
@@ -43,49 +48,70 @@ public interface ResoucePatternResolver extends ResourceLoader {
 ## DefaultResourceLoader
 DefaultResourceLoader 是 ResourceLoader 的默认实现, 几乎所有的 Application 的实现类都继承了它
 通过它来提供 ResourceLoader 接口的功能
-
-它主要拥有一个 ClassLoader 和 一个 Set/<ProtocolResolver>
 ```java
-//这是ResourceLoader 中方法的具体实现
-@Override
-public Resource getResource(String location) {
-    // 首先判断指定的 location 是否为空
-    Assert.notNull(location, "Location must not be null");
-
-    // 然后遍历自己的 Set 集合 调用 protocolResolver (协议处理器) 处理
-    for (ProtocolResolver protocolResolver : this.protocolResolvers) {
-        Resource resource = protocolResolver.resolve(location, this);
-        if (resource != null) {
-            return resource;
-        }
+public class DefautlResourceLoader implements ResourceLoader {
+    private ClassLoader classLoader;
+    private final Set<ProtocolResolver> protocolResolvers = new LinkedHashSet<>(4);
+    public DefaultResourceLoader() {
+        this.classLoader = ClassUtils.getDefaultClassLoader();
+    }
+    public DefaultResourceLoader(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
+    public setClassLoader(ClassLoader classLoader){
+        this.classLoader = classLoader;
+    }
+    public ClassLoader getClassLoader(){
+        return (this.classLoader !=null ? this.classLoader : ClassUtils.getDefaultClassLoader());
+    }
+    public void addProtocolResolver(ProtocolResolver resolver) {
+        Assert.notNull(resolver, "ProtocolResolver must not be null"):
+        this.protocolResolvers.add(resolver);
+    }
+    public Colletion<ProtocolResolver> getProtocolResolvers() {
+        return this.protocolResolvers;
     }
 
-    /*
-     * 如果 location 以"/" 开始那边就解析为
-     * 如果以 "classpath:" 开始就解析为 ClassPathResouce
-     * 如果都不是就尝试解析为 URL
-     */
-    if (location.startsWith("/")) {
-        return getResourceByPath(location);
-    }
-    else if (location.startsWith(CLASSPATH_URL_PREFIX)) {
-        return new ClassPathResource(location.substring(CLASSPATH_URL_PREFIX.length()), getClassLoader());
-    }
-    else {
-        try {
-            // Try to parse the location as a URL...
-            URL url = new URL(location);
-            return new UrlResource(url);
+    //这是ResourceLoader 中方法的具体实现
+    @Override
+    public Resource getResource(String location) {
+        // 首先判断指定的 location 是否为空
+        Assert.notNull(location, "Location must not be null");
+        // 然后遍历自己的 Set 集合 调用 protocolResolver (协议处理器) 处理
+        for (ProtocolResolver protocolResolver : this.protocolResolvers) {
+            Resource resource = protocolResolver.resolve(location, this);
+            if (resource != null) {
+                return resource;
+            }
         }
-        catch (MalformedURLException ex) {
-            // No URL -> resolve as resource path.
+        /*
+         * 如果 location 以"/" 开始那边就解析为
+         * 如果以 "classpath:" 开始就解析为 ClassPathResouce
+         * 如果都不是就尝试解析为 URL
+         */
+        if (location.startsWith("/")) {
             return getResourceByPath(location);
         }
+        else if (location.startsWith(CLASSPATH_URL_PREFIX)) {
+            return new ClassPathResource(location.substring(CLASSPATH_URL_PREFIX.length()), getClassLoader());
+        }
+        else {
+            try {
+                // Try to parse the location as a URL...
+                URL url = new URL(location);
+                return new UrlResource(url);
+            }
+            catch (MalformedURLException ex) {
+                // No URL -> resolve as resource path.
+                return getResourceByPath(location);
+            }
+        }
     }
-}
 
-protected Resource getResourceByPath(String path) {
-    return new ClassPathContextResource(path, getClassLoader());
-}
+    protected Resource getResourceByPath(String path) {
+        return new ClassPathContextResource(path, getClassLoader());
+    }
 
+}
 ```
+

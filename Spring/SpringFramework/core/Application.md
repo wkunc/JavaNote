@@ -17,10 +17,11 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
-            // 预备刷新
+            // 预备刷新这个context
 			prepareRefresh();
 
-			// Tell the subclass to refresh the internal bean factory.
+            // 告诉子类刷新内部的 BeanFactory
+            // obtaninFreshBeanFactory() 方法在下面
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
@@ -80,6 +81,60 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
 	}
 ```
 
+```java
+    protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+        // 启动子类的 refreshBeanFactory() 方法
+        // refreshBeanFactory() 在自己这里定义为abstract, 实现交给子类
+        // 采用模板方法设计模式
+        refreshBeanFactory();
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        //一个debug等级的日志
+        if (logger.isDebugEnabled()){
+            logger.debug("Bean factory for " + getDisplayName() + ": " + beanFactory);
+        }
+        return beanFactory;
+    }
+```
+```java
+    protected final void refreshBeanFactory() throws BeanException {
+        if (hasBeanFactory()) {
+            destroyBeans();
+            closeBeanFactory();
+        }
+        try {
+            //创建一个和之前一样的 beanFactory
+            //主要逻辑就是获得自己的**父容器**,如果父容器是个 ApplicationContext的话获得内部的 BeanFactory
+            DefaultListableBeanFactory beanFactory = createBeanFactory();
+            beanFactory.setSerializationId(getId());
+            // 定制BeanFactory, 主要是设置是否允许别名覆盖和BeanDefinition覆盖
+            customizeBeanFactory(beanFactory);
+            // 加载BeanDefinition, 这个方法是个 abstract 方法, 具体由子类实现
+            // 又是模板方法模式的使用
+            loadBeanDefinitions(beanFactory);
+            synchronized (this.BeanFactoryMonitor) {
+                this.beanFactory = beanFactory;
+            }
+        }//异常处理
+        catch (IOException ex){
+            thorw new ApplicationContextException("");
+        }
+    }
+```
+
+这里我们选择学习 AbstractXmlApplicationContext 中的 loadBeanDefinitions() 实现
+```java
+    protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) throws BeanException, IOException {
+        // 创建一个 XmlBeanDefinitionReader
+        XmlBeanDefinitionReader beanDefintionReader = new  XmlBeanDefinitionReader(beanFactory);
+        //
+        beanDefintionReader.setEnironment(this.getEnvironment());
+        beanDefintionReader.setResourceLoader(this);
+        beanDefintionReader.setEntityResolber(new ResourceEntityResovler(this));
+
+        initBeanDefinitionReader(beanDefintionReader);
+        loadBeanDefinitions(beanDefintionReader);
+    }
+```
 
 
 # 子类
