@@ -1,0 +1,3 @@
+# @Required
+Spring 内部提供了 RequiredAnnotationBeanPostProcessor.
+RequiredAnnotationBeanPostProcessor 这个后处理器检查Bean是否已设置具有@Required注释的所有bean属性。

@@ -1,41 +1,165 @@
-# 基本过程 
-定义一个测试类的要求是, 这个类必须是 public 的并且包含了一个 无参数的构造函数
+# JunitCore
+研究执行过程
+```java
+// 门面接口.
+public static void main(String... args) {
+    Result result = new JUnitCore().runMain(new RealSystem(), args);
+    System.exit(result.wasSuccessful() ? 0 : 1);
+}
 
-Junit 在调用每一个 @Test 方法之前, 为测试类创建一个新的实例.
-这有助于提供测试方法之间的独立性, 并且避免在测试代码中产生意外的副作用.
-因为每一个方法都运行于一个新的测试类实例上, 所以我们就不能在测试方法之间重用各个实例变量值.
+// 对传入的 args 进行解析.
+// 并生成一个Request, 它是一次测试的抽象. 相当于一次运行JUnit的动作. 
+Result runMain(JUnitSystem system, String... args) {
+    system.out().print("JUnit version " + Version.id());
 
-当你需要一次运行多个测试类时, 你就要创建另一个叫做测试集(test suite 或者 Suite)的对象.
-你的测试集也是一个特定的测试运行器(Runner), 因此可以像运行测试类那样运行它.
+    JUnitCommandLineParseResult jUnitCommandLineParseResult = JUnitCommandLineParseResult.parse(args);
 
-Junit 中的核心抽象就是
-* test class (一个包含或者多个测试的类)
-* test suite (一组测试)
-* test runner (执行测试集的程序)
+    RunListener listener = new TextListener(system);
+    addListener(listener);
+    return run(jUnitCommandLineParseResult.createRequest(defaultComputer()));
+}
 
-# Runner
-Junit4 的测试运行器
-| 运行器 | 目的|
-|-----|-----|
-|org.junit.internal.runners.Junit38ClassRunner|用来兼容
-|org.junit.runners.JUnit4|
-|org.junit.runners.Parameterized|使用不同的参数集运行同一个测试集
-|org.junit.runners.Suite|Suite 是一个包含不同测试的容器, 同时 Suite 也是一个运行器,可以运行一个测试类中所有以 @Test 注释的方法
+//
+public Result run(Request request) {
+    return run(request.getRunner());
+}
 
-可以用 **@RunWith** 注解指定 Runner 
+// 主体方法, JUnit 的本质逻辑就是, 获取需要测试的类, 和filter 生成对应的 Runner.
+// Runner 和 RunNotifier 协调工作执行测试.
+// RunNotifier 本质就是 RunListener 的集合体
+public Result run(Runner runner) {
+    Result result = new Result();
+    RunListener listener = result.createListener();
+    notifier.addFirstListener(listener);
+    try {
+        notifier.fireTestRunStearted(runner.getDescription());
+        runner.run(notifier);
+        notifier.fireTestRunFinished(result);
+    } finally {
+        removeListener(listener);
+    }
+    return result;
+}
+```
 
-## facade(门面)
-为了能够尽可能快地运行测试, JUnit 提供了一个 facade (org.junit.runner.JUnitCore),
-它可以运行任何测试运行器(Runner).
-JUnit 设计这个facade 来执行你的测试, 并收集测试结果与统计信息
+# JUnitCommandLineParseResult
+这个类负责参数的解析, 它会将解析结果填充到它内部的三个ArrayList中.
 
-JUnit 的facade决定使用哪个Runner来运行你的测试, 它支持 JUnit3.8 的测试, JUnit4的测试,以及两者混合
+然后根据解析结果生成本次*测试*的抽象描述*Request*对象
 
+private final List<String> filterSpecs = new ArrayList<>();
+private final List<Class<?>> classes = new ArrayList<>();
+private final List<Throwable> parserErrors = new ArrayList<>();
+```java
+public static JUnitCommandLineParseResult parse(String[] args) {
+    JUnitCommandLineParseResult result = new JUnitCommandLineParseResult();
+    result.parseArgs(args);
+}
+// 解析参数, 分为两步. 
+// 第一步: parseOptions() 方法提取 filter 参数.
+// 第二步: parseParameter() 方法提取 parseOptions() 方法返回的String[] 填充Class;
+private void parseArgs(String[] args) {
+    parseParameters(parseOptions(args));
+}
+// 过滤出 filter 参数填入 filterSpecs, 如果有异常填入 parserErrors中.
+// 除了 filter 参数, 之外都是Class 参数
+String[] parseOptions(String... args) {
+    for (int i = 0; i != args.length; ++i) {
+        String arg = args[i];
 
-# Sutie
-运行多个测试类, 为了简化这个任务, JUnit 提供了测试 Suite. 
-这个 Suite 是个容器, 用来把几个测试归在一起, 并且它们作为一个集合一起运行
+        if (arg.equlas("--")) {
+            return copyArray(args, i + 1, args.length);
+        } else if (args.startsWith("--")) {
+            if (args.startsWith("--filter=") || arg.equals("--filter")) {
+                String filterSpec;
+                if (arg.equals("--filter") {
+                    ++i;
+                    
+                    if (i < args.length) {
+                        filterSpec = args[i];
+                    } else {
+                        parserErrors.add(new CommandLineParserError(arg + " value not specified"));
+                        break;
+                    }
+                } else {
+                    filterSpec = arg.substring(arg.indexOf('=') + 1);
+                }
+                filterSpecs.add(filterSpec);
+            } else {
+                parserErrors.add(new CommandLineParserError("JUnit kons noting about the " + arg + " option"));
+            } 
+        } else {
+            return copyArray(args, i, args.length);
+        }
+    }
 
-@SuiteClasses 来组合多个测试类
+    return new String[]{};
+}
+// 简单的copy数组, 在上面的方法中使用,没有什么要将
+private String[] copyArray(String[] args, int from, int to) {
+    ArrayList<String> result = new ArrayList<>();
+    for (int j = from; j != to; ++j) {
+        result.add(args[j]);
+    }
+    return result.toArray(new String[result.size()]);
+}
 
-不过IDE, Maven, Gradle 都提供了运行测试集的功能
+// 将Class参数一个一个去尝试加载对应名字的Class, 并填充到Classes中
+public parseParameters(String[] args) {
+    for (String arg : args) {
+        try {
+            classes.add(Classes.getClass(arg));
+        } catch (ClassNotFoundException e) {
+            parserErrors.add(new IllegalArgumentException("Could not find class [" + arg + "]", e));
+        }
+    }
+}
+
+// 调用 Request 中的static方法来生成Request.
+// 然后调用 applyFilterSpecs(request) 用 filter 对其进行过滤
+public Request createRequest(Computer computer) {
+    if (parserErrors.isEmpty()) {
+        Request request = Request.classes(
+                computer, classes.toArray(new Class<?>[classes.size()]));
+        return applyFilterSpecs(request);
+    } else {
+        return errorReport();
+    }
+}
+```
+
+# Request
+Request 表示一次将要运行的 tests.
+本体一个 abstract 类. 提供了非常多的 static 方法来生成子类.
+![](Request.PNG)
+FilterRequest 和 SortingRequest就是个包装器, 功能实现也比较简单.
+ClassRequest 核心就是一个Class对象罢了.
+内部的Runner是由AllDefaultPossibilitiesBuilder创建.
+```java
+public class ClassRequest extends Request {
+    private final Object runnerLock = new Object();
+    private final Class<?> fTestClass;
+    private final boolean canUseSuiteMethod;
+    private volatile Runner runner;
+
+    public ClassRequest(Class<?> testClass, boolean canUseSuiteMethod) {
+        this.fTestClass = testClass;
+        this.canUseSuiteMethod = canUseSuiteMethod;
+    }
+    public ClassRequest(Class<?> testClass) {
+        this(testClass, true);
+    }
+
+    @Override
+    public Runner getRunner() {
+        if (runner == null) {
+            synchronized (runnerLock) {
+                if (runner == null) {
+                    runner = new AllDefaultPossibiliteiesBuilder().safeRunnerForClass();
+                }
+            }
+        }
+        return runner;
+    }
+}
+```

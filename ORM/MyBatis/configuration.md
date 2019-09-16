@@ -1,0 +1,266 @@
+# Configuration
+我们知道 SqlSessionFactoryBuilder 是Mybatis的启动类,
+然后它主要通过 XML 配置文件或 Configuration 实例来创建 SqlSessionFactory.
+其实Mybatis的XML会被其解析器解析为 Configuration 对象.
+所以我们直接来学习以下这个配置类抽象, 看看到的有哪些属性.
+
+org.apache.ibatis.session.Configuration
+
+```java
+public class Configuration {
+
+  // 这个应该就是对应XML中 <environment> 标签
+  protected Environment environment;
+
+  // mybatis 支持的设置属性中布尔类型的属性.
+  protected boolean safeRowBoundsEnabled;
+  protected boolean safeResultHandlerEnabled = true;
+  protected boolean mapUnderscoreToCamelCase;
+  protected boolean aggressiveLazyLoading;
+  protected boolean multipleResultSetsEnabled = true;
+  protected boolean useGeneratedKeys;
+  protected boolean useColumnLabel = true;
+  protected boolean cacheEnabled = true;
+  protected boolean callSettersOnNulls;
+  protected boolean useActualParamName = true;
+  protected boolean returnInstanceForEmptyRow;
+
+  // mybatis 支持的设置选项中其他类型的属性.
+  protected String logPrefix;
+  protected Class <? extends Log> logImpl;
+  protected Class <? extends VFS> vfsImpl;
+  protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
+  protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+  protected Set<String> lazyLoadTriggerMethods = new HashSet<String>(Arrays.asList(new String[] { "equals", "clone", "hashCode", "toString" }));
+  protected Integer defaultStatementTimeout;
+  protected Integer defaultFetchSize;
+  protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
+  protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
+
+  // 对应XML中 <properties> 标签
+  protected Properties variables = new Properties();
+
+  // 对应XML中 <reflectorFactory type="DefaultObjectFactory"/>
+  protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
+
+  // 对应XML中 <objectFactory type="DefaultObjectFactory"/>
+  protected ObjectFactory objectFactory = new DefaultObjectFactory();
+
+  // 对应XML中 <objectWrapperFactory type="DefaultObjectFactory"/>
+  protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
+
+  protected boolean lazyLoadingEnabled = false;
+  protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
+
+  // databaseIdProvider ?
+  protected String databaseId;
+  /**
+   * Configuration factory class.
+   * Used to create Configuration for loading deserialized unread properties.
+   *
+   * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
+   */
+  protected Class<?> configurationFactory;
+
+  // 下面是重点
+  // <mapper/> 标签的集合
+  protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  protected final InterceptorChain interceptorChain = new InterceptorChain();
+
+  // typeHandler 的集合, 配置文件中的 <typeHandlers> 应该会向其注册我们自定义的. 
+  protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+
+  // 别名注册中心
+  protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+  protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
+
+  // 各种select, update 等的集合
+  protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection");
+  protected final Map<String, Cache> caches = new StrictMap<Cache>("Caches collection");
+  // <resultMap/> 标签的最终集合, 一个 ResultMap 表示一个标签, key 是标签 id 值.
+  protected final Map<String, ResultMap> resultMaps = new StrictMap<ResultMap>("Result Maps collection");
+  protected final Map<String, ParameterMap> parameterMaps = new StrictMap<ParameterMap>("Parameter Maps collection");
+  protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<KeyGenerator>("Key Generators collection");
+
+  // 保存Mybatis加载过的所有资源, 如mapper.xml映射文件, 避免重复加载.
+  protected final Set<String> loadedResources = new HashSet<String>();
+  protected final Map<String, XNode> sqlFragments = new StrictMap<XNode>("XML fragments parsed from previous mappers");
+
+  // 解析完成的信息, 没有完成注册. 只在加载配置时有值.
+  // 用来解析出 MappedStatement 的xml解析器, 专门负责解析 select, update, insert, delete 等节点
+  protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<XMLStatementBuilder>();
+  protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<CacheRefResolver>();
+  protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<ResultMapResolver>();
+  protected final Collection<MethodResolver> incompleteMethods = new LinkedList<MethodResolver>();
+
+  /*
+   * A map holds cache-ref relationship. The key is the namespace that
+   * references a cache bound to another namespace and the value is the
+   * namespace which the actual cache is bound to.
+   */
+  protected final Map<String, String> cacheRefMap = new HashMap<String, String>();
+
+  // 两个公开的构造器, 第二个一定会被调用, 而它会负责初始化一些别名, 从构造器看就知道XML配置文件中哪些简写的名字是什么意思了.
+  public Configuration(Environment environment) {
+    this();
+    this.environment = environment;
+  }
+
+  public Configuration() {
+    // 这就是内建的两个事务管理器的别名
+    typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
+    typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
+
+    // 内建的数据连接池的别名
+    typeAliasRegistry.registerAlias("JNDI", JndiDataSourceFactory.class);
+    typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
+    typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
+
+    // 算法别名?
+    typeAliasRegistry.registerAlias("PERPETUAL", PerpetualCache.class);
+    typeAliasRegistry.registerAlias("FIFO", FifoCache.class);
+    typeAliasRegistry.registerAlias("LRU", LruCache.class);
+    typeAliasRegistry.registerAlias("SOFT", SoftCache.class);
+    typeAliasRegistry.registerAlias("WEAK", WeakCache.class);
+
+    // 内建的 databaseIdProvider 别名
+    typeAliasRegistry.registerAlias("DB_VENDOR", VendorDatabaseIdProvider.class);
+
+    typeAliasRegistry.registerAlias("XML", XMLLanguageDriver.class);
+    typeAliasRegistry.registerAlias("RAW", RawLanguageDriver.class);
+
+    // 内建的日志支持别名
+    typeAliasRegistry.registerAlias("SLF4J", Slf4jImpl.class);
+    typeAliasRegistry.registerAlias("COMMONS_LOGGING", JakartaCommonsLoggingImpl.class);
+    typeAliasRegistry.registerAlias("LOG4J", Log4jImpl.class);
+    typeAliasRegistry.registerAlias("LOG4J2", Log4j2Impl.class);
+    typeAliasRegistry.registerAlias("JDK_LOGGING", Jdk14LoggingImpl.class);
+    typeAliasRegistry.registerAlias("STDOUT_LOGGING", StdOutImpl.class);
+    typeAliasRegistry.registerAlias("NO_LOGGING", NoLoggingImpl.class);
+
+    typeAliasRegistry.registerAlias("CGLIB", CglibProxyFactory.class);
+    typeAliasRegistry.registerAlias("JAVASSIST", JavassistProxyFactory.class);
+
+    // 
+    languageRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
+    languageRegistry.register(RawLanguageDriver.class);
+  }
+
+}
+```
+
+
+为了理解它和配置文件的映射关系, 我们在学习一下XML配置文件的解析过程.
+
+```java
+XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
+Configuration config = parser.parse();
+```
+
+# XMLConfigBuilder
+
+```java
+  public Configuration parse() {
+    if (parsed) {
+      throw new BuilderException("Each XMLConfigBuilder can only be used once.");
+    }
+    parsed = true;
+    parseConfiguration(parser.evalNode("/configuration"));
+    return configuration;
+  }
+
+  private void parseConfiguration(XNode root) {
+    try {
+      // 对应 <properties> 标签, 会调用 configuration.setVariables() 方法.
+      propertiesElement(root.evalNode("properties"));
+
+      // 对应 <setting> 标签, 这里并不会做设置, 而是在下面 settingsElements() 方法中对属性进行设置.
+      Properties settings = settingsAsProperties(root.evalNode("settings"));
+      loadCustomVfs(settings);
+
+      // 对应 <typeAliases> 标签, 会向 typeAliases 注册.
+      typeAliasesElement(root.evalNode("typeAliases"));
+
+      // 对应 <plugins>, 会调用 configuration.addInterceptor();
+      pluginElement(root.evalNode("plugins"));
+
+      // 对应 <objectFactory>, 会调用 configuration.setObjectFactory
+      objectFactoryElement(root.evalNode("objectFactory"));
+      // 对应 <objectWrapperFactory>
+      objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      // 对应 <relectoryFactory>
+      reflectorFactoryElement(root.evalNode("reflectorFactory"));
+
+      settingsElement(settings);
+      // read it after objectFactory and objectWrapperFactory issue #631
+
+      // 对应 environments 标签, 只会加载 default 指定的 environemt 元素
+      environmentsElement(root.evalNode("environments"));
+
+      // <databaseIdProvider>
+      databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+
+      // <typeHandlers>, 重点
+      typeHandlerElement(root.evalNode("typeHandlers"));
+
+      // <mappers>, 重点
+      mapperElement(root.evalNode("mappers"));
+    } catch (Exception e) {
+      throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
+    }
+  }
+
+  // 加载environment
+  private void environmentsElement(XNode context) throws Exception {
+    if (context != null) {
+      if (environment == null) {
+        // 这个environment是一个String类型的成员变量,
+        // 基本上因为这个本地变量所以这个Buidler才不能调用两次 parser() 方法
+        // 明确使用的环境id
+        environment = context.getStringAttribute("default");
+      }
+      // 变量所有的 environment 元素, 找出id匹配的环境标签.
+      // 并且构建其指定事务管理器和DataSourceFactory.
+      for (XNode child : context.getChildren()) {
+        String id = child.getStringAttribute("id");
+        if (isSpecifiedEnvironment(id)) {
+          //
+          TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
+          DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
+          DataSource dataSource = dsFactory.getDataSource();
+          Environment.Builder environmentBuilder = new Environment.Builder(id)
+              .transactionFactory(txFactory)
+              .dataSource(dataSource);
+          configuration.setEnvironment(environmentBuilder.build());
+        }
+      }
+    }
+  }
+  // 解析environment标签中的 <transcationManager> 标签
+  private TransactionFactory transactionManagerElement(XNode context) throws Exception {
+    if (context != null) {
+      // 取到指定的 type 值和子元素信息.
+      String type = context.getStringAttribute("type");
+      Properties props = context.getChildrenAsProperties();
+
+      // 重点是这个 Class<?> resolveClass(String) 方法. 会调用正在配置的Configuration内部的typeAliasRegistry来获取Class.
+      // 简单说这就是为啥我们可以在type上写 JDBC, MANAGED 这样不是全类名的值.
+      TransactionFactory factory = (TransactionFactory) resolveClass(type).newInstance();
+
+      factory.setProperties(props);
+      return factory;
+    }
+    throw new BuilderException("Environment declaration requires a TransactionFactory.");
+  }
+  private DataSourceFactory dataSourceElement(XNode context) throws Exception {
+    if (context != null) {
+      String type = context.getStringAttribute("type");
+      Properties props = context.getChildrenAsProperties();
+      DataSourceFactory factory = (DataSourceFactory) resolveClass(type).newInstance();
+      factory.setProperties(props);
+      return factory;
+    }
+    throw new BuilderException("Environment declaration requires a DataSourceFactory.");
+  }
+```

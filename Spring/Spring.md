@@ -18,16 +18,14 @@ configure (配置) 和 assemble(组装对象)
 
 Spring IoC container 本身完全与与实际编写此配置元数据的格式分离
 
+-----
 # Bean Overview
-
 ## Instantiating Beans
 A bean definition is essentially a recipe for creating one or more object
-
 ### Instantiation with a Constructor
 
 ### Instantiation with a Static Factory Method
-
-```
+```xml
 <bean id = "clientService" class="examples.ClientService" factory-method="createInstance"/>
 ```
 ### Instantiation by Using an Instance Factory Method
@@ -43,7 +41,7 @@ A bean definition is essentially a recipe for creating one or more object
     factory-bean="serviceLocator"
     factory-method="createClientServiceInstance"/>
 ```
-
+-----
 # Dependencies
 ## Dependency Injection(DI)
 ### 构造器注入
@@ -57,12 +55,14 @@ A bean definition is essentially a recipe for creating one or more object
     <constructor-arg index="1" value="42"/>
 </bean>
 <!--有特殊要求的 -->
+<!--启用debug标志编译代码, 或者用注解, 应该是因为没有方法能得到参数 name ,只有参数类型-->
+<!--@ConstructorProperties 在对应类中指定构造器的参数名-->
 <bean id="exampleBean" class="examples.ExampleBean">
     <constructor-arg name="years" value="7500000"/>
     <constructor-arg name="ultimateAnswer" value="42"/>
 </bean>
 ```
-@ConstructorProperties
+
 ### 属性注入
 
 ### Dependency Resolution Process(依赖 解决 过程)
@@ -83,11 +83,102 @@ You can also configure a java.util.Properties instance, as follows:
 </bean>
 ```
 Spring容器通过使用JavaBeans PropertyEditor机制将\<value/>
-元素内的文本转换为java.util.Properties实例。
+元素内的文本转换为java.util.Properties实例.
 
+## Method Injection
+Lookup Method Injection
+用于 singletons 类型的 bean 中要配装一个 property 的 bean.
+因为 singletons 类型的 bean 只创建一次,所以只会注入一次 property 的Bean.
+但是, 我们希望每次获得这个 singletons 的Bean时, 其中的 property 都是不同的.
+所以我们可以这样做.
+显示的使用 Spring 的API 让这个 Bean 这个Bean的每次都能*显式*的获得那个动态的Bean
+但是, 这样做会让我们的 Bean SpringFramework 这是我们不想看到的, Spring入侵到我们的代码中.
+```java
+public class CommandManager implements ApplicationContextAware {
+
+    private ApplicationContext applicationContext;
+
+    public Object process(Map commandState) {
+        // grab a new instance of the appropriate Command
+        Command command = createCommand();
+        // set the state on the (hopefully brand new) Command instance
+        command.setState(commandState);
+        return command.execute();
+    }
+
+    protected Command createCommand() {
+        // notice the Spring API dependency!
+        return this.applicationContext.getBean("command", Command.class);
+    }
+
+    public void setApplicationContext(
+            ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+}
+```
+当然我们还可以写一些特殊的基类, 将 Spring 的API 放到更高的层面中, 避免子类与Spring耦合.
+(ps:但是这毫无意义)
+所以, Spring 提出了 Method Injection. (ps:感觉应该叫注入方法的)
+这里我们可以将原来的 Bean 改写为下面这样.
+然后配置它的 lookup-method 属性.
+这个类是 abstract 的所有这个类无法创建出对象, 但是 Spring 底层会用 Cglib 的技术,
+创建出 subclass 代理, 并且实现这个方法保证每次调用都会返回对应的 property Bean.
+当然因为是**子类代理**所以有些限制, 如: 这个方法不能是*final*的,不能是*private*, 方法不能有参数
+(ps:因为 final 无法覆盖, private 无法继承)
+因为是子类代理所以其实没有要求这个方法必须是*abstract*. 
+如果不是抽象的, 子类会覆盖其方法, 否则就会实现这个抽象方法. 
+```java
+public abstract class CommandManager {
+
+    public Object process(Object commandState) {
+        // grab a new instance of the appropriate Command interface
+        Command command = createCommand();
+        // set the state on the (hopefully brand new) Command instance
+        command.setState(commandState);
+        return command.execute();
+    }
+
+    // okay... but where is the implementation of this method?
+    @lookup
+    protected abstract Command createCommand();
+}
+```
+```xml
+<public|protected> [abstract] <return-type> theMethodName(no-arguments);
+```
+```xml
+<!--要注入的原型Bean-->
+<bean id="myCommand" class="fiona.apple.AsyncCommand" scope="prototype">
+    <!-- inject dependencies here as required -->
+</bean>
+<!--单例Bean-->
+<bean id="commandManager" class="fiona.apple.CommandManager">
+    <lookup-method name="createCommand" bean="myCommand"/>
+</bean>
+```
+我们也可以使用注解 @lookup 标记在对应方法上非常简单就可以起到xml配置一样的效果.
+
+> 访问范围不同的目标bean的另一种方法是 ObjectFactory/Provider 注入点.
+> 你也会发现 org.springframework.beans.factory.config包中的*ServiceLoactorFactoryBean*是非常有用的
+### Arbitrary Method Replacement
+还有一种 Method Injection 的形式是用一个方法的实现替代托管 Bean 中的任意方法.
+
+必须实现 org.springframework.beans.factory.support.MethodRepleacer 接口
+```java
+public class ReplacementComputeValue implements MethodReplacer {
+
+    public Object reimplement(Object o, Method m, Object[] args) throws Throwable {
+        // get the input value, work with it, and return a computed result
+        String input = (String) args[0];
+        ...
+        return ...;
+    }
+}
+```
 
 # Customizing the Nature of a Bean (定制Bean)
-spring 提供l许多可用于自定义bean特性的接口
+spring 提了许多可用于自定义bean特性的接口
 
 * Lifecycle Ballbacks
 * ApplicationContextAware and BeanNameAware

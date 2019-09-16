@@ -1,0 +1,72 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+1.解决库中字段名和对应实体类属性名不一致问题
+    1.在sql语句中起列别名
+    2.使用<resultMap>将属性名和字段名对应
+    	<select id="selectOrderResultMap" parameterType="int" resultMap="orderResultMap">
+		    select * from orders where order_id=#{id}
+	    </select>
+        <resultMap type="Order" id="orderResultMap">
+            <id property="id" column="order_id"/>
+            <result property="orderNo" column="order_no"/>
+            <result property="price" column="order_price"/>
+        </resultMap>
+-->
+<!--
+MyBatis一对一关联查询总结
+　　MyBatis中使用association标签来解决一对一的关联查询，association标签可用的属性如下：
+    property:对象属性的名称
+    javaType:对象属性的类型
+    column:所对应的外键字段名称
+    select:使用另一个查询封装的结果
+MyBatis一对多关联查询总结
+　　MyBatis中使用collection标签来解决一对多的关联查询，ofType属性指定集合中元素的对象类型。
+-->
+<resultMap>标签高级
+
+<!--获取数据库自增主键-->
+<!--
+    useGeneratedKeys 属性用来获取数据库自增的字段 keyProperty指明java类的属性
+    在语句执行之后
+    mybatis会把数据库中取出的自增结果放入你提供的java类中
+-->
+<insert id="addGoods" parameterType="Goods" useGeneratedKeys="true" keyProperty="id">
+    insert into goods (gname, price) values(#{name}, #{price})
+</insert>
+<!--动态sql之动态insert-->
+<insert id="addGoods" parameterType="Goods" useGeneratedKeys="true" keyProperty="id">
+    insert into goods
+    <!--
+        用 trim 标签实现动态插入
+        prefix 前缀
+        suffix 后缀
+        prefixoverride: 去掉第一个and或者是or
+        suffixOverrides: 去掉最后一个逗号   (也可以是其他符号)
+    -->
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+        <if test="name != null">gname,</if>
+        <if test="price != null">price,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+        <if test="name != null">#{name},</if>
+        <if test="price != null">#{price}</if>
+    </trim>
+</insert>
+<!--动态sql之动态delete-->
+    <delete id="deleteGoods">
+        delete from goods where id in
+        <foreach collection="list" open="(" separator="," close=")" index="index" item="item">
+            #{item}
+        </foreach>
+    </delete>
+<!--动态sql之动态update-->
+    <update id="updateGoods" parameterType="Goods">
+        update goods
+        <set>
+            <if test="name !=null">gname = #{name},</if>
+            <if test="price !=null">price = #{price},</if>
+        </set>
+        where gid =#{id}
+    </update>
+<!--动态sql之动态select-->

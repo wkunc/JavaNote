@@ -1,0 +1,210 @@
+![](AliasRegistryAndSingletonBeanRegistry.PNG)
+
+# AliasRegistry
+```java
+public interface AliasRegistry {
+	// 注册别名
+	void registerAlias(String name, String alias);
+	// 移除别名
+	void removeAlias(String alias);
+	// 判断是否为别名
+	boolean isAlias(String name);
+	// 获取别名数组
+	String[] getAliases(String name);
+}
+```
+## SimpleAliasRegistry
+这个类实现了上面的接口.
+
+首先 alias 不可以一样, 即一个 alias 不能对应两个对象(两个不同的对象不能有相同的别名).
+
+但是 alias 可以有别名, 即 wkunc 的别名是 w, 而 w 的别名可以是 c.
+
+这样 wkunc 的别名就是 w 和 c, 其中 w 是直接别名, c 是间接别名.
+
+```java
+public class SimpleAliasRegistry implements AliasRegistry {
+
+	/** Map from alias to canonical(典范) name */
+    // key 是 alias, value 是 name
+    // key 不可以重复 value 可以重复, 
+    // 所以不可以有相同的别名, 但是同一个 name 可以有多个别名, 且别名也可以注册别名
+	private final Map<String, String> aliasMap = new ConcurrentHashMap<String, String>(16);
+
+	@Override
+	public void registerAlias(String name, String alias) {
+		// 省略判断参数是否为空的 Assert 语句....
+		synchronized (this.aliasMap) {
+			// 如果传入的 name 和 别名相同, 则会删除原来的别名
+            // 保障了没有和 正名相同的别名出现
+			if (alias.equals(name)) {
+				this.aliasMap.remove(alias);
+			}
+			else {
+				// 尝试获取传入的 alias 对应的 name.(ps: 如果获得值就要判断是否相同和是否可以覆盖别名)
+				String registeredName = this.aliasMap.get(alias);
+				if (registeredName != null) {
+                    // 如果能取到值就说明,这个 alias 已经有人用了
+                    // 如果 name 和 registeredName 的名字相同, 就什么也不做
+					if (registeredName.equals(name)) {
+						// An existing alias - no need to re-register
+						return;
+					}
+                    // 如果 name 和 registeredName 不同,就判断是否允许别名覆盖(ps:如果不允许别名覆盖就会抛出异常, 默认允许true)
+					if (!allowAliasOverriding()) {
+						throw new IllegalStateException("Cannot register alias '" + alias + "' for name '" +
+								name + "': It is already registered for name '" + registeredName + "'.");
+					}
+				}
+                // 检查别名循环
+                // registerAlias("w", "c");
+                // registerAlias("c", "w"); 这是就导致了别名循环会报错
+				checkForAliasCircle(name, alias);
+				this.aliasMap.put(alias, name);
+			}
+		}
+	}
+
+    // 返回是否允许 alias 别名覆盖
+	protected boolean allowAliasOverriding() {
+		return true;
+	}
+
+	// 检测别名循环,
+	protected void checkForAliasCircle(String name, String alias) {
+		if (hasAlias(alias, name)) {
+			throw new IllegalStateException("Cannot register alias '" + alias +
+					"' for name '" + name + "': Circular reference - '" +
+					name + "' is a direct or indirect alias for '" + alias + "' already");
+		}
+	}
+
+    // 查看 alias 链(就是递归调用),确定 name 是否已经注册了给定 alias, 如果不是还要递归的查看alias的alias
+    // 相当重要的方法
+	public boolean hasAlias(String name, String alias) {
+		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
+            // 获得每一对 key value
+			String registeredName = entry.getValue();
+            // 判断其值和给定的 name 是否相同,
+            // 不同就不是我们要找的, 如果相同就获得它的 key(alias)
+            // 如果 alias 相同了,就说明已经直接注册了返回 true
+            // 如果 alias 不同, 就调用 hasAlias(registeredAlias, alias) 继续向下查看别名链,
+            // 查看当前 注册的别名 有没有 别名 是否和给定的别名一样的.
+			if (registeredName.equals(name)) {
+				String registeredAlias = entry.getKey();
+				return (registeredAlias.equals(alias) || hasAlias(registeredAlias, alias));
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void removeAlias(String alias) {
+		synchronized (this.aliasMap) {
+			String name = this.aliasMap.remove(alias);
+			if (name == null) {
+				throw new IllegalStateException("No alias '" + alias + "' registered");
+			}
+		}
+	}
+
+	@Override
+	public boolean isAlias(String name) {
+		return this.aliasMap.containsKey(name);
+	}
+
+    /*
+    * 根据给定 name 返回所有别名
+    * 内部调用了 retrieveAliases() 方法 (ps: retrieve 取回,恢复)
+    */
+	@Override
+	public String[] getAliases(String name) {
+		List<String> result = new ArrayList<String>();
+		synchronized (this.aliasMap) {
+			retrieveAliases(name, result);
+		}
+		return StringUtils.toStringArray(result);
+	}
+
+    /*
+    * 递归调用返回指定 name 的所有别名, 包括别名的别名.
+    * 当找到一个 alias时, 存放到 result中并递归的查找这个别名的别名, 直到这个别名链结束.
+    * 然后找下个一个name的直接别名.
+    */
+	private void retrieveAliases(String name, List<String> result) {
+		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
+			String registeredName = entry.getValue();
+			if (registeredName.equals(name)) {
+				String alias = entry.getKey();
+				result.add(alias);
+				retrieveAliases(alias, result);
+			}
+		}
+	}
+
+
+	public void resolveAliases(StringValueResolver valueResolver) {
+		Assert.notNull(valueResolver, "StringValueResolver must not be null");
+		synchronized (this.aliasMap) {
+			Map<String, String> aliasCopy = new HashMap<String, String>(this.aliasMap);
+			for (String alias : aliasCopy.keySet()) {
+				String registeredName = aliasCopy.get(alias);
+				String resolvedAlias = valueResolver.resolveStringValue(alias);
+				String resolvedName = valueResolver.resolveStringValue(registeredName);
+				if (resolvedAlias == null || resolvedName == null || resolvedAlias.equals(resolvedName)) {
+					this.aliasMap.remove(alias);
+				}
+				else if (!resolvedAlias.equals(alias)) {
+					String existingName = this.aliasMap.get(resolvedAlias);
+					if (existingName != null) {
+						if (existingName.equals(resolvedName)) {
+							// Pointing to existing alias - just remove placeholder
+							this.aliasMap.remove(alias);
+							break;
+						}
+						throw new IllegalStateException(
+								"Cannot register resolved alias '" + resolvedAlias + "' (original: '" + alias +
+								"') for name '" + resolvedName + "': It is already registered for name '" +
+								registeredName + "'.");
+					}
+					checkForAliasCircle(resolvedName, resolvedAlias);
+					this.aliasMap.remove(alias);
+					this.aliasMap.put(resolvedAlias, resolvedName);
+				}
+				else if (!registeredName.equals(resolvedName)) {
+					this.aliasMap.put(alias, resolvedName);
+				}
+			}
+		}
+	}
+
+	/**
+     * 根据 alias 转换为 name. 会获得别名链上最终的正名
+	 */
+	public String canonicalName(String name) {
+		String canonicalName = name;
+		// Handle aliasing...
+		String resolvedName;
+		do {
+			resolvedName = this.aliasMap.get(canonicalName);
+			if (resolvedName != null) {
+				canonicalName = resolvedName;
+			}
+		}
+		while (resolvedName != null);
+		return canonicalName;
+	}
+
+}
+```
+
+# BeanDefinitionRegistry
+```java
+void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+void removeBeanDefinition(String beanName);
+BeanDefinition getBeanDefinition(String beanName);
+boolean containsBeanDefinition(String beanName);
+String[] getBeanDefinitionNames();
+int getBeanDefinitionCount();
+boolean isBeanNameInUse(String beanName);
+```

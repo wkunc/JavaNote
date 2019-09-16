@@ -1,4 +1,4 @@
- # File 类
+# File 类
  虽然叫 File 但是它其实是文件和路径的抽象表示
 
 所以它里面的方法可以分成, 为目录服务的 和 为文件服务的
@@ -52,6 +52,7 @@ public static File createTempFile(String prefix, String suffix) throws IOExcepti
     retrun createTempFile(prefix, suffix, null);
 }
 ```
+
 ## 常见方法
 boolean createNewFile()
 boolean exists()
@@ -83,11 +84,30 @@ System.out 和 System.err 已经被包装成 PrintStream(OutputStream的子类)
 System.in 之前必须对其进行包装
 
 # 18.10 新I/O
-jdk1.4 的时候 java.nio.\* 引入了新的 JavaI/O 类库, 其目的在于提高速度, 旧I/O也已经用nio重新实现过了
+jdk1.4 的时候 java.nio.\* 引入了新的 JavaI/O 类库, 其目的在于提高速度, 旧I/O也已经用nio重新实现过了.
 
 速度的提高来自于所使用的结构更接近于操作系统执行I/O的方式: *通道* 和 *缓冲器*
 
-可以把通道看出煤矿, 缓冲器就是矿车, 我们只是和缓冲器交互
+可以把通道看出煤矿, 缓冲器就是矿车, 我们只是和缓冲器交互.
 
-## ByteBuffer
-唯一直接的和通道交互的缓冲器是 ByteBuffer :可以存储未加工字节的缓冲器
+## Buffer
+nio 中重要的抽象之一 Buffer 抽象类, 它有多个子类. 最核心的是 ByteBuffer.
+
+唯一直接的和通道交互的缓冲器是 ByteBuffer :可以存储未加工字节的缓冲器.
+
+旧的I/O类库中有三个类被修改了, 用以产生 FileChannel. 这三个类是:
+FileInputStream, FileOutputStream, 和 RandomAccessFile.
+
+这些都是字节操作流, 与底层的 nio 性质一致. Reader 和 Writer 这种字符模式类不能用于生产 Channel.
+但是 java.nio.channel.Channels 工具类提供了实用方法, 用以在通道中产生 *Reader* 和 *Writer*.
+
+
+# 内存映射文件
+内存映射文件允许我们创建和修改哪些因为太大而不能放入内存的文件.
+有了内存映射文件我们就可以完全把它当作非常大的数组来访问.
+这种方法大大简化了用于修改文件的代码.
+
+
+# 文件加锁
+
+

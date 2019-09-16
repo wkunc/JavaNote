@@ -19,7 +19,10 @@ service() 方法能在一个特定时间点处理多线程并发执行.
 
 
 # Servlet 的生命周期
+所有Servlet必须直接或间接的实现 GenericServlet 或 HttpServlet 抽象类
 ## 加载和实例化
+Servlet容器负责加载和实例化 Servlet. 加载和实例化可以发生在容器启动时, 或者延迟初始化直到
+容器决定由请求需要处理时.
 
 ## 初始化
 容器通过调用 Servlet 实例的 init 方法完成初始化, init方法定义在 Servlet 接口中, 并提供一个
