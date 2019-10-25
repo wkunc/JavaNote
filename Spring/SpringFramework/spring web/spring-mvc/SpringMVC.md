@@ -132,7 +132,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 	}
 ```
 
-# BeanNameUrlHandlerMapper
+# BeanNameUrlHandlerMapping
 好像是用来解决 Controller bean 上的路径的
 ```java
 	@Bean

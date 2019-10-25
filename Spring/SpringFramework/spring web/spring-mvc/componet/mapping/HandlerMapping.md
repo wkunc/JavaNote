@@ -84,10 +84,12 @@ HandlerMapping中的信息是什么配置好的呢?
 # Implement 
 ![](../../imgs/All.png)
 ![](../../imgs/HandlerMapping.png)
-AbstractHandler 对HandlerMapping进行了基本实现, 
-它实现了 defaultHandler的功能, 拦截器的注册,
-以及HandlerExecutionChain应用到对应handler上的能力,
-CORS设置和应用.
+**AbstractHandlerMapping** 对 HandlerMapping 进行了基本实现, 
+它实现了 
+1. defaultHandler功能(如果没有映射的, 就使用默认handler, 可以为null)
+2. 拦截器的注册
+3. 以及HandlerExecutionChain应用到对应handler上的能力()
+4. CORS设置和应用.
 这样子类就可以专心实现如何根据请求获得handler的功能.
 
 我们可以把 HandlerMapping 的实现分为两种, 
@@ -95,7 +97,7 @@ CORS设置和应用.
 一种是支持注解式编程的RequestMappingHandlerMapping.
 
 # AbstracthandlerMapping
-HandlerMapping 实现的抽象基类实现基本功能, 支持排序, 默认Handler, Cors配置,
+HandlerMapping 实现的抽象基类实现基本功能, 如: 支持Orderd语义, 默认Handler, Cors配置,
 HandlerInterceptor, 包括由路径模式映射的处理程序拦截器.
 完成了拦截器的注册和组装, 占了很多行.
 
@@ -132,6 +134,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 
 实现HandlerMapping接口定义的方法, 将获取逻辑交给具体子类, 如果获取到的null就是用设置的默认 Handler.
 实现了, 如果handler对象是String类型, 就会从ApplicationContext中获取对应name的Bean作为Handler.
+最后添加一个 CORS Interceptor
 
 ```java
 public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
@@ -207,8 +210,8 @@ protected HandlerExecutionChain getHandlerExecutionChain(Object handler, HttpSer
 
 ```java
 /*
- *1. 调用 detectMappedInterceptors() 方法将当前 ApplicationContext 中的所有 MappedInterceptor 对象获取.
- *2. 调用 initInterceptors() 方法将手动注册的拦截器, 
+ * 1. 调用 detectMappedInterceptors() 方法将当前 ApplicationContext 中的所有 MappedInterceptor 对象获取.
+ * 2. 调用 initInterceptors() 方法将手动注册的拦截器, 
  *   从注册的位置List<Object> intercetors 中移动到 List<HandlerInterceptor> adaptedInterceptors中.
  * 
  * 也就是说最后 adaptedInterceptors 中是最终的保存所有拦截器的地方.
@@ -221,10 +224,11 @@ protected void initApplicationContext() throws BeansException {
     // 从Context中获取所有的 MappedInterceptor 对象, 并添加到list中
     detectMappedInterceptors(this.adaptedInterceptors);
 
-    // 将手动注册到这个对象中拦截器, 放到 adaptedInterceptors 中.
+    // 将手动注册在 List<Object> 的 Interceptor, 放到 adaptedInterceptors 中.
     initInterceptors();
 }
 
+// 给子类扩展使用, 空实现
 protected void extendInterceptors(List<Object> interceptors) {
 }
 
@@ -249,7 +253,6 @@ protected void initInterceptors() {
 }
 ```
 后面的子类还有自己的初始化逻辑, 有的也会使用initApplicationContext()方法进行初始化逻辑.
-
 
 
 # AbstractUrlHandlerMapping
@@ -397,7 +400,8 @@ protected Object lookupHandler(String urlPath, HttpServletRequest request) throw
             logger.trace("URI variables " + uriTemplateVariables);
         }
 
-        //
+        // 暴露上面解析出来的 path variables, 会以 org.springframework....HandlerMapping.uriTemplateVariables 的名字放在
+        // Request Attribute 中
         return buildPathExposingHandler(handler, bestMatch, pathWithinMapping, uriTemplateVariables);
     }
 

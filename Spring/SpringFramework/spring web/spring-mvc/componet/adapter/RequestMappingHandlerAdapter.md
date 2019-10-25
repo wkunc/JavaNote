@@ -2,7 +2,8 @@
 
 在DispatcherServlet工作的过程中, 会调用本次请求对应的 handlerAdapter.handle()方法.
 RequestMappingHandlerAdapter 继承自 AbstractHandlerMethodAdapter.
-所以其本意就是想要支持 HandlerMethod 类型的 handler.(这个抽象类非常简单, 就不具体分析了)
+所以其本意就是想要支持 HandlerMethod 类型的 handler, 重写了 support() 方法
+(这个抽象类非常简单, 就不具体分析了)
 ```java
 public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) {
     return handleInternal(request, response, (HandlerMethod)handler);
@@ -16,6 +17,9 @@ public final ModelAndView handle(HttpServletRequest request, HttpServletResponse
 
 那么这个 RequestMappingHandlerAdapter 就负责让我们的方法编写起来更加方便.
 超级多, 超级神奇的功能都是它实现的.
+
+方法的执行, 方法参数的自动解析, 方法返回值的解决.
+都是有这个 Adapter 实现的.
 
 当然根据单一职责原则, 它不可能自己实现了如此众多的功能.
 交给具体的模块类实现不同的功能然后组合在一起.
@@ -165,9 +169,9 @@ protected ModelAndView invokeHandlerMethod(HttpServletRequest request,
 
         //2. 创建一个 ModelFactory, 这个工厂在@RequestMapping方法调用前协助model初始化, 
         // 1. 负责根据@SessionAttributes注解尝试从Session获取指定值,
-        // 2.调用 @ModelAttribute 方法填充
+        // 2. 调用 @ModelAttribute 方法填充 model
         // 这里调用的 getModelFactory() 方法只是, 准备需要调用的@ModelAttribute方法, 和@SessionAttributes信息.
-        // 还没有进行执行填充.
+        // 还没有进行执行方法和填充model.
         ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
 
         //3. 创建一个包装器, 为了将这些组件用起来, 包装器设计模式. 核心

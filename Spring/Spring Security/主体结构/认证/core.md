@@ -192,7 +192,8 @@ Spring Security中的默认实现称为ProviderManager, 它不负责处理身份
 
 Spring Security 提供了多个 AuthenticationProvider 实现来负责解析不同类型的 Authentication Token.
 ![](AuthenticationProvider.png)
-我们主要学习 DaoAuthenticationProvider 这个具体实现类.
+我们主要学习 DaoAuthenticationProvider 这个具体实现类, 
+它负责认证的请求类型是 UsernamePasswordAuthenticationToken 及子类
 
 ### DaoAuthenticationProvider
 学习这个类之前需要先学习其父类AbstractUserDetailsAuthenticationProvider.
@@ -257,6 +258,8 @@ public Authentication authenticate(Authentication authentication)
         cacheWasUsed = false;
 
         try {
+            // 从任何地方加载 UserDetails 对象, 由子类实现.
+            // 返回值不能null, 这是接口约定, 找不到用户抛出就抛出UsernameNotFoundException.
             user = retrieveUser(username,
                     (UsernamePasswordAuthenticationToken) authentication);
         }
