@@ -1,25 +1,28 @@
-# RequestMappingHandlerMapping
-![基于注解的HandlerMapping的类图]()
+= RequestMappingHandlerMapping
 
-# AbstractHandlerMethodMapping\<T>
+image:[基于注解的HandlerMapping的类图]
+
+== AbstractHandlerMethodMapping&lt;T&gt;
+
 用于定义request和HandlerMethod之间的映射.
 对于每个已注册的 HandlerMethod 维护唯一的映射关系.
 
 这里的泛型很有意思, 之前的 AbstractUrlHandlerMapping 定义了 url 和 handler 之间的映射关系.
 也就是说它是通过request的请求路径,
 进行判断应该映射到哪一个 handler 对象, 它没有规定Handler的类型
-handler 可以是任何类型, 比如说 HandlerMethod, Controller接口...等等
+handler 可以是任何类型, 比如说 HandlerMethod, Controller接口…等等
 
-但是这个类不同的是, 它没有规定如何映射到handler, 
+但是这个类不同的是, 它没有规定如何映射到handler,
 它只规定了handler的类型, 必须是 HandlerMethod.
 
 并没有规定什么样的信息映射到HandlerMethod, 这一点有子类声明, 当然既然是http request, 我们可以用上面携带的信息进行映射, 就像RequestMappingHnalderMapping子类一样.
 
-我们知道 RequestMapingHandlerMapping 不仅仅通过url来映射request, 
+我们知道 RequestMapingHandlerMapping 不仅仅通过url来映射request,
 还可以用 header, requestParam, cookie 等等做出一系列的具体映射.
 比基于 url 的映射很加的细粒度, 更加自由.
 
-```java
+[source,java]
+----
 public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMapping implements InitializingBean {
 
     // 静态常量
@@ -46,10 +49,12 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	private final MappingRegistry mappingRegistry = new MappingRegistry();
 
 }
-```
+----
 
 实现 getHandlerInternal() 方法
-```java
+
+[source,java]
+----
 protected HandlerMethod getHandlerInternal(HttpServletRequest request) throws Exception {
     String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
     // 从注册表上获取锁, 因为lookupHanlderMethod()方法会访问注册表,为了并发访问的安全性.
@@ -94,6 +99,7 @@ protected HandlerMethod lookupHandlerMethod(String lookupPath, HttpServletReques
             if (logger.isTraceEnabled()) {
                 logger.trace(matches.size() + " matching mappings: " + matches);
             }
+            // 如果是一个CORS预检请求就返回
             if (CorsUtils.isPreFlightRequest(request)) {
                 return PREFLIGHT_AMBIGUOUS_MATCH;
             }
@@ -132,14 +138,14 @@ private void addMatchingMappings(Collection<T> mappings, List<Match> matches, Ht
         }
     }
 }
-```
+----
 
-
-
-## init
+== init
 
 这个类的初始化没有依赖ApplicationContextAware接口, 而是通过 InitlizBean接口时间的
-```java
+
+[source,java]
+----
 public void afterPropertiesSet() {
     initHandlerMethods();
 }
@@ -218,7 +224,6 @@ protected void detectHandlerMethods(Object handler) {
     }
 }
 
-
 // 它会根据传入的Method, Class 生成对用的 T(映射信息), 具体子类已经实现了这个方法.
 // 获取方法上的 @RequestMapping 对象, 然后根据信息生成 RequestMappingInfo.
 protected abstract T getMappingForMethod(Method method, Class<?> handlerType);
@@ -227,7 +232,6 @@ protected abstract T getMappingForMethod(Method method, Class<?> handlerType);
 protected void registerHandlerMethod(Object handler, Method method, T mapping) {
     this.mappingRegistry.register(mapping, handler, method);
 }
-
 
 // 3
 // 为了给子类扩展用的, 在handlerMethod注册完成后调用, 这里简单的打印了一个日志
@@ -238,14 +242,15 @@ protected void handlerMethodsInitialized(Map<T, HandlerMethod> handlerMethods) {
         logger.debug(total + " mappings in " + formatMappingName());
     }
 }
-```
+----
 
+== MappingRegistry
 
-## MappingRegistry
 上面的执行过程和初始化流程中涉及到了 MappingRegistry 这个注册表.(谁让它保存着映射信息呢)
 所以接下来让我们探究一下MappingRegistry是如何保存映射信息.
 
-```java
+[source,java]
+----
 class MappingRegistry {
 
     // 所有信息的总集, 在注册完成其他信息后都会向这里注册一份.
@@ -273,27 +278,33 @@ class MappingRegistry {
 
     // 没有声明构造器 
 }
-```
+----
 
 首先我们看到运行过程中的调用方法
-getMappingByUrl()方法非常的简单, 
-MultiValueMap可以看出 Map\<String, List\<T\>\>的简写.
-所以对其调用 get()方法返回的自然是 List\<T\>.
-```java
+getMappingByUrl()方法非常的简单,
+MultiValueMap可以看出 Map&lt;String, List&lt;T&gt;&gt;的简写.
+所以对其调用 get()方法返回的自然是 List&lt;T&gt;.
+
+[source,java]
+----
 public List<T> getMappingsByUrl(String urlPath) {
     return this.urlLookup.get(urlPath);
 }
-```
+----
 
 这个方法在addMatchingMappings中调用, getMappings().get(T); 的调用获取了 HandlerMethod 组装成 Match对象.
-```java
+
+[source,java]
+----
 public Map<T, HandlerMethod> getMappings() {
     return this.mappingLookup;
 }
-```
+----
 
 这个方法在初始化时注册映射关系时用到.
-```java
+
+[source,java]
+----
 // 这个是上面调用的内部类 mappingRegistry 的方法.
 // 什么有三个参数呢, 想要调用一个 Method 对象, 必须传入其对应的类的实例, 和方法参数. Method.invoke(Object, args); 
 // 这里的 handler 就是我们的被 @Controllor 注解的类的实例对象的BeanName
@@ -351,12 +362,14 @@ public void register(T mapping, Object handler, Method method) {
         this.readWriteLock.writeLock().unlock();
     }
 }
-```
+----
 
-## 总结
+== 总结
 
 AbstractHandlerMethodMapping 中一共有5个抽象方法, 分别在不同的逻辑中调用.
-```java
+
+[source,java]
+----
 
 // 在初始化逻辑中, 用于判断获取的BeanClass是不是目标, 即是否有@Contrllor或@RequestMapping注解.
 protected abstract boolean isHandler(Class<?> beanType);
@@ -375,8 +388,6 @@ protected abstract T getMatchingMapping(T mapping, HttpServletRequest request);
 
 // 在运行时, 用于获取最匹配的选项.
 protected abstract Comparator<T> getMappingComparator(HttpServletRequest request);
-```
+----
 
-
-# RequestMappingInfoHandlerMapping
-
+== RequestMappingInfoHandlerMapping

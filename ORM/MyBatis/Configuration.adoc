@@ -1,4 +1,5 @@
-# Configuration
+= Configuration
+
 我们知道 SqlSessionFactoryBuilder 是Mybatis的启动类,
 然后它主要通过 XML 配置文件或 Configuration 实例来创建 SqlSessionFactory.
 其实Mybatis的XML会被其解析器解析为 Configuration 对象.
@@ -6,7 +7,8 @@
 
 org.apache.ibatis.session.Configuration
 
-```java
+[source,java]
+----
 public class Configuration {
 
   // 这个应该就是对应XML中 <environment> 标签
@@ -107,6 +109,7 @@ public class Configuration {
     this.environment = environment;
   }
 
+  // 唯一构造器.
   public Configuration() {
     // 这就是内建的两个事务管理器的别名
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
@@ -148,69 +151,116 @@ public class Configuration {
   }
 
 }
-```
+----
 
 
+== XMLConfigBuilder
 为了理解它和配置文件的映射关系, 我们在学习一下XML配置文件的解析过程.
 
-```java
+[source,java]
+----
 XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
 Configuration config = parser.parse();
-```
+----
 
-# XMLConfigBuilder
 
-```java
+[source,java]
+----
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
     parseConfiguration(parser.evalNode("/configuration"));
+    // 返回成员变量
     return configuration;
   }
 
   private void parseConfiguration(XNode root) {
     try {
-      // 对应 <properties> 标签, 会调用 configuration.setVariables() 方法.
+      //1 对应 <properties> 标签, 会调用 configuration.setVariables() 方法.
       propertiesElement(root.evalNode("properties"));
 
-      // 对应 <setting> 标签, 这里并不会做设置, 而是在下面 settingsElements() 方法中对属性进行设置.
+      //2 对应 <setting> 标签, 这里并不会做设置, 而是在下面 settingsElements() 方法中对属性进行设置.
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
 
-      // 对应 <typeAliases> 标签, 会向 typeAliases 注册.
+      //3 对应 <typeAliases> 标签, 会向 typeAliases 注册.
       typeAliasesElement(root.evalNode("typeAliases"));
 
-      // 对应 <plugins>, 会调用 configuration.addInterceptor();
+      //4 对应 <plugins>, 会调用 configuration.addInterceptor();
       pluginElement(root.evalNode("plugins"));
 
-      // 对应 <objectFactory>, 会调用 configuration.setObjectFactory
+      //5 对应 <objectFactory>, 会调用 configuration.setObjectFactory
       objectFactoryElement(root.evalNode("objectFactory"));
-      // 对应 <objectWrapperFactory>
+      //6 对应 <objectWrapperFactory>
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
-      // 对应 <relectoryFactory>
+      //7 对应 <relectoryFactory>
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
 
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
 
-      // 对应 environments 标签, 只会加载 default 指定的 environemt 元素
+      //8 对应 environments 标签, 只会加载 default 指定的 environemt 元素
       environmentsElement(root.evalNode("environments"));
 
-      // <databaseIdProvider>
+      //9 <databaseIdProvider>
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
 
-      // <typeHandlers>, 重点
+      //10 <typeHandlers>, 重点
       typeHandlerElement(root.evalNode("typeHandlers"));
 
-      // <mappers>, 重点
+      //11 <mappers>, 重点
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
     }
   }
+----
 
+=== Properties 标签
+
+[source,java]
+----
+/*
+<properties resource="org/mybatis/example/config.properties" url="">
+  <property name="username" value="dev_user"/>
+  <property name="password" value="F2Fa3!33TYyg"/>
+</properties>
+*/
+  private void propertiesElement(XNode context) throws Exception {
+    if (context != null) {
+      // 加载所有子标签 properties 作为属性.
+      Properties defaults = context.getChildrenAsProperties();
+      String resource = context.getStringAttribute("resource");
+      String url = context.getStringAttribute("url");
+      // 不能同时指定 resource 和 url
+      if (resource != null && url != null) {
+        throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
+      }
+      // 用 Resources 去加载对应的属性文件, 本质上是使用 ClassLoader.loadResource()
+      if (resource != null) {
+        defaults.putAll(Resources.getResourceAsProperties(resource));
+      } else if (url != null) {
+        defaults.putAll(Resources.getUrlAsProperties(url));
+      }
+
+      // 如果之前设置过Properties的化, 进行两个properties的合并
+      Properties vars = configuration.getVariables();
+      if (vars != null) {
+        defaults.putAll(vars);
+      }
+      parser.setVariables(defaults);
+      configuration.setVariables(defaults);
+    }
+  }
+----
+
+
+
+
+[source,java]
+----
   // 加载environment
   private void environmentsElement(XNode context) throws Exception {
     if (context != null) {
@@ -263,4 +313,4 @@ Configuration config = parser.parse();
     }
     throw new BuilderException("Environment declaration requires a DataSourceFactory.");
   }
-```
+----

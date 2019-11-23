@@ -8,7 +8,9 @@ public static final Class<?>[] IMPLEMENTATIONS = { JBoss6VFS.class, DefaultVFS.c
 
 public static final List<Class<? extends VFS>> USER_IMPLEMENTATIONS = new ArrayList<Class<? extends VFS>>();
 ```
+
 ```java
+// 私有内部类, 
   private static class VFSHolder {
     static final VFS INSTANCE = createVFS();
 

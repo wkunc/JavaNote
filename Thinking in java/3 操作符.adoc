@@ -1,0 +1,50 @@
+= 操作符
+
+== 关系操作符
+
+== 逻辑操作符
+
+=== 短路
+
+== 直接常量
+
+编译器可以准确地知道需要生成什么类型, 但有时候却是模棱两可的.
+这时候, 必须给编译器一些指示, 用与直接量相关的某些字符来额外增加一些信息.
+
+.Literals.java
+[source,java]
+----
+public class Literals {
+    // 0x 开头就是16进制, 可以使用大写或小写的a-f.
+    int i1 = 0x2f;
+    int i2 = 0x2F;
+
+    // 0 开头是8进制,
+    int i3 = 0177;
+
+    char c = 0xffff;
+    byte b = 0x7f;
+    short s = 0x7fff;
+
+    // 可以使用L或l标识一个数是long类型, 因为一个不超过int表示范围的整数都会被认为是int类型.
+    // 推荐使用L, 因为l容易和1搞混.
+    long n1 = 200L;
+    long n2 = 200l;
+    long n3 = 200;
+
+    float f1 = 1;
+    float f2 = 1F;
+    float f2 = 1f;
+
+    double d1 = 1d;
+    double d2 = 1D;
+}
+----
+=== 指数记数法
+
+== 按位操作符
+
+== 位移操作符
+
+
+

@@ -1,0 +1,13 @@
+= Externalized Configuration (外部化配置)
+
+Spring Boot使您可以外部化配置, 以便可以在不同环境中使用相同的应用程序代码.
+可以使用``属性文件``,``YAML文件``,``环境变量``,``命令行参数``来外部化配置.
+可以使用@Value注解将属性值直接注入到您的Bean中, 可以通过``Environment``抽象方法,
+也可以通过``@ConfigurationProperties``绑定到结构化对象.
+
+
+== Configuring Random Values
+
+== Type-safe Configuration Properties
+
+
