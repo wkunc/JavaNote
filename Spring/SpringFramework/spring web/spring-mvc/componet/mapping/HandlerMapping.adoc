@@ -8,13 +8,13 @@ HandlerMapping 组件负责路由请求到对应的handler上.
 3. bestMatchingPattern
 4. introspectTypeLevelMapping
 
+.HandlerMapping.java
 [source,java]
 ----
 public interface HandlerMapping {
 
     HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception;
 }
-
 ----
 
 getHandler() 方法返回的不是一个Handler, 而是一个 HandlerExecutionChain,
@@ -28,6 +28,7 @@ getHandler() 方法返回的不是一个Handler, 而是一个 HandlerExecutionCh
 
 除了这些getter, setter方法外, 它还有些调用拦截器链的方法.
 
+.HandlerExecutionChain.java
 [source,java]
 ----
 public class HandlerExecutionChain {
@@ -91,17 +92,18 @@ HandlerMapping中的信息是什么配置好的呢?
 
 image:../../imgs/All.png[]
 image:../../imgs/HandlerMapping.png[]
-*AbstractHandlerMapping* 对 HandlerMapping 进行了基本实现,
-它实现了
+*AbstractHandlerMapping* 对 HandlerMapping 进行了基本实现, 它实现了如下几个功能:
+
 1. defaultHandler功能(如果没有映射的, 就使用默认handler, 可以为null)
 2. 拦截器的注册
 3. 以及HandlerExecutionChain应用到对应handler上的能力()
 4. CORS设置和应用.
 这样子类就可以专心实现如何根据请求获得handler的功能.
 
-我们可以把 HandlerMapping 的实现分为两种,
-一种是基于显式url配置的mapping. 由AbstractUrlHandlerMapping定义, 它的子类是定义了如何配置url声明的操作.
-一种是支持注解式编程的RequestMappingHandlerMapping.
+我们可以把``HandlerMapping``的实现分为两种,
+一种是基于显式url配置的mapping. 由``AbstractUrlHandlerMapping``定义,
+它的子类是定义了如何配置url声明的操作.
+一种是支持注解式编程的``RequestMappingHandlerMapping``.
 
 == AbstractHandlerMapping
 
@@ -109,9 +111,9 @@ HandlerMapping 实现的抽象基类实现基本功能, 如: 支持Order语义, 
 HandlerInterceptor, 包括由路径模式映射的处理程序拦截器.
 完成了拦截器的注册和组装, 占了很多行.
 
+.AbstractHandlerMapping.java
 [source,java]
 ----
-
 public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 		implements HandlerMapping, Ordered, BeanNameAware {
     //用来实现默认handler的功能, 当子类实现的getHandlerInternal()方法返回null时就使用默认handler,如果有的话
@@ -145,6 +147,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 实现了, 如果handler对象是String类型, 就会从ApplicationContext中获取对应name的Bean作为Handler.
 最后添加一个 CORS Interceptor
 
+.HandlerExecutionChain.java
 [source,java]
 ----
 public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {

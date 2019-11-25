@@ -1,0 +1,19 @@
+= Run As Authrntication Replacement
+
+
+== RunAsManager
+
+[source,java]
+----
+public interface RunAsManager {
+
+    Authentication buildRunAs(Authentication authentication, Object object, List<ConfigAttribute> config);
+
+    boolean supports(ConfigAttribute attribute);
+
+    boolean supports(Class clazz);
+
+}
+----
+
+
