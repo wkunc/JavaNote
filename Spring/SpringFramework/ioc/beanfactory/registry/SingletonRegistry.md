@@ -1,4 +1,5 @@
-# SingletionBeanRegistry
+# SingletonBeanRegistry
+
 
 为共享 Bean 实例定义注册表接口.
 注意这个接口提供了直接注册对象到IOC容器中的方法, 
@@ -7,23 +8,23 @@ IOC容器中的某些方法(查找判断之类的)不会理会这些注册进来
 ```java
 public interface SingletonBeanRegistry {
     // 注册一个 bean
-    void registerSingletion(String beanName, Object singletonObject);
+    void registerSingleton(String beanName, Object singletonObject);
 
     // 获得指定 name 的 bean
-    Object getSingletion(String beanName);
+    Object getSingleton(String beanName);
 
     // 判断是否有给定 name 的bean
-    boolean containsSingletion(String beanName);
+    boolean containsSingleton(String beanName);
 
     // 获得所有 bean 的注册名
-    String[] getSingletionNames();
+    String[] getSingletonNames();
 
     // 获得注册表中 bean 的数量
     int getSingletOnCount();
 
     // return the singleton mutex used by this registry (for external collaborators).
     // 和线程安全相关, 返回一个用于互斥访问的同步对象.
-    Object getSingletionMutex();
+    Object getSingletonMutex();
 }
 ```
 
@@ -228,10 +229,10 @@ protected void afterSingletonCreation(String beanName) {
 ```
 
 # 注册销毁依赖
-之前提到这个SingtletonBeanRegistry支持按给定顺序销毁 bean 对象.
+之前提到这个SingletonBeanRegistry支持按给定顺序销毁 bean 对象.
 
 ```java
-// 注册 DispoableBean 的对象
+// 注册 DisposableBean 的对象
 public void registerDisposableBean(String beanName, DisposableBean bean) {
     synchronized (this.disposableBeans) {
         this.disposableBeans.put(beanName, bean);

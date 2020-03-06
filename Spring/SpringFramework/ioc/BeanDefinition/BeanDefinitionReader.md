@@ -1,5 +1,5 @@
 # BeanDefinitionReader
-![](imgs/BeanDefinitionReader.PNG)
+![](../imgs/BeanDefinitionReader.PNG)
 
 Simple interface for bean definition readers.
 这个接口负责向 BeanDefinitionRegistry 中注册 BeanDefinition
@@ -18,39 +18,40 @@ public interface BeanDefinitionReader {
     int loadBeanDefinitions(String... locations);
 }
 ```
-# AbstractBeanDefinitionReader
+## AbstractBeanDefinitionReader
 字段和构造器.
 实现了 BeanDefinitionReader 接口. 有一个方法没有实现
 ```java
 public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable, BeanDefinitionReader{
-private final BeanDefinitionRegistry registry;
-private ResourceLoader resourceLoader;
-private ClassLoader beanClassLoader;
-private Environment environment;
-private BeanNameGenerator beanNameGenerator = new DefaultBeanNameGenerator();
+    private final BeanDefinitionRegistry registry;
+    private ResourceLoader resourceLoader;
+    private ClassLoader beanClassLoader;
+    private Environment environment;
+    private BeanNameGenerator beanNameGenerator = new DefaultBeanNameGenerator();
 
-/*
-* 利用BeanDefinitionRegistry进行初始化.
-* 因为在Spring中Application实现了各种接口,
-* 在Spring内部中每次调用这个方法传入的其实都是 BeanFactory 或 ApplicationContext
-* */
-protected AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
-    Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
-    this.registry = registry;
+    /*
+    * 利用BeanDefinitionRegistry进行初始化.
+    * 因为在Spring中Application实现了各种接口,
+    * 在Spring内部中每次调用这个方法传入的其实都是 BeanFactory 或 ApplicationContext
+    * */
+    protected AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
+        Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+        this.registry = registry;
 
-    // Determine ResourceLoader to use.
-    if (this.registry instanceof ResourceLoader) {
-        this.resourceLoader = (ResourceLoader) this.registry;
-    }
-    else {
-        this.resourceLoader = new PathMatchingResourcePatternResolver();
-    }
-    // Inherit Environment if possible
-    if (this.registry instanceof EnvironmentCapable) {
-        this.environment = ((EnvironmentCapable) this.registry).getEnvironment();
-    }
-    else {
-        this.environment = new StandardEnvironment();
+        // Determine ResourceLoader to use.
+        if (this.registry instanceof ResourceLoader) {
+            this.resourceLoader = (ResourceLoader) this.registry;
+        }
+        else {
+            this.resourceLoader = new PathMatchingResourcePatternResolver();
+        }
+        // Inherit Environment if possible
+        if (this.registry instanceof EnvironmentCapable) {
+            this.environment = ((EnvironmentCapable) this.registry).getEnvironment();
+        }
+        else {
+            this.environment = new StandardEnvironment();
+        }
     }
 }
 ```
@@ -122,7 +123,7 @@ protected AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
     }
 }
 
-public loadBeanDefinitions(Resource resource);
+public abstract int loadBeanDefinitions(Resource resource);
 ```
 
 其他load方法底层都依赖于它, 然后把它交给子类实现 (ps:模板方法设计模式)

@@ -1,0 +1,145 @@
+= 高级装配
+
+在自动装配中我们提到了当 spring 中有多个 bean 可以匹配结果的话,自动装配就会失效
+
+这里我们可以将某一个 bean 设置为首选的 (primary) bean,
+或者使用限定符 (qualifier) 来帮助 Spring 将可选的 bean 的范围缩小到只有一个 bean
+
+== 标示首选的 Bean
+
+`@Primary` 显式的配置标注在 @Bean 方法上, 表示这个 bean 是首选的
+
+[source,java]
+----
+@Configuration
+class Config {
+    @Primary
+    @Bean
+    public User user1(){
+        return new User("bill");
+    }
+    @Bean
+    public User user2(){
+        return new User("bob");
+    }
+    @Bean
+    public Order order(User user){
+        Order order = new Order();
+        order.setUser(user);
+        return order;
+    }
+}
+----
+
+自动扫描的配置标注在类上面, 表示这个类是**首选的**
+
+这种方式用在一个接口(父类), 多个实现(子类)之间
+
+[source,java]
+----
+@Primary
+@Component
+public class User {
+    //类的主体
+}
+----
+
+== 限定自动装配的 bean
+
+设置首选 `bean` 的方式可以很好的告诉 `Spring` 我们需要哪一个 `Bean`,避免了 *歧义性*
+
+但是如果我们同时在多个相同类型的 `Bean` 上标注了 `@Primary` ,
+这还是会产生 *歧义性* , 所以我们需要一个更具体的方案来告诉 Spring 我们的想要Bean
+
+`@Qualifier` 注解是使用限定符的主要方式, 它可以和 `@Autowired` 协同使用,
+在注入的时候指定想要注入进去的是哪个 `bean`
+
+=== @Qualifier
+`@Qualifier` 设置的参数就是想要注入的 Bean 的ID,
+准确的讲 `@Qualifier("user")` 所引用的 bean 是具有 String 类型的 "user" 作为限定符,
+
+NOTE: 在没有显式的标注限定符的情况下, Spring 会默认给所有的 Bean 一个默认的限定符, 这个限定符与 Bean 的 ID 相同.
+
+直接用默认的限定符会导致当你重构过程中修改了类名, 就会使相应的自动装配失败,
+此时 `@Qualifier` 和要注入的 bean 的名称是紧耦合的, 对类名的任意改动都会导致限定符失效
+
+[source,java]
+----
+@Component
+public class Order {
+    private User user;
+
+    @Qualifier("user")
+    @Autowired
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+}
+----
+
+=== 创建自定义的限定符
+
+通过 *自定义的限定符* 符我们可以避免和 *类名* 紧耦合
+
+所谓 *自定义的限定符* 就是自己给 Bean 加一个 *限定词* 而不用默认的限定符
+
+所以我们可以通过将 @Qualifier 用在 @Component 注解的类上,
+或者是 @Bean 注解的方法上, 来为我们的 Bean 显示的声明一个限定符
+
+NOTE: @Qualifier 注解放在Bean注册时, 是声明这个Bean的标识符.
+用在装配中, 如果方法参数, 构造器参数中等是表明这里需要指定标识符的Bean.
+
+==== 标注在类上和自动扫描搭配使用
+
+[source,java]
+----
+@Qualifier("Bob")
+@Component
+public class User {
+    private String name;
+    //类主体...
+}
+----
+
+==== 标注在方法上和显式配置搭配使用
+
+[source,java]
+----
+@Qualifier("Bob")
+@Bean
+public User user(){
+    return new User("Bob");
+}
+----
+
+还有一个小问题有两个 bean 的限定符内容是一致的,
+这是还是会导致自动装配的 *歧义性*
+
+为解决这个问题, 我们自然会想到给 bean 加上多个限定符, 来加以区别.
+但是在 *java8* 之前不允许在同一个条目上重复出现相同类型的多个注解
+
+这种方式在 *java8* 之前是不被允许的
+
+[source,java]
+----
+    @Qualifier("Bob")
+    @Qualifier("20")
+    @Bean
+    public User user(){
+        return new User("Bob");
+    }
+----
+
+所以 Spring 体供了 *自定义的限定符注解* 方式来达到上面的目的
+
+注意是 *自定义注解* 而不是 *自定义限定符*
+
+=== 自定义的限定符注解
+
+[source,java]
+----
+@Target({ElmentTyep.CONSTRYCTOR, Elment})
+@Qualifier
+public @interface Bob()
+----

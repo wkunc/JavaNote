@@ -1,21 +1,25 @@
-# BeanDefinition
-![](../imgs/BeanDefinition.PNG)
+= BeanDefinition
+
+image:BeanDefinition.png[]
 
 一个 BeanDefinition 描述了一个 bean 实例, 它具有属性值, 构造参数值,
 
-BeanDefinition 接口继承了 AttributeAccessor(属性访问器) 和 BeanMetadatElement 接口.
-意味着要实现 BeanDefinition 的同时也要实现这两个接口.
+BeanDefinition 接口继承了 `AttributeAccessor(属性访问器)` 和 `BeanMetadataElement` 接口.
+意味着要实现 `BeanDefinition` 的同时也要实现这两个接口.
 Spring提供了上面两个的实现类, 方便实现BeanDefinition接口.
 
 这个接口提供了方法抽象和一些公共变量.
-```java
+
+.BeanDefinition.java
+[source,java]
+----
 public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 
     // Spring定义了两个Scope, 单例和原型不需多讲
 	String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
 	String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-    // 这些常量代表一个BeanDefinition的角色, 是用户自己的Appliction, 还是Spring的内部对象
+    // 这些常量代表一个BeanDefinition的角色, 是用户自己的Application级别的, 还是Spring的内部对象
 	int ROLE_APPLICATION = 0;
 	int ROLE_SUPPORT = 1;
 	int ROLE_INFRASTRUCTURE = 2;
@@ -104,7 +108,6 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	@Nullable
 	String getDescription();
 
-
 	// Read-only attributes
 
     // 是否对应的Scope
@@ -122,32 +125,58 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	BeanDefinition getOriginatingBeanDefinition();
 
 }
-```
-总结一下, BeanDefiniton接口一共定义了14个属性
-* 父定义name
-* BeanClass的全类名
-* Scope
-* LazyInit
-* 
-```java
-String parentName;
-String beanClassName;
-String scope
-boolean isLazyInit
-String[] dependsOn
-boolean isAutowireCandidate
-boolean isPrimary
-String factoryBeanName
-String factroyMethodName
-String initMethod
-String destroyMethod
-int ROLE
-boolean isAbstract
+----
 
-String description
+总结一下, `BeanDefinition` 接口一共定义了14个属性
 
-//
-MutablePropertyValues
-ConstrcutorArgumentValues
-```
+* ParentName: 父定义的名字, 如果有的话.
+* BeanClassName: 当前BeanDefinition的java类的全类名, 可以在运行时被改变. 通过BeanDefinitionProcessor 等手段.
+* Scope: Bean的范围
+* LazyInit: 是否延迟创建
+* DependsOn: 显式依赖的bean的name
+* AutowireCandidate: 是否为其他bean自动装配时的候选人(说人话就是, 在其他bean自动装配的过程中是否会被作为结果传递).
+注意这个选项不会影响名称的显式引用, 即getBean(BeanName)方法任然可以获得到它, 而基于名称的自动装配就是使用这个方法的.所以按名称自动装配任然会将其作为可选的依赖项.
+* Primary: 设置此bean是否为自动装配的主要候选者, 如果多个匹配项都有这个标记, 那么它们是平局.
+* FactoryBeanName: 生成当前bean所指定的工厂方法的工厂beanName. (Java配置的本质就是调用每个 `@Configuration` 类的 `@Bean` 方法)
+* FactoryMethodName: 指定的工厂方法, 如果指定了FactoryBeanName 那么会视为指定的工厂上的方法, 如果没有就会视为一个beanClass指定的类的静态工厂方法.
+* InitMethodName: 指定的bean初始化方法名.
+* DestroyMethodName: 指定的销毁方法.
+* Role: 这个bean的角色, 有application, support, infrastructure
 
+== BeanMetadataElement and AttributeAccessor
+
+`BeanMetadataElement` 定义了一个获取bean定义源头的方法, 对于XML来说, 这里就是对应的配置文件.
+对于Java配置来说, 这里会指向当前 `BeanDefinition` 被声明的配置类.
+
+.BeanMetadataElement.java
+[source,java]
+----
+public interface BeanMetadataElement {
+	@Nullable
+	default Object getSource() {
+		return null;
+	}
+}
+----
+
+这里提供了一个属性访问器的抽象.
+
+.AttributeAccessor.java
+[source,java]
+----
+public interface AttributeAccessor {
+
+	void setAttribute(String name, @Nullable Object value);
+
+	@Nullable
+	Object getAttribute(String name);
+
+	@Nullable
+	Object removeAttribute(String name);
+
+	boolean hasAttribute(String name);
+
+	String[] attributeNames();
+
+}
+----

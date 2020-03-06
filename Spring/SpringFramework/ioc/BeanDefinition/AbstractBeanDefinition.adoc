@@ -1,5 +1,9 @@
-# AbstractBeanDefinition
-```java
+= AbstractBeanDefinition
+
+== 字段
+
+[source,java]
+----
 private volatile Object beanClass;
 private String scope = SCOPE_DEFAULT;
 private boolean abstractFlag = false;
@@ -19,7 +23,6 @@ private Resource resource;
 // 上面的是实现BeanDefinition接口必须定义的属性
 // 还缺一个 parentName, 交给子类实现.
 
-
 private int autowireMode = AUTOWIRE_NO;
 private int dependencyCheck = DEPENDENCY_CHECK_NONE;
 private final Map<String, AutowireCandidateQualifier> qualifiers = new LinkedHashMap<>();
@@ -30,10 +33,12 @@ private MethodOverrides methodOverrides;
 private boolean enforrceInitMethod = true;
 private boolean enforceDestroyMethod = true;
 private boolean synthetic =false;
-```
+----
 
-# 构造器
-```java
+== 构造器
+
+[source,java]
+----
 protected AbstractBeanDefinition() {
     this(null, null);
 }
@@ -91,14 +96,18 @@ protected AbstractBeanDefinition(BeanDefinition original) {
         setResourceDescription(original.getResourceDescription());
     }
 }
-```
+----
 
-# 具体子类
-## RootBeanDefinition
-代表最该高层的BeanDefintion, 不能拥有 parent, 调用 setParentName(beanName) 会报错
+== 具体子类
 
-## ChildBeanDefinition
-代表儿子BeanDefintion, 一定有一个 parent, 因为它的每个构造器都有 parentName 这个参数.
+== RootBeanDefinition
 
-## GenericBeanDefinition
-可以有 parent 也可以没有, 最通用的 BeanDefintion, 如果需要手动注册 BeanDefintion 使用这个子类是不错的选择.
+代表最该高层的BeanDefinition, 不能拥有 parent, 调用 setParentName(beanName) 会报错
+
+== ChildBeanDefinition
+
+代表儿子BeanDefinition, 一定有一个 parent, 因为它的每个构造器都有 parentName 这个参数.
+
+== GenericBeanDefinition
+
+可以有 parent 也可以没有, 最通用的 BeanDefinition, 如果需要手动注册 BeanDefinition 使用这个子类是不错的选择.

@@ -1,7 +1,9 @@
-![](AliasRegistryAndSingletonBeanRegistry.PNG)
+= Registry
 
-# AliasRegistry
-```java
+== AliasRegistry
+
+[source,java]
+----
 public interface AliasRegistry {
 	// 注册别名
 	void registerAlias(String name, String alias);
@@ -12,17 +14,20 @@ public interface AliasRegistry {
 	// 获取别名数组
 	String[] getAliases(String name);
 }
-```
-## SimpleAliasRegistry
+----
+
+=== SimpleAliasRegistry
+
 这个类实现了上面的接口.
 
-首先 alias 不可以一样, 即一个 alias 不能对应两个对象(两个不同的对象不能有相同的别名).
+首先 `alias` 不可以一样, 即一个 `alias` 不能对应两个对象(两个不同的对象不能有相同的别名).
 
-但是 alias 可以有别名, 即 wkunc 的别名是 w, 而 w 的别名可以是 c.
+但是 `alias` 可以有别名, 即 wkunc 的别名是 w, 而 w 的别名可以是 c.
 
 这样 wkunc 的别名就是 w 和 c, 其中 w 是直接别名, c 是间接别名.
 
-```java
+[source,java]
+----
 public class SimpleAliasRegistry implements AliasRegistry {
 
 	/** Map from alias to canonical(典范) name */
@@ -35,16 +40,17 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	public void registerAlias(String name, String alias) {
 		// 省略判断参数是否为空的 Assert 语句....
 		synchronized (this.aliasMap) {
-			// 如果传入的 name 和 别名相同, 则会删除原来的别名
-            // 保障了没有和 正名相同的别名出现
+			// 如果传入的 name 和 alias 相同, 则会删除原来的别名
+            // 保障了没有和正名相同的别名出现
 			if (alias.equals(name)) {
 				this.aliasMap.remove(alias);
 			}
 			else {
-				// 尝试获取传入的 alias 对应的 name.(ps: 如果获得值就要判断是否相同和是否可以覆盖别名)
+				// 尝试获取传入的 alias 对应的 name
+                // .(ps: 如果获得值就要判断是否相同和是否可以覆盖别名)
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
-                    // 如果能取到值就说明,这个 alias 已经有人用了
+                    // 如果能取到值就说明, 这个 alias 已经有人用了
                     // 如果 name 和 registeredName 的名字相同, 就什么也不做
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
@@ -65,7 +71,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		}
 	}
 
-    // 返回是否允许 alias 别名覆盖
+    // 返回是否允许 alias 别名覆盖, 默认可以覆盖.
 	protected boolean allowAliasOverriding() {
 		return true;
 	}
@@ -79,7 +85,8 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		}
 	}
 
-    // 查看 alias 链(就是递归调用),确定 name 是否已经注册了给定 alias, 如果不是还要递归的查看alias的alias
+    // 查看 alias 链(就是递归调用),
+    // 确定 name 是否已经注册了给定 alias, 如果不是还要递归的查看alias的alias
     // 相当重要的方法
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
@@ -142,7 +149,6 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		}
 	}
 
-
 	public void resolveAliases(StringValueResolver valueResolver) {
 		Assert.notNull(valueResolver, "StringValueResolver must not be null");
 		synchronized (this.aliasMap) {
@@ -196,15 +202,34 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 }
-```
+----
 
-# BeanDefinitionRegistry
-```java
-void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
-void removeBeanDefinition(String beanName);
-BeanDefinition getBeanDefinition(String beanName);
-boolean containsBeanDefinition(String beanName);
-String[] getBeanDefinitionNames();
-int getBeanDefinitionCount();
-boolean isBeanNameInUse(String beanName);
-```
+== BeanDefinitionRegistry
+
+作为 `BeanDefinition` 的注册表. 这个接口定义了如何向其注册 `BeanDefinition` 以及移除
+指定 `BeanDefinition` 的方法.
+
+很显然用使用 `Map<String, BeanDefinition>` 就可以实现了, 再考虑线程安全所以使用
+`ConcurrentHashMap` 作为使用的具体实现.
+
+[source,java]
+----
+public interface BeanDefinitionRegistry extends AliasRegistry {
+
+	void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+			throws BeanDefinitionStoreException;
+
+	void removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+
+	BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+
+	boolean containsBeanDefinition(String beanName);
+
+	String[] getBeanDefinitionNames();
+
+	int getBeanDefinitionCount();
+
+	boolean isBeanNameInUse(String beanName);
+
+}
+----
