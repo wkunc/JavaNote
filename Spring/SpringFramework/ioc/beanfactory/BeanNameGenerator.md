@@ -9,6 +9,13 @@ public interface BeanNameGenerator {
 这个接口有两个实现
 ```java
 // 委托给 BeanDefinitionReaderUtils.generateBeanName() 方法实现
+/**
+* 总结生成规则:1
+* 1. 如果是普通的 BeanDefinition. 那么就是对应的 java class 的全类名
+* 2. 如果是 FactoryBean 创建的Bean, 那么就是对应的 FactoryBean 在IOC中的名字后面拼接 $created
+* 3. 如果是通过继承<bean extend = ""/>声明的, 那么也拿不到直接的class, 就是获取父定义的class 后面拼接 $chlid
+* 4. 最后, 如果同一个 class 在IOC中注册了多个, 那么按照顺序在后面拼接 #count, 计数从0开始
+*/
 public class DefaultBeanNameGenerator implements BeanNameGenerator {
     public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry){
         return BeanDefinitionReaderUtils.generateBeanName(definition, registry);
@@ -62,12 +69,14 @@ public static String generateBeanName(
 }
 ```
 
+这个就是为了的基于注解配置自动beanName生成器.
 ```java
 public class AnnotationBeanNameGenerator implements BeanNameGenerator {
     private static final String COMPONENT_ANNOTATION_CLASSNAME = "org.springframework.stereotype.Component";
 
     @Override
     public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry){
+        // 要求 bean definition 必须是 AnnoteatedBeanDefinition
         if (definition instanceof AnnotatedBeanDefinition) {
             String beanName = determineBEanNameFromAnnotation((AnnotatedBeanDefinition) definition);
             if (StringUtils.hasText(beanName)) {

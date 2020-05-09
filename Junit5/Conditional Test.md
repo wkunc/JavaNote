@@ -1,4 +1,4 @@
-# Conditional Test Execution
+# Conditional Test Execution (条件测试执行)
 
 ``ExecutionCondition``扩展 API 在JUnit Jupiter中允许开发者是否 enable 或者
 disable 一个容器(一个测试类?)或者测试.

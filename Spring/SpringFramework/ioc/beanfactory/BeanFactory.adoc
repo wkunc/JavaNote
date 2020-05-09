@@ -1,6 +1,6 @@
 = BeanFactory
 
-image:DefaultListableBeanFactory.png[]
+image:./images/DefaultListableBeanFactory.png[]
 它是 Spring bean container 的 root interface 
 
 它主要定义了一系列的 getBean() 方法
@@ -54,6 +54,7 @@ public interface BeanFactory {
 == ListableBeanFactory
 
 定义了访问容器中 Bean 基本信息的若干方法
+比如获取容器中 BeanDefinition 的个数
 
 [source,java]
 ----
@@ -135,8 +136,9 @@ public interface ConfigurableBeanFactory extends HierarchiaclBeanFactory, Single
 == AutowireCapableBeanFactory
 
 自动装配的 BeanFactory. 这个接口是暴露了内部自动装配的方法, 不是给常规的应用使用的.
-通常给哪些其他框架, 不能由Spring控制生命周期的Bean提供依赖注入的地方.
-即那些Bean不是由Spring控制的, 但Spring可以给它们提供所需的组件bean.
+通常给那些其他框架使用, 不能由 Spring 控制生命周期的Bean提供依赖注入的地方.
+即那些Bean不是由 Spring 创建的, 但Spring可以给它们提供所需的组件bean.
+也就是可以通过这个接口中定义的方法来 "手动" 装配一个组件
 
 [source,java]
 ----

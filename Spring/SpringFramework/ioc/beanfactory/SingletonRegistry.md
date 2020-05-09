@@ -1,6 +1,5 @@
 # SingletonBeanRegistry
 
-
 为共享 Bean 实例定义注册表接口.
 注意这个接口提供了直接注册对象到IOC容器中的方法, 
 也意味着IOC容器不会控制这个对象的生命周期.
@@ -28,19 +27,20 @@ public interface SingletonBeanRegistry {
 }
 ```
 
-# DefaultSingletonBeanRegistry 
+## DefaultSingletonBeanRegistry 
 Spring提供了 DefaultSingletonBeanRegistry 实现了这个接口.
 
-共享 bean 实例的通用注册表, 实现SingletonBeanRegistry.
+共享 bean 实例的通用注册表, 实现 SingletonBeanRegistry 接口.
 允许通过 bean 名称注册应该为注册表的所有调用者共享的单例实例.
-还支持在关闭注册表时销毁DisposableBean实例(可能对应于已注册的单例，也可能不对应于已注册的单例)
+还支持在关闭注册表时销毁实现了 DisposableBean 接口的实例(可能对应于已注册的单例，也可能不对应于已注册的单例)
 
 可以注册bean之间的依赖关系以强制执行适当的关闭顺序.(ps: )
-该类主要用作org.springframework.beans.factory.BeanFactory实现的基类, 分解了单例bean实例的公共管理.
+该类主要用作org.springframework.beans.factory.BeanFactory实现的基类,
+分解了单例bean实例的公共管理.  以便以统一的方式公开其单例管理工具
 
 ## 字段分析
 ```java
-
+// 继承 SimpleAliasRegistry 实现 SingletonBeanRegistry 接口
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
     // 存放已注册的的Bean实例, key beanName, value Object
@@ -63,6 +63,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Set<String> inCreationCheckExclusions =
 			Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(16));
 
+    // 用来保存创建某个 Singleton Bean 时发生的完整异常栈
 	private Set<Exception> suppressedExceptions;
 
 	/** Flag that indicates whether we're currently within destroySingletons */
@@ -146,13 +147,15 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
     }
     return singletonObject;
 }
+
 // 返回给定beanName对应的 bean 是否正在被实例化.
 public boolean isSingletonCurrentlyInCreation(String beanName) {
     return this.singletonsCurrentlyInCreation.contains(beanName);
 }
 
-// 这是类中补的方法, 给定name返回底层已经注册的bean,
-//如果name没有注册bean, 就创建并注册一个
+// 这是自定义的方法, 获取给定 name 返回底层已经注册的bean,
+// 如果没有, 就创建并注册一个.
+// 这个方法将获取与注册合并在一起, 后期BeanFactory实现 getBean() 时就会调用这个方法.
 public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
     Assert.notNull(beanName, "Bean name must not be null");
     synchronized (this.singletonObjects) {
@@ -160,7 +163,8 @@ public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
         Object singletonObject = this.singletonObjects.get(beanName);
         // 没有获取到就开始创建并注册
         if (singletonObject == null) {
-            // 如果当前 beanFactory 真正销毁单例对象, 则不允许创建, 并警告不要在 BeanFactoy 销毁方法时,请求一个 bean.
+            // 如果当前 beanFactory 处于正在关闭状态, 则不允许创建.
+            // 并警告不要在 BeanFactoy 销毁方法时, 请求一个 bean.
             if (this.singletonsCurrentlyInDestruction) {
                 throw new BeanCreationNotAllowedException(beanName,
                         "Singleton bean creation not allowed while singletons of this factory are in destruction " +
@@ -204,10 +208,12 @@ public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
                 if (recordSuppressedExceptions) {
                     this.suppressedExceptions = null;
                 }
-                // 创建bean完成后的回调, 默认实现是标记bean不是正在创建中
+                // 创建bean完成后的回调, 默认实现是标记 bean 不是正在创建中
                 // (就是将 beanName 从 singltonsCurrentlyInCreation 中移除.)
+                // 和 beforeSingletonCreation(beanName); 相对的逻辑
                 afterSingletonCreation(beanName);
             }
+            // 创建完成, 注册到单例map中
             if (newSingleton) {
                 addSingleton(beanName, singletonObject);
             }
@@ -304,8 +310,11 @@ private boolean isDependent(String beanName, String dependentBeanName, @Nullable
 }
 
 ```
-# FactoryBeanRegistrySupport
-在支持注册单例bean的基础上添加了对 interface- FactoryBean<?> 的支持
+
+## FactoryBeanRegistrySupport
+
+在支持注册单例bean的基础上添加了对 FactoryBean<?> 接口的支持
+
 ```java
 public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanRegistry {
 

@@ -1,6 +1,7 @@
 = Registry
 
 == AliasRegistry
+用于管理别名的接口, 作为 BeanDefinitionRegistry 的 supper-interface
 
 [source,java]
 ----
@@ -51,22 +52,23 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
                     // 如果能取到值就说明, 这个 alias 已经有人用了
-                    // 如果 name 和 registeredName 的名字相同, 就什么也不做
+                    // 如果 name 和 别名当前对应 registeredName 相同
+					// 那么就无需重复注册, 什么也不做.
 					if (registeredName.equals(name)) {
-						// An existing alias - no need to re-register
 						return;
 					}
-                    // 如果 name 和 registeredName 不同,就判断是否允许别名覆盖(ps:如果不允许别名覆盖就会抛出异常, 默认允许true)
+                    // 如果 name 和 registeredName 不同
+					// 就判断是否允许别名覆盖(ps: 默认允许true)
 					if (!allowAliasOverriding()) {
 						throw new IllegalStateException("Cannot register alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
 					}
+					// 检查别名循环
+					// registerAlias("w", "c");
+					// registerAlias("c", "w"); 这是就导致了别名循环会报错
+					checkForAliasCircle(name, alias);
+					this.aliasMap.put(alias, name);
 				}
-                // 检查别名循环
-                // registerAlias("w", "c");
-                // registerAlias("c", "w"); 这是就导致了别名循环会报错
-				checkForAliasCircle(name, alias);
-				this.aliasMap.put(alias, name);
 			}
 		}
 	}
@@ -86,7 +88,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
     // 查看 alias 链(就是递归调用),
-    // 确定 name 是否已经注册了给定 alias, 如果不是还要递归的查看alias的alias
+    // 确定 name 是否已经注册了给定 alias, 如果不是还要递归的查看 alias 的 alias
     // 相当重要的方法
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {

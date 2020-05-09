@@ -1,5 +1,48 @@
-# Core component
-主要介绍核心接口及其实现.
+# Architecture Component (构建组件)
+
+1. SecurityContextHolder
+2. SecurityContext
+3. Authentication
+4. GrantedAuthority
+5. ProviderManager
+6. AuthenticationProvider
+7. Request Credentials with AuthenticationEntryPoint
+8. AbstractAuthenticationProcessingFilter
+
+## SecurityContextHolder
+Spring Security 认证模型的核心是 SecurityContextHolder. 
+它包含 SecurityContext
+
+![](securitycontextholder.png)
+
+
+Spring Security在SecurityContextHolder中存储用于通过认证的人员的详细信息.
+Spring Security并不关心如何填充SecurityContextHolder.
+如果它包含一个值, 那么它将用作当前通过身份验证的用户.
+
+指示用户已经通过认证的最简单方法是直接设置SecurityContextHolder
+
+```java
+SecurityContext context = SecurityContexHolder.createEmptyContext();
+Authentication authentication = new TestAuthenticationToken("username", "password", "ROLE_USER");
+context.setAuthentication(authentication);
+
+SecurityContextHolder.setContext(context);
+```
+
+
+
+# Authentication Mechanisms (认证机制)
+
+1. Username and Password
+2. OAuth 2.0 Login
+3. SAML 2.0 Login
+4. Central Authentication Server (CAS)
+5. Remember Me
+6. JAAS Authentication
+7. OpenID
+8. Pre-Authentication Scenarios
+9. X509 Authentication
 
 # AuthenticationManager
 负责处理一次 authentication request (认证请求).
@@ -346,5 +389,4 @@ protected Authentication createSuccessAuthentication(Object principal,
     return result;
 }
 ```
-
 
