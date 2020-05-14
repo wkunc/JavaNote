@@ -30,6 +30,14 @@ context.setAuthentication(authentication);
 SecurityContextHolder.setContext(context);
 ```
 
+# GrantedAuthority (授予的权限)
+
+`GrantedAuthority`是授予角色的高级权限.
+role 或者 scopes 是最常见的例子
+可以通过 Authentication.getAuthorities() 方法获得.
+
+GrantedAuthoriity是授予 principal(主体)的权限, 此类权限通常是 role
+
 
 
 # Authentication Mechanisms (认证机制)
