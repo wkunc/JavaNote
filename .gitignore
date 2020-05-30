@@ -6,3 +6,5 @@
 *.iws
 *.iml
 *.ipr
+# 忽略MacOS
+\.DS_Store

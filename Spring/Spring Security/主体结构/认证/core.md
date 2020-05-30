@@ -39,19 +39,6 @@ role 或者 scopes 是最常见的例子
 GrantedAuthoriity是授予 principal(主体)的权限, 此类权限通常是 role
 
 
-
-# Authentication Mechanisms (认证机制)
-
-1. Username and Password
-2. OAuth 2.0 Login
-3. SAML 2.0 Login
-4. Central Authentication Server (CAS)
-5. Remember Me
-6. JAAS Authentication
-7. OpenID
-8. Pre-Authentication Scenarios
-9. X509 Authentication
-
 # AuthenticationManager
 负责处理一次 authentication request (认证请求).
 
@@ -70,7 +57,40 @@ public interface AuthenticationManager {
 }
 ```
 
-## Authentication
+# ProviderManager 
+Spring Security中的`AuthenticationManager`默认实现称为ProviderManager,
+它不负责处理身份验证请求本身.
+而是委托给内部的已配置的 `AuthenticationProvider` 列表.
+每个验证提供者依次查询它们是否可以执行身份验证,
+每个提供程序将抛出异常或返回完全填充的 Authentication 对象.
+
+使用这种设计的原因是, 每个AuthenticationProvider都知道如何执行特定类型的身份验证.
+例如: 一个AuthenticationProvider 可能可以验证 Username/Password, 而另一个可能可以验证SAML断言.
+这允许每个AuthenticationProvider进行非常特定的身份验证, 同时支持多种身份验证, 并且只公开一个AuthenticationManager bean.
+
+ProviderManager还允许配置可选的 parent AuthenticationManager, 
+如果当前没有可以执行的AuthenticationProvider, 就询问parent.
+
+这种设计的最大目的就是保证灵活性
+
+
+
+# AuthenticationProvider
+可以将多个 AuthenticationProvider 注入 ProviderManager . 
+每个AuthenticationProvider执行特定的身份验证类型.
+例如: DaoAuthenticationProvider 支持基于 username/password 形式的身份验证.
+而 JwtAuthenticationProvider 支持对JWT令牌的身份验证.
+
+处理身份验证请求的最常用方法是加载相应的UserDetails并检查加载密码与用户输入的密码是否一致.
+这是 DaoAuthenticationProvider 使用的方法. 
+加载的 UserDetails 对象特别是它包含的权限列表会在构建完全填充的 Authentication 对象时使用.
+
+Spring Security 提供了多个 AuthenticationProvider 实现来负责解析不同类型的 Authentication Token.
+![](AuthenticationProvider.png)
+我们主要学习 DaoAuthenticationProvider 这个具体实现类, 
+它负责认证的请求类型是 UsernamePasswordAuthenticationToken 及子类
+
+# Authentication
 ![](authentication.png)
 从 java.security.Principal 继续而来, 代表一次认证请求成功后的 token. 
 
@@ -112,7 +132,70 @@ public interface Authentication extends Principal, Serializable {
 }
 ```
 
-### 具体实现
+# Request Credentials with `AuthenticationEntryPoint`
+AuthenticationEntryPoint用于发送HTTP响应, 以从客户端请求凭据.
+
+
+# AbstractAuthenticationProcessingFilter
+
+
+
+# Authentication Mechanisms (认证机制)
+
+1. Username and Password
+2. OAuth 2.0 Login
+3. SAML 2.0 Login
+4. Central Authentication Server (CAS)
+5. Remember Me
+6. JAAS Authentication
+7. OpenID
+8. Pre-Authentication Scenarios
+9. X509 Authentication
+
+
+
+### DaoAuthenticationProvider
+学习这个类之前需要先学习其父类AbstractUserDetailsAuthenticationProvider.
+这个抽象父类定义了如何与 UserDetails 交互, 但是没有定义如何加载UserDetails.
+该类负责响应 UsernamePasswordAuthenticationToken 类型的身份验证请求.
+验证成功后将创建 UsernamePasswordAuthenticationToken 并将其返回给调用者.
+返回的令牌使用*用户名字符串*或*UserDetails*作为其主体(就是Token 中的 principal 字段会是字符串或UserDetails对象).
+不过默认都是UserDetails(因为可以访问其他属性, 如电子邮件地址, 人性化的名称等).
+可以通过设置boolean 标志**forcePrincipalAsString**来修改此行为.
+
+通过存储放置在UserCache中的UserDetails对象来实现缓存功能,
+这样可以确保可以验证具有相同用户名的后续请求, 而无需查询UserDetailsService.
+应该注意的是, 如果用户似乎提供了错误的密码, 将查询UserDetailsService以确保比较的最新密码.
+只有无状态应用程序才需要缓存. 例如: 在普通Web应用程序中, SecurityContext存储在Session中,
+并不会在每个请求上重新验证用户. 因此, 默认缓存实现是NullUserCache(就是不缓存).
+
+```java
+
+public abstract class AbstractUserDetailsAuthenticationProvider implements
+		AuthenticationProvider, InitializingBean, MessageSourceAware {
+
+	protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
+
+    // 用于实现缓存机制的接口实例.
+	private UserCache userCache = new NullUserCache();
+    // 两个控制行为的布尔标志,
+    // 一个控制是否用String表示token中的主体,
+    // 一个控制是否要暴露账号找不到异常(默认是不暴露, 防止被有心人利用, 会将账号找不到异常变成错误密码异常)
+	private boolean forcePrincipalAsString = false;
+	protected boolean hideUserNotFoundExceptions = true;
+
+    // 两个用于先后检查Token的接口实例, 是同一个接口的实习, 只是使用的先后不同说明字段名不同.
+    // 
+	private UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
+	private UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
+	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
+
+}
+```
+
+
+## 具体实现
+
 所有具体类的抽象父类, 负责完成以下公有的功能.
 1. 保存权限列表
 2. 是否经过认证标志
@@ -397,4 +480,11 @@ protected Authentication createSuccessAuthentication(Object principal,
     return result;
 }
 ```
+
+
+
+
+
+## 认证机制
+
 
