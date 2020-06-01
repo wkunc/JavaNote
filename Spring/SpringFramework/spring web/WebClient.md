@@ -75,4 +75,122 @@ protected <T> T doExecute(URI url, @Nullable HttpMethod method, @Nullable Reques
     }
 }
 ```
+# RestTemplate 具体实现
 
+## HttpAccessor
+
+```java
+public abstract class HttpAccessor {
+
+    private ClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+    // 5.2 添加的新接口, 与 ClientHttpRequestInterceptor 相比不需要将 request body 加载到内存.
+    private final List<ClientHttpRequestInitializer> clientHttpRequestInitializers = new ArrayList<>();
+
+	public void setRequestFactory(ClientHttpRequestFactory requestFactory) {
+		Assert.notNull(requestFactory, "ClientHttpRequestFactory must not be null");
+		this.requestFactory = requestFactory;
+	}
+
+	public ClientHttpRequestFactory getRequestFactory() {
+		return this.requestFactory;
+	}
+
+	public void setClientHttpRequestInitializers(
+			List<ClientHttpRequestInitializer> clientHttpRequestInitializers) {
+
+		if (this.clientHttpRequestInitializers != clientHttpRequestInitializers) {
+			this.clientHttpRequestInitializers.clear();
+			this.clientHttpRequestInitializers.addAll(clientHttpRequestInitializers);
+			AnnotationAwareOrderComparator.sort(this.clientHttpRequestInitializers);
+		}
+	}
+
+
+	public List<ClientHttpRequestInitializer> getClientHttpRequestInitializers() {
+		return this.clientHttpRequestInitializers;
+	}
+
+    // 主要逻辑, 调用RequestFactory创建 ClientHttpRequest 后使用初始化器进行初始化
+    // 比较特殊的点是 通过 getRequestFactory() 方法获取 ClientFactory, 而不是直接访问字段
+    // 
+	protected ClientHttpRequest createRequest(URI url, HttpMethod method) throws IOException {
+		ClientHttpRequest request = getRequestFactory().createRequest(url, method);
+		initialize(request);
+		if (logger.isDebugEnabled()) {
+			logger.debug("HTTP " + method.name() + " " + url);
+		}
+		return request;
+	}
+
+	private void initialize(ClientHttpRequest request) {
+		this.clientHttpRequestInitializers.forEach(initializer -> initializer.initialize(request));
+	}
+}
+
+public interface ClientHttpRequestInitializer {
+    void initialize(ClientHttpRequest request);
+}
+```
+
+```java
+public abstract class InterceptingHttpAccessor extends HttpAccessor {
+
+	private final List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
+
+	@Nullable
+	private volatile ClientHttpRequestFactory interceptingRequestFactory;
+
+
+	public void setInterceptors(List<ClientHttpRequestInterceptor> interceptors) {
+		// Take getInterceptors() List as-is when passed in here
+		if (this.interceptors != interceptors) {
+			this.interceptors.clear();
+			this.interceptors.addAll(interceptors);
+			AnnotationAwareOrderComparator.sort(this.interceptors);
+		}
+	}
+
+	public List<ClientHttpRequestInterceptor> getInterceptors() {
+		return this.interceptors;
+	}
+
+	@Override
+	public void setRequestFactory(ClientHttpRequestFactory requestFactory) {
+		super.setRequestFactory(requestFactory);
+		this.interceptingRequestFactory = null;
+	}
+
+	@Override
+	public ClientHttpRequestFactory getRequestFactory() {
+		List<ClientHttpRequestInterceptor> interceptors = getInterceptors();
+		if (!CollectionUtils.isEmpty(interceptors)) {
+			ClientHttpRequestFactory factory = this.interceptingRequestFactory;
+			if (factory == null) {
+				factory = new InterceptingClientHttpRequestFactory(super.getRequestFactory(), interceptors);
+				this.interceptingRequestFactory = factory;
+			}
+			return factory;
+		}
+		else {
+			return super.getRequestFactory();
+		}
+	}
+
+}
+```
+
+## ClientHttpRequestFactory
+上面 HttpAccessor 到 InterceptingHttpAccessor, 都用到了 ClientHttpRequestFactory 抽象
+
+```java
+public interface ClientHttpRequestFactory {
+
+    ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException;
+
+}
+
+public interface ClientHttpRequest {
+
+}
+```
