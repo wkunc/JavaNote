@@ -12,6 +12,12 @@ META-INF/spring.factories文件.
 很显然, loadFactories() 会用到 loadFactoryNames().
 首先加载所有注册的类名, 然后为每个类进行实例化.
 ```java
+/*
+* 框架内部通用的目标 factory 加载机制.
+* "META-INF/spring.factories"
+* 采用 Properties 格式, key 是 interface or abstract class 的全限定名.
+* value 是 用`,`分割的具体实现类列表
+*/
 public final class SpringFactoriesLoader {
 
 	public static final String FACTORIES_RESOURCE_LOCATION = "META-INF/spring.factories";
@@ -19,6 +25,7 @@ public final class SpringFactoriesLoader {
 
 	private static final Log logger = LogFactory.getLog(SpringFactoriesLoader.class);
 
+    // 缓存
 	private static final Map<ClassLoader, MultiValueMap<String, String>> cache = new ConcurrentReferenceHashMap<>();
 
 
@@ -61,6 +68,8 @@ public final class SpringFactoriesLoader {
     /*
     * 首先这个类有缓存, 也就说基本上只会加载一次.
     * 
+    * 利用缓存
+    * 返回的内容相当与所有的 META-INF/spring.factories 文件的内存表示
     */
 	private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
 		MultiValueMap<String, String> result = cache.get(classLoader);
