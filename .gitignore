@@ -1,5 +1,6 @@
 # 忽略vim的备份文件
 *~
+*.swp
 
 # 忽略idea
 .idea
