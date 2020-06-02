@@ -32,15 +32,18 @@ public final class SpringFactoriesLoader {
 		if (classLoaderToUse == null) {
 			classLoaderToUse = SpringFactoriesLoader.class.getClassLoader();
 		}
-        // 使用另一个公开方法, 获取所有需要实例化的全类名
+
+        // 使用另一个公开方法 loadFactoryNames , 获取所有需要实例化的全类名
 		List<String> factoryNames = loadFactoryNames(factoryClass, classLoaderToUse);
 		if (logger.isTraceEnabled()) {
 			logger.trace("Loaded [" + factoryClass.getName() + "] names: " + factoryNames);
 		}
 		List<T> result = new ArrayList<>(factoryNames.size());
-        // 为每个加载到的 全类名调用私有的 instantiateFactory() 方法进行实例化.
+
+        // 为每个加载到的 全类名调用 private instantiateFactory() 方法进行实例化.
         // 逻辑很简单, 就是Class.forName()加载类, 然后class.getDeclaredConstructor()获取默认构造器.
         // 然后 constructor.newInstance();
+        // 也就是说目标类必须有默认构造器(空构造器)
 		for (String factoryName : factoryNames) {
 			result.add(instantiateFactory(factoryName, factoryClass, classLoaderToUse));
 		}
@@ -55,6 +58,10 @@ public final class SpringFactoriesLoader {
 		return loadSpringFactories(classLoader).getOrDefault(factoryClassName, Collections.emptyList());
 	}
 
+    /*
+    * 首先这个类有缓存, 也就说基本上只会加载一次.
+    * 
+    */
 	private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
 		MultiValueMap<String, String> result = cache.get(classLoader);
 		if (result != null) {
@@ -62,6 +69,7 @@ public final class SpringFactoriesLoader {
 		}
 
 		try {
+            // 获取所有的 META-INF/spring.factories 文件路径.
 			Enumeration<URL> urls = (classLoader != null ?
 					classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
 					ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));

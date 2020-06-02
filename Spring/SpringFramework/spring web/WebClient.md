@@ -17,6 +17,32 @@
 
 这些方法最后都是调用 execute(),
 execute() 最后又都是调用一个内部方法 doExecute()
+
+首先学习两个简单的函数式接口. 分别表示对request, response的处理.
+```java
+/**
+ * 请求时回调接口, 允许操作 request Header, 或者 request Body.
+ *
+ * 在 RestTemplate 内部使用, 也可以用于应用程序代码.
+ * 提供的工厂方法
+ * 1. RestTemplate.acceptHeaderRequestCallback(Class)
+ * 2. RestTemplate.httpEntityCallback(Object)
+ * 3. RestTemplate.httpEntityCallback(Object, Type)
+ */
+public interface RequestCallback { 
+ 
+	void doWithRequest(ClientHttpRequest request) throws IOException;
+
+}
+
+public interface ResponseExtractor {
+
+	@Nullable
+	T extractData(ClientHttpResponse response) throws IOException;
+
+}
+```
+
 ```java
 public <T> T execute(String url, HttpMethod method, @Nullable RequestCallback requestCallback,
         @Nullable ResponseExtractor<T> responseExtractor, Object... uriVariables) throws RestClientException {
