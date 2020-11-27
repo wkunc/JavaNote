@@ -126,6 +126,7 @@ protected void onRefresh(ApplicationContext context) {
 // 这些初始化方法的逻辑基本都是, 从传入的 context 中获取想要类型,名字的Bean,
 // 如果Context中没有,就根据默认配置创建指定的Bean.
 // 默认配置由一个叫defaultStartegies的Properties的对象维护
+// 实际上就是一个类加载时加载到内存的属性文件, 位于 spring-webmvc 包内
 protected void initStartegies(ApplicationContext context) {
     // 初始化文件解析器
     initMultipartResolver(context);
@@ -139,12 +140,13 @@ protected void initStartegies(ApplicationContext context) {
     initHandlerAdapters(context);
     // 异常处理器
     initHandlerExceptionResolvers(context);
-    // 翻译器
+    // 翻译器, 当使用 @Controller 处理请求,
+    // 但是 handler 方法没有明确指明 viewName. 
+    // 通过这个翻译器会将请求的文件扩展名去除作为viewName
     intiRequestToViewNameTranslator(context);
     // 视图解析器
     initViewResolvers(context);
     // flash属性管理器
     initFlashMapManager(context);
 }
-
 ```

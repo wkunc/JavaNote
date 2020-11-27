@@ -1,5 +1,6 @@
 # OpenFegin
-Feign is a Java to HTTP client binder inspired by Retrofit, JAXRS-2.0, and WebSocket. Feign's first goal was reducing the complexity of binding Denominator uniformly to HTTP APIs regardless of ReSTfulness.
+Feign is a Java to HTTP client binder inspired by Retrofit, JAXRS-2.0, and WebSocket.
+Feign's first goal was reducing the complexity of binding Denominator uniformly to HTTP APIs regardless of ReSTfulness.
 
 Feign 是受到 Retrofit, JAXRS-2.0 和 WebSokcet 启发的.
 Java 到 HttpClient 端绑定程序. Feign的目标是减少与Restfulness 无关的的事情.
