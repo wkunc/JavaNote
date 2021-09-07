@@ -5,6 +5,10 @@ spring-web 模块也提供了 reactive web Application 的基础.
 对于一次请求处理的过程, 我们有两个级别的支持.
 1. HttpHandler, 具有非阻塞I/O和Reactive Stream的 HTTP 请求处理抽象.
 它是一个低级别的抽象, 基本和基于 servlet 的抽象没什么区别.
+以及用于 Reactor Netty(TomcatHttpHandlerAdapter), Undertow(UndertowHttpHandlerAdapter),
+Tomcat(TomcatHttpHandlerAdapter), Jetty(JettyHttpHandlerAdapter),
+Servlet(TomcatHttpHandlerAdapter) 的 adapter.
+
 2. WebHandler, 用于请求处理, 在此基础上构建具体的编程模型.
 
 
@@ -17,7 +21,7 @@ public interface HttpHandler {
 }
 ```
 
-不管是什么服务器, 都能从 HttpHandler 加上何时的adapter启动.
+不管是什么服务器, 都能从 HttpHandler 加上合适的adapter启动.
 > Reactor Netty
 > ```java
 > HttpHandler handler = ...
