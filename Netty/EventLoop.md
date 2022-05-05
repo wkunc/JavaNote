@@ -50,21 +50,31 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
     }
 
-
+    // nThreads 需要的线程数量
+    // 内部的Executor
+    // EventExecutor选择器工厂. 
+    // 默认会根据线程数量返回不同的 Chooser (通用的和2的n次方版本)
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
                                             EventExecutorChooserFactory chooserFactory, Object... args) {
         checkPositive(nThreads, "nThreads");
 
+        // 如果 executor 为null使用默认的 Executor.
+        // 简单的使用给定的 ThreadFactory 创建线程然后start的Executor
+        // TODO DefaultThreadFactory, FastThreadLocalThread. 
         if (executor == null) {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
+        // 初始化子 EventExecutor 数组长度
         children = new EventExecutor[nThreads];
 
+        // 循环创建每一个 EventExecutor
+        // 如果某一个子 EventExecutor 创建失败了
+        // 通过调用 EventExecutor.shutdownGracefully() 关闭之前创建的 
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
-                // 调用抽象方法
+                // 调用抽象方法, 将 Executor 和 args 参数传入
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
@@ -92,8 +102,14 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         }
 
+        // 创建 Chooseer. 默认通过数组长度确定
         chooser = chooserFactory.newChooser(children);
 
+        // 创建子EventExector终止事件监听器.
+        // 终结后增加 terminatedChildren 计数器, 
+        // 当计数器和子EventExector数组长度一样相等时,
+        // 意味着所有的Children都已经关闭了,
+        // 将这个 EventExectoryGroup 的termainationFuture设置为true
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
