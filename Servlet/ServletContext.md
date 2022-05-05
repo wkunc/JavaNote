@@ -12,7 +12,7 @@ ServletContext 是 Web 服务器中已知路径的根
 
 未完待续...
 ## 初始化参数
-Serlvet 接口的一下方法允许,servlet 获得 Webapp 在部署时的初始化参数
+Servlet 接口的一下方法允许,servlet 获得 Webapp 在部署时的初始化参数
 ```java
 public String getInitParameter(String name);
 public Enumeratoin<String> getInitParameterNames();

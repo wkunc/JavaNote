@@ -11,7 +11,7 @@
 5. interval()
 
 
-## subscribe moethod
+## subscribe method
 
 ```java
 // 1. 订阅并触发序列

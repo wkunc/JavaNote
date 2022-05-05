@@ -1,6 +1,6 @@
 # Feign Face
 Feign.Builder
-Feign提供了一个builder用来构造 FeigenClient
+Feign提供了一个builder用来构造 FeignClient
 
 * List<RequestInterceptor>
 * Contract

@@ -1,4 +1,4 @@
-# OpenFegin
+# OpenFeign
 Feign is a Java to HTTP client binder inspired by Retrofit, JAXRS-2.0, and WebSocket.
 Feign's first goal was reducing the complexity of binding Denominator uniformly to HTTP APIs regardless of ReSTfulness.
 
@@ -7,14 +7,14 @@ Java 到 HttpClient 端绑定程序. Feign的目标是减少与Restfulness 无�
 
 # Interface Annotations
 
-|Annotation|Interface Target|usage
-|----------|----------------|-----
-|@RequestLine|Method| http请求URL模板, 如@RequestLine("Get /repos/{ower}/repo/contributors"), 可以用{expression}的形式引用方法参数中的 @Param 标注的参数
-|@Param|Parameter|标注参数的名字, 用于@RequestLine, @Headers, @Body 等模板中.
-|@Headers|Method, Type| http请求 header 模板, 可以添加各种请求头, 也可以引用 @Param. 可以写在接口上, 作为预请求头.
-|@QueryMap|Parameter| 写在方法参数上, 表示对应的参数应该变成 http 查询参数.
-|@HeaderMap|Parameter| 对应的参数会被变成 http header 的一部分.
-|@Body|Method| 请求body模板.
+| Annotation   | Interface Target | usage                                                                                                      |
+|--------------|------------------|------------------------------------------------------------------------------------------------------------|
+| @RequestLine | Method           | http请求URL模板, 如@RequestLine("Get /repos/{ower}/repo/contributors"), 可以用{expression}的形式引用方法参数中的 @Param 标注的参数 |
+| @Param       | Parameter        | 标注参数的名字, 用于@RequestLine, @Headers, @Body 等模板中.                                                             |
+| @Headers     | Method, Type     | http请求 header 模板, 可以添加各种请求头, 也可以引用 @Param. 可以写在接口上, 作为预请求头.                                                |
+| @QueryMap    | Parameter        | 写在方法参数上, 表示对应的参数应该变成 http 查询参数.                                                                            |
+| @HeaderMap   | Parameter        | 对应的参数会被变成 http header 的一部分.                                                                                |
+| @Body        | Method           | 请求body模板.                                                                                                  |
 
 # 模板与表达式
 Fegin 的 `expression` 是 简单字符串表达式 (Level 1), 由 URI Template - RFC 6570 定义

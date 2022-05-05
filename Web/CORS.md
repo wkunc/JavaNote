@@ -23,7 +23,7 @@
 
 CORS将跨域访问请求分为三种: 
 Simple Request
-Prefighted(预检) Request
+Preflighted Request (预检请求)
 Request with Credential(凭证)
 
 
@@ -36,12 +36,12 @@ Request with Credential(凭证)
 application/x-www-form-urlencoded, multipart/form-data, 或text/plain之一.
 
 
-# Prefighted Request(预检请求)
+# Preflighted Request(预检请求)
 如果request包含任何自定义的请求头, 或者它使用的GET, HEAD,POST之外的方法,
-那么它就是 Prefighted Request.
+那么它就是 Preflighted Request.
 并且 POST 请求的Content-type不是
 application/x-www-form-urlencoded, multipart/form-data, 或text/plain之一.
-那么它也是Prefighted Request.
+那么它也是Preflighted Request.
 
 
 
