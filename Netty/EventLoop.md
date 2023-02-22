@@ -132,6 +132,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         return new DefaultThreadFactory(getClass());
     }
 
+    // 交给子类实现真正的创建一个EventLoop.
     protected abstract EventExecutor newChild(Executor executor, Object... args) throws Exception;
 
 }
