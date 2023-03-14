@@ -54,7 +54,7 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     TimeUnit maxWorkerExecuteTimeUnit = options.getMaxWorkerExecuteTimeUnit();
     long maxWorkerExecuteTime = options.getMaxWorkerExecuteTime();
 
-    // 准备了两个 ExecutorServer, 一个是work, 一个是internal work
+    // 创建了两个 ExecutorService, 一个是work, 一个是internal work.
     ThreadFactory workerThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxWorkerExecuteTime, maxWorkerExecuteTimeUnit, "vert.x-worker-thread-", true);
     ExecutorService workerExec = executorServiceFactory.createExecutor(workerThreadFactory, workerPoolSize, workerPoolSize);
     PoolMetrics workerPoolMetrics = metrics != null ? metrics.createPoolMetrics("worker", "vert.x-worker-thread", options.getWorkerPoolSize()) : null;
@@ -66,10 +66,8 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     maxEventLoopExecTime = maxEventLoopExecuteTime;
     maxEventLoopExecTimeUnit = maxEventLoopExecuteTimeUnit;
     eventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecTime, maxEventLoopExecTimeUnit, "vert.x-eventloop-thread-", false);
+    // 创建了用于IO的 EventLoopGroup
     eventLoopGroup = transport.eventLoopGroup(Transport.IO_EVENT_LOOP_GROUP, options.getEventLoopPoolSize(), eventLoopThreadFactory, NETTY_IO_RATIO);
-
-    // The acceptor event loop thread needs to be from a different pool otherwise can get lags in accepted connections
-    // under a lot of load
     // 接收者线程池, 大小为1并且ioRatio为100, 表示不会执行任何非IO工作.
     acceptorEventLoopGroup = transport.eventLoopGroup(Transport.ACCEPTOR_EVENT_LOOP_GROUP, 1, acceptorEventLoopThreadFactory, 100);
     // WorkerPool 只是简单的Executor容器, 帮助我们管理 PoolMetrics 和其监控的Pool保持同步关闭
@@ -86,6 +84,7 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     this.threadFactory = threadFactory;
     this.transport = transport;
     this.sharedData = new SharedDataImpl(this, clusterManager);
+    //省略其他代码...
   }
 
   // 一个简单的包装, 自定义了线程的名称, 指定了线程最大执行时长
@@ -101,9 +100,43 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     };
   }
 
-  // 使用JDK的Eexcutor框架提供的固定线程池.
+  //ExecutorServiceFactory中的提供的实现. 使用JDK的Eexcutor框架提供的固定线程池.
   ExecutorServiceFactory INSTANCE = (threadFactory, concurrency, maxConcurrency) ->
     Executors.newFixedThreadPool(maxConcurrency, threadFactory);
+
+}
+```
+
+## Context
+Handler 执行上下文.
+通常来说一个 Context 是EventLoop Contenxt, 与一个指定的 EventLoop 线程绑定.
+因此该上下文的执行始终发生在完全相同的event loop线程上.
+```java
+public interface Context {
+
+  // 主要提供的方法，运行一个异步任务.
+  void runOnContext(Handler<Void> action);
+
+  // 运行阻塞任务, 与runOnContext不同, 不会运行在event loop线程中.
+  <T> void executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered, Handler<AsyncResult<@Nullable T>> resultHandler);
+
+  <T> Future<@Nullable T> executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered);
+
+}
+
+public interface ContextInternal extends Context {
+  static ContextInternal current() {
+    Thread thread = Thread.currentThread();
+    if (thread instanceof VertxThread) {
+      return ((VertxThread) thread).context();
+    } else {
+      VertxImpl.ContextDispatch current = VertxImpl.nonVertxContextDispatch.get();
+      if (current != null) {
+        return current.context;
+      }
+    }
+    return null;
+  }
 
 }
 ```
@@ -155,6 +188,7 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
 
   this.listenContext = context;
   this.listening = true;
+  // 从context 中获取关联的 eventLoop
   this.eventLoop = context.nettyEventLoop();
 
   SocketAddress bindAddress;
