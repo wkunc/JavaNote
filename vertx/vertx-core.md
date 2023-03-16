@@ -226,6 +226,9 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
       worker =  childHandler(listenContext, localAddress, sslHelper);
       servers = new HashSet<>();
       servers.add(this);
+      // accpectorEventLoopGroup中只有一个EventLoop. 
+      // 所以其实所有的Server Socket IO请求都是由同一个EventLoop处理的.
+      // 由所以它的ioRatio 设置为了 100
       channelBalancer = new ServerChannelLoadBalancer(vertx.getAcceptorEventLoopGroup().next());
 
       // Register the server in the shared server list
@@ -238,10 +241,16 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
       // Initialize SSL before binding
       sslHelper.init(listenContext).onComplete(ar -> {
         if (ar.succeeded()) {
-
+          // 在SSL初始化完成后
           // Socket bind
           channelBalancer.addWorker(eventLoop, worker);
+          // Netty 的部分
           ServerBootstrap bootstrap = new ServerBootstrap();
+          // 注意这里的childGroup 参数是 ChannelBalancer 里的 VertxEventLoopGroup
+          // 是一个手动添加EventLoop的动态EventLoopGroup.
+          // 也就是说首次调用时, 这个 childGroup 中只有一个EventLoop
+          // 所有的连接都在这一个EventLoop上处理.
+          // 结合ShareServer机制可以用于自定义使用的EventLoop个数.
           bootstrap.group(vertx.getAcceptorEventLoopGroup(), channelBalancer.workers());
           if (sslHelper.isSSL()) {
             bootstrap.childOption(ChannelOption.ALLOCATOR, PartialPooledByteBufAllocator.INSTANCE);
@@ -249,6 +258,7 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
             bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
           }
 
+          // ChannelBalancer 重点对象
           bootstrap.childHandler(channelBalancer);
           applyConnectionOptions(localAddress.isDomainSocket(), bootstrap);
 
@@ -305,4 +315,82 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
   }
 }
 
+```
+
+
+```java
+class ServerChannelLoadBalancer extends ChannelInitializer<Channel> {
+
+  private final VertxEventLoopGroup workers;
+  private final ChannelGroup channelGroup;
+  // 
+  private final ConcurrentMap<EventLoop, WorkerList> workerMap = new ConcurrentHashMap<>();
+
+  // We maintain a separate hasHandlers variable so we can implement hasHandlers() efficiently
+  // As it is called for every HTTP message received
+  private volatile boolean hasHandlers;
+
+  // 唯一的调用是 TCPserverBase.java 141 channelBalancer = new ServerChannelLoadBalancer(vertx.getAcceptorEventLoopGroup().next());
+  // 所以这里其实就是vertx中的唯一用来处理ServerSocket accept事件的EventLoop(Acceptor).
+  ServerChannelLoadBalancer(EventExecutor executor) {
+    // 这里 Vertx 自己实现了一个简单的 EventLoopGroup逻辑
+    // 可以添加的 EventLoop 的 EventLoopGroup.
+    // 简单的说就是用了一个 List, 保持真正的EventLoop, 并且提供 add 和 remove 方法
+    this.workers = new VertxEventLoopGroup();
+    // 用了 Netty ChannelGroup. 每个子线程添加到其中. 
+    // 然后在server stop时可以统一close
+    this.channelGroup = new DefaultChannelGroup(executor);
+  }
+
+  @Override
+  protected void initChannel(Channel ch) {
+    // 通过 channel 绑定的EventLoop 获取对应的处理逻辑.
+    // 这里的 worker 是ServerBootstrap的childGroup.
+    Handler<Channel> handler = chooseInitializer(ch.eventLoop());
+    if (handler == null) {
+      ch.close();
+    } else {
+      channelGroup.add(ch);
+      handler.handle(ch);
+    }
+  }
+
+  private Handler<Channel> chooseInitializer(EventLoop worker) {
+    WorkerList handlers = workerMap.get(worker);
+    return handlers == null ? null : handlers.chooseHandler();
+  }
+
+  /**
+  * EventLoop Channel的处理线程
+  * handler 是处理Channel的逻辑
+  */
+  public synchronized void addWorker(EventLoop eventLoop, Handler<Channel> handler) {
+    // 1. 先把 eventLoop 添加到 eventLoopGroup中
+    workers.addWorker(eventLoop);
+    WorkerList handlers = new WorkerList();
+    WorkerList prev = workerMap.putIfAbsent(eventLoop, handlers);
+    if (prev != null) {
+      handlers = prev;
+    }
+    handlers.addWorker(handler);
+    hasHandlers = true;
+  }
+
+  public synchronized boolean removeWorker(EventLoop worker, Handler<Channel> handler) {
+    WorkerList handlers = workerMap.get(worker);
+    if (handlers == null || !handlers.removeWorker(handler)) {
+      return false;
+    }
+    if (handlers.isEmpty()) {
+      workerMap.remove(worker);
+    }
+    if (workerMap.isEmpty()) {
+      hasHandlers = false;
+    }
+    //Available workers does it's own reference counting -since workers can be shared across different Handlers
+    workers.removeWorker(worker);
+    return true;
+  }
+
+}
 ```
