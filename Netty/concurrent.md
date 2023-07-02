@@ -94,7 +94,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         return ftask;
     }
 
-    public Future<T> submit(Callable<T> task,) {
+    public Future<T> submit(Callable<T> task) {
         if (task == null) throw new NullPointerException();
         RunnableFuture<T> ftask = newTaskFor(task);
         execute(ftask);
@@ -182,7 +182,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
     
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
-        throw InterruptedException {
+        throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
 
@@ -196,7 +196,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
             for (int i = 0, size = futures.size(); i < size; i++) {
                 Future<T> f = futures.get(i);
                 if (!f.isDone()) {
-                    try { f.get(); ) }
+                    try { f.get(); }
                     catch (CancellationException | ExecutionExeceoption ignore) {}
                 }
             }
@@ -209,8 +209,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
 
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
-                                        long timeout, TimeUnit unit)
-        throw InterruptedException {
+                                        long timeout, TimeUnit unit) throws InterruptedException {
         if (tasks == null)
             throw new NullPointerException();
         final long nanos = unit.toNanos(timeout);
