@@ -1,0 +1,389 @@
+* Future
+
+** AsyncResult
+
+@code java
+public interface AsyncResult<T> {
+
+  T result();
+
+  Throwable cause();
+
+  boolean succeeded();
+
+  boolean failed();
+
+  /**
+   * Apply a {@code mapper} function on this async result.<p>
+   *
+   * The {@code mapper} is called with the completed value and this mapper returns a value. This value will complete the result returned by this method call.<p>
+   *
+   * When this async result is failed, the failure will be propagated to the returned async result and the {@code mapper} will not be called.
+   *
+   * @param mapper the mapper function
+   * @return the mapped async result
+   */
+  default <U> AsyncResult<U> map(Function<T, U> mapper) {
+    if (mapper == null) {
+      throw new NullPointerException();
+    }
+    return new AsyncResult<U>() {
+      @Override
+      public U result() {
+        if (succeeded()) {
+          return mapper.apply(AsyncResult.this.result());
+        } else {
+          return null;
+        }
+      }
+
+      @Override
+      public Throwable cause() {
+        return AsyncResult.this.cause();
+      }
+
+      @Override
+      public boolean succeeded() {
+        return AsyncResult.this.succeeded();
+      }
+
+      @Override
+      public boolean failed() {
+        return AsyncResult.this.failed();
+      }
+    };
+  }
+
+  /**
+   * Map the result of this async result to a specific {@code value}.<p>
+   *
+   * When this async result succeeds, this {@code value} will succeeed the async result returned by this method call.<p>
+   *
+   * When this async result fails, the failure will be propagated to the returned async result.
+   *
+   * @param value the value that eventually completes the mapped async result
+   * @return the mapped async result
+   */
+  default <V> AsyncResult<V> map(V value) {
+    return map(t -> value);
+  }
+
+  /**
+   * Map the result of this async result to {@code null}.<p>
+   *
+   * This is a convenience for {@code asyncResult.map((T) null)} or {@code asyncResult.map((Void) null)}.<p>
+   *
+   * When this async result succeeds, {@code null} will succeeed the async result returned by this method call.<p>
+   *
+   * When this async result fails, the failure will be propagated to the returned async result.
+   *
+   * @return the mapped async result
+   */
+  default <V> AsyncResult<V> mapEmpty() {
+    return map((V)null);
+  }
+
+  /**
+   * Apply a {@code mapper} function on this async result.<p>
+   *
+   * The {@code mapper} is called with the failure and this mapper returns a value. This value will complete the result returned by this method call.<p>
+   *
+   * When this async result is succeeded, the value will be propagated to the returned async result and the {@code mapper} will not be called.
+   *
+   * @param mapper the mapper function
+   * @return the mapped async result
+   */
+  default AsyncResult<T> otherwise(Function<Throwable, T> mapper) {
+    if (mapper == null) {
+      throw new NullPointerException();
+    }
+    return new AsyncResult<T>() {
+      @Override
+      public T result() {
+        if (AsyncResult.this.succeeded()) {
+          return AsyncResult.this.result();
+        } else if (AsyncResult.this.failed()) {
+          return mapper.apply(AsyncResult.this.cause());
+        } else {
+          return null;
+        }
+      }
+
+      @Override
+      public Throwable cause() {
+        return null;
+      }
+
+      @Override
+      public boolean succeeded() {
+        return AsyncResult.this.succeeded() || AsyncResult.this.failed();
+      }
+
+      @Override
+      public boolean failed() {
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Map the failure of this async result to a specific {@code value}.<p>
+   *
+   * When this async result fails, this {@code value} will succeeed the async result returned by this method call.<p>
+   *
+   * When this async succeeds, the result will be propagated to the returned async result.
+   *
+   * @param value the value that eventually completes the mapped async result
+   * @return the mapped async result
+   */
+  default AsyncResult<T> otherwise(T value) {
+    return otherwise(err -> value);
+  }
+
+  /**
+   * Map the failure of this async result to {@code null}.<p>
+   *
+   * This is a convenience for {@code asyncResult.otherwise((T) null)}.<p>
+   *
+   * When this async result fails, the {@code null} will succeeed the async result returned by this method call.<p>
+   *
+   * When this async succeeds, the result will be propagated to the returned async result.
+   *
+   * @return the mapped async result
+   */
+  default AsyncResult<T> otherwiseEmpty() {
+    return otherwise(err -> null);
+  }
+}
+@end
+
+
+** Future
+   在AsyncResult的基础上增加:
+   ~ 增加回调onComplete() 方法新增
+   ~ 增加 compose(), transform(), eventually() 等Future连接起来的方法
+   > 和 map() otherwise() 方法不同, map和otherwise是在Future成功/失败后修改结果/Throwable的方法
+
+
+@code  java
+public interface Future<T> extends AsyncResult<T> {
+   /**
+   * Has the future completed?
+   * <p>
+   * It's completed if it's either succeeded or failed.
+   *
+   * @return true if completed, false if not
+   */
+  boolean isComplete();
+
+  @Fluent
+  Future<T> onComplete(Handler<AsyncResult<T>> handler);
+
+  @Fluent
+  default Future<T> onSuccess(Handler<T> handler) {
+    return onComplete(ar -> {
+      if (ar.succeeded()) {
+        handler.handle(ar.result());
+      }
+    });
+  }
+
+  @Fluent
+  default Future<T> onFailure(Handler<Throwable> handler) {
+    return onComplete(ar -> {
+      if (ar.failed()) {
+        handler.handle(ar.cause());
+      }
+    });
+  }
+
+  @Override
+  T result();
+
+  @Override
+  Throwable cause();
+
+  @Override
+  boolean succeeded();
+
+  @Override
+  boolean failed();
+
+  default <U> Future<U> flatMap(Function<T, Future<U>> mapper) {
+    return compose(mapper);
+  }
+
+  default <U> Future<U> compose(Function<T, Future<U>> mapper) {
+    return compose(mapper, Future::failedFuture);
+  }
+
+  default Future<T> recover(Function<Throwable, Future<T>> mapper) {
+    return compose(Future::succeededFuture, mapper);
+  }
+
+  <U> Future<U> compose(Function<T, Future<U>> successMapper, Function<Throwable, Future<U>> failureMapper);
+
+  <U> Future<U> transform(Function<AsyncResult<T>, Future<U>> mapper);
+
+  <U> Future<T> eventually(Function<Void, Future<U>> mapper);
+
+  <U> Future<U> map(Function<T, U> mapper);
+
+  <V> Future<V> map(V value);
+
+  @Override
+  default <V> Future<V> mapEmpty() {
+    return (Future<V>) AsyncResult.super.mapEmpty();
+  }
+
+  Future<T> otherwise(Function<Throwable, T> mapper);
+
+  Future<T> otherwise(T value);
+
+  default Future<T> otherwiseEmpty() {
+    return (Future<T>) AsyncResult.super.otherwiseEmpty();
+  }
+
+  default Future<T> andThen(Handler<AsyncResult<T>> handler) {
+    return transform(ar -> {
+      handler.handle(ar);
+      return (Future<T>) ar;
+    });
+  }
+
+  @GenIgnore
+  default CompletionStage<T> toCompletionStage() {
+    CompletableFuture<T> completableFuture = new CompletableFuture<>();
+    onComplete(ar -> {
+      if (ar.succeeded()) {
+        completableFuture.complete(ar.result());
+      } else {
+        completableFuture.completeExceptionally(ar.cause());
+      }
+    });
+    return completableFuture;
+  }
+
+}
+@end
+
+** Promise
+   Promise提供complete(),tryComplete(),fail(),tryFail()等完成方法
+   以及 future() 方法返回关联的Future<T>
+
+   获取 Promise 对象在后续调用完成方法, 然后返回关联的Future 是用户接口实现的常见用法
+  
+@code java
+public interface Promise<T> extends Handler<AsyncResult<T>> {
+
+
+  /**
+   * Succeed or fail this promise with the {@link AsyncResult} event.
+   *
+   * @param asyncResult the async result to handle
+   */
+  @GenIgnore
+  @Override
+  default void handle(AsyncResult<T> asyncResult) {
+    if (asyncResult.succeeded()) {
+      complete(asyncResult.result());
+    } else {
+      fail(asyncResult.cause());
+    }
+  }
+
+  /**
+   * Set the result. Any handler will be called, if there is one, and the promise will be marked as completed.
+   * <p/>
+   * Any handler set on the associated promise will be called.
+   *
+   * @param result  the result
+   * @throws IllegalStateException when the promise is already completed
+   */
+  default void complete(T result) {
+    if (!tryComplete(result)) {
+      throw new IllegalStateException("Result is already complete");
+    }
+  }
+
+  /**
+   * Calls {@code complete(null)}
+   *
+   * @throws IllegalStateException when the promise is already completed
+   */
+  default void complete() {
+    if (!tryComplete()) {
+      throw new IllegalStateException("Result is already complete");
+    }
+  }
+
+  /**
+   * Set the failure. Any handler will be called, if there is one, and the future will be marked as completed.
+   *
+   * @param cause  the failure cause
+   * @throws IllegalStateException when the promise is already completed
+   */
+  default void fail(Throwable cause) {
+    if (!tryFail(cause)) {
+      throw new IllegalStateException("Result is already complete");
+    }
+  }
+
+  /**
+   * Calls {@link #fail(Throwable)} with the {@code message}.
+   *
+   * @param message  the failure message
+   * @throws IllegalStateException when the promise is already completed
+   */
+  default void fail(String message) {
+    if (!tryFail(message)) {
+      throw new IllegalStateException("Result is already complete");
+    }
+  }
+
+  /**
+   * Like {@link #complete(Object)} but returns {@code false} when the promise is already completed instead of throwing
+   * an {@link IllegalStateException}, it returns {@code true} otherwise.
+   *
+   * @param result  the result
+   * @return {@code false} when the future is already completed
+   */
+  boolean tryComplete(T result);
+
+  /**
+   * Calls {@code tryComplete(null)}.
+   *
+   * @return {@code false} when the future is already completed
+   */
+  default boolean tryComplete() {
+    return tryComplete(null);
+  }
+
+  /**
+   * Like {@link #fail(Throwable)} but returns {@code false} when the promise is already completed instead of throwing
+   * an {@link IllegalStateException}, it returns {@code true} otherwise.
+   *
+   * @param cause  the failure cause
+   * @return {@code false} when the future is already completed
+   */
+  boolean tryFail(Throwable cause);
+
+  /**
+   * Calls {@link #fail(Throwable)} with the {@code message}.
+   *
+   * @param message  the failure message
+   * @return false when the future is already completed
+   */
+  default boolean tryFail(String message) {
+    return tryFail(new NoStackTraceThrowable(message));
+  }
+
+  /**
+   * @return the {@link Future} associated with this promise, it can be used to be aware of the promise completion
+   */
+  @CacheReturn
+  Future<T> future();
+
+}
+@end
+

@@ -141,8 +141,6 @@ public interface ContextInternal extends Context {
 }
 ```
 
-
-
 # NetServer
 
 ## TCPServerBase

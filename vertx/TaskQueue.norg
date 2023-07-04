@@ -1,0 +1,93 @@
+* TaskQueue
+
+从ContextBase中看到这个类. 实现了队列任务逻辑.
+@code java
+  public class TaskQueue {
+
+  static final Logger log = LoggerFactory.getLogger(TaskQueue.class);
+
+  //每个任务和执行改任务的执执行器
+  private static class Task {
+
+    private final Runnable runnable;
+    private final Executor exec;
+
+    public Task(Runnable runnable, Executor exec) {
+      this.runnable = runnable;
+      this.exec = exec;
+    }
+  }
+
+  //存储任务的容器.用采用链表, 不需要考虑扩容问题(数组)
+  // @protectedby tasks
+  private final LinkedList<Task> tasks = new LinkedList<>();
+
+  // @protectedby tasks
+  private Executor current;
+
+  // 其实就是自己run方法引用
+  private final Runnable runner;
+
+  public TaskQueue() {
+    runner = this::run;
+  }
+
+  /**
+   * 1. 启动死循环
+   * 2. 从tasks中按照顺序获取第一个任务 (在tasks上同步防止并发修改) 
+   * 3. 如果没有获取到任务, 说明队列空. 将当前执行器 == null,并退出方法
+   * 4. 如果获取到新的任务. 判断task指定的executor是否与当前不同.
+   * 5. 如果不同的话需要切换当前executor, 然后在执行. 所以调用addFirst重新将任务放回队列
+   *    调用下一个任务的executor执行run方法, 修改当前executor为下一个任务的执行器.
+   *    (此时由于当前线程获取了tasks上的同步锁, 所以新的executor运行run方法时会卡住.直到完成当前执行器的修改)
+   *
+   * PS: 可以看出. 这个TaskQueue实现了任务的顺序执行且每个任务都在其指定的执行器上执行.
+   *     但是只有在执行器和当前不同时,调用新的Executor.execute()方法.
+   *     所以n个连续相同执行器的任务的运行Thread实际上会是同一个.
+   *
+   */
+  private void run() {
+    for (; ; ) {
+      final Task task;
+      synchronized (tasks) {
+        task = tasks.poll();
+        if (task == null) {
+          current = null;
+          return;
+        }
+        if (task.exec != current) {
+          tasks.addFirst(task);
+          task.exec.execute(runner);
+          current = task.exec;
+          return;
+        }
+      }
+      try {
+        task.runnable.run();
+      } catch (Throwable t) {
+        log.error("Caught unexpected Throwable", t);
+      }
+    }
+  };
+
+  /**
+   * Run a task.
+   * 添加一个Runnable任务和其关联的Executor
+   * 1. 添加tasks容器中(线程安全,在容器上执行同步)
+   * 2. 判断当前是否正在允许 current == null
+   * 3. 不在运行状态的话(说明tasks中没有任务,这个Runnable就是唯一的任务)
+   *    用关联的Executor执行run方法.
+   *
+   * @param task the task to run.
+   */
+  public void execute(Runnable task, Executor executor) {
+    synchronized (tasks) {
+      tasks.add(new Task(task, executor));
+      if (current == null) {
+        current = executor;
+        executor.execute(runner);
+      }
+    }
+  }
+}
+@end

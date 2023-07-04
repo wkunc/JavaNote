@@ -1,0 +1,145 @@
+* Core
+
+Vertx 作为核心类类似于 Spring的ApplicationContenxt. 
+由许多的接口实现类组成比如: ClusterManager, FileSystem等等. 类似一个门面模式(Face)
+这里先关注对 Netty EventLoop 的使用
+
+
+** VertxThreadFactory
+@code java
+public interface VertxThreadFactory extends VertxServiceProvider {
+
+  VertxThreadFactory INSTANCE = new VertxThreadFactory() {
+  };
+
+  @Override
+  default void init(VertxBuilder builder) {
+    if (builder.threadFactory() == null) {
+      builder.threadFactory(this);
+    }
+  }
+
+  /**
+    * 创建一个VertxThread对象.
+    */
+  default VertxThread newVertxThread(Runnable target, String name, boolean worker, long maxExecTime, TimeUnit maxExecTimeUnit) {
+    return new VertxThread(target, name, worker, maxExecTime, maxExecTimeUnit);
+  }
+}
+
+@end
+
+
+** VertxThread
+@code java
+/**
+实现了阻塞线程监控
+*/
+public class VertxThread extends FastThreadLocalThread implements BlockedThreadChecker.Task {
+
+}
+@end
+
+
+** Vertx
+@code java
+public class VertxImpl implements VertxInternal, MetricsProvider {
+
+  final WorkerPool workerPool;
+  final WorkerPool internalWorkerPool;
+  private final VertxThreadFactory threadFactory;
+  private final ExecutorServiceFactory executorServiceFactory;
+  private ThreadFactory eventLoopThreadFactory;
+  private final EventLoopGroup eventLoopGroup;
+  private final EventLoopGroup acceptroEventLoopGroup;
+
+  private final Transport transport;
+
+
+  /**
+  * 通过简单VertxBuilder的代码查看
+  * threadFactory = VertxThreadFactory.INSTANCE;
+  * executorServiceFactory = ExecutorServiceFactory.INSTANCE;
+  * 等同于调用JDK中的执行器框架 Executors.newFixedThreadPool(maxConcurrency, threadFactory);
+  *
+  */
+  VertxImpl(VertxOptions options, ClusterManager clusterManager,
+            NodeSelector nodeSelector, VertxMetrics metrics,
+            VertxTracer<?, ?> tracer, Transport transport,
+            FileResolver fileResolver, VertxThreadFactory threadFactory,
+            ExecutorServiceFactory executorServiceFactory) {
+
+    // Sanity check
+    if (Vertx.currentContext() != null) {
+      log.warn("You're already on a Vert.x context, are you sure you want to create a new Vertx instance?");
+    }
+
+  
+    // 是否为守护线程
+    Boolean useDaemonThread = options.getUseDaemonThread();
+    // IO工作线程大小, 20
+    int workerPoolSize = options.getWorkerPoolSize();
+    // 阻塞任务线程池大小, 20
+    int internalBlockingPoolSize = options.getInternalBlockingPoolSize();
+
+  
+    //EventLoop的最大执行时长, 默认 2s. 
+    long maxEventLoopExecuteTime = options.getMaxEventLoopExecuteTime();
+    TimeUnit maxEventLoopExecuteTimeUnit = options.getMaxEventLoopExecuteTimeUnit();
+    //创建acceptor的ThreadFactory. Reactor模式中Acceptor复杂接收IO事件并分发给Worker线程, Vertx是单个Acceptor模式(NIO来说所有的通道不管是Server还是Client都会注册到同一个Selector上).
+    ThreadFactory acceptorEventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecuteTime, maxEventLoopExecuteTimeUnit, "vert.x-acceptor-thread-", false);
+
+    // 最大执行时长, 默认 60s
+    TimeUnit maxWorkerExecuteTimeUnit = options.getMaxWorkerExecuteTimeUnit();
+    long maxWorkerExecuteTime = options.getMaxWorkerExecuteTime();
+
+    // 创建了两个 ExecutorService, 一个是work, 一个是internal work.
+    ThreadFactory workerThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxWorkerExecuteTime, maxWorkerExecuteTimeUnit, "vert.x-worker-thread-", true);
+    ExecutorService workerExec = executorServiceFactory.createExecutor(workerThreadFactory, workerPoolSize, workerPoolSize);
+    PoolMetrics workerPoolMetrics = metrics != null ? metrics.createPoolMetrics("worker", "vert.x-worker-thread", options.getWorkerPoolSize()) : null;
+    ThreadFactory internalWorkerThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxWorkerExecuteTime, maxWorkerExecuteTimeUnit, "vert.x-internal-blocking-", true);
+    ExecutorService internalWorkerExec = executorServiceFactory.createExecutor(internalWorkerThreadFactory, internalBlockingPoolSize, internalBlockingPoolSize);
+    PoolMetrics internalBlockingPoolMetrics = metrics != null ? metrics.createPoolMetrics("worker", "vert.x-internal-blocking", internalBlockingPoolSize) : null;
+
+    closeFuture = new CloseFuture(log);
+    maxEventLoopExecTime = maxEventLoopExecuteTime;
+    maxEventLoopExecTimeUnit = maxEventLoopExecuteTimeUnit;
+    eventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecTime, maxEventLoopExecTimeUnit, "vert.x-eventloop-thread-", false);
+    // 创建了用于IO的 EventLoopGroup
+    eventLoopGroup = transport.eventLoopGroup(Transport.IO_EVENT_LOOP_GROUP, options.getEventLoopPoolSize(), eventLoopThreadFactory, NETTY_IO_RATIO);
+    // 接收者线程池, 大小为1并且ioRatio为100, 表示不会执行任何非IO工作.
+    acceptorEventLoopGroup = transport.eventLoopGroup(Transport.ACCEPTOR_EVENT_LOOP_GROUP, 1, acceptorEventLoopThreadFactory, 100);
+    // WorkerPool 只是简单的Executor容器, 帮助我们管理 PoolMetrics 和其监控的Pool保持同步关闭
+    internalWorkerPool = new WorkerPool(internalWorkerExec, internalBlockingPoolMetrics);
+    namedWorkerPools = new HashMap<>();
+    workerPool = new WorkerPool(workerExec, workerPoolMetrics);
+    defaultWorkerPoolSize = options.getWorkerPoolSize();
+    maxWorkerExecTime = maxWorkerExecuteTime;
+    maxWorkerExecTimeUnit = maxWorkerExecuteTimeUnit;
+
+    this.checker = checker;
+    this.useDaemonThread = useDaemonThread;
+    this.executorServiceFactory = executorServiceFactory;
+    this.threadFactory = threadFactory;
+    this.transport = transport;
+    this.sharedData = new SharedDataImpl(this, clusterManager);
+    //省略其他代码...
+  }
+
+  // 一个简单的包装, 自定义了线程的名称, 是否是守护线程,指定了线程最大执行时长.
+  // 并将新创建的VertxThread注册到 BlockedThreadChecker 中
+  private static ThreadFactory createThreadFactory(VertxThreadFactory threadFactory, BlockedThreadChecker checker, Boolean useDaemonThread, long maxExecuteTime, TimeUnit maxExecuteTimeUnit, String prefix, boolean worker) {
+    AtomicInteger threadCount = new AtomicInteger(0);
+    return runnable -> {
+      VertxThread thread = threadFactory.newVertxThread(runnable, prefix + threadCount.getAndIncrement(), worker, maxExecuteTime, maxExecuteTimeUnit);
+      checker.registerThread(thread, thread.info);
+      if (useDaemonThread != null && thread.isDaemon() != useDaemonThread) {
+        thread.setDaemon(useDaemonThread);
+      }
+      return thread;
+    };
+  }
+
+}
+@end
+
