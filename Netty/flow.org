@@ -1,26 +1,25 @@
-# Netty Client 初始化流程
+#+author: wkunc
+#+date:<2023-07-28 五> 
 
-# BootStrap
+* BootStrap
 
-## AbstractBootstrap
+** AbstractBootstrap
 
-```java
+#+begin_src java
 // 设置ChannelFactory, 采用反射方式调用指定 Channel 的默认构造器
 public B channel(Class<? extents C channelClass>) {
     return channelFactory(new ReflectiveChannelFactory<C>(channelClass)
 }
-
 
 // 创建 Channel 并绑定到指定到本地端口
 // 通常是 Server 调用, 因为Client有 Connect 方法
 private ChannelFutre doBind(final SocketAddress loaclAddress) {
 
 }
+#+end_src
 
-```
 
-
-```java
+#+begin_src java
 public ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
     // 1. 用 ChnnelFactory 创建 Channel
     // 2. 将指定到 ChannelHandler 放到 pipline 到末尾, 配置Channel选项 
@@ -38,14 +37,14 @@ private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress 
     // 获取 地址解析器, 复制解析远程地址
     AddressResolver<SocketAddress> resolver = this.resolver.getResolver(eventLoop);
 
-    // 
     final Future<SocketAddress> resolveFuture = resolver.resolve(remoteAddress);
 
-    // 
     doConnect(resolveFuture.getNow(), localAddress, promise);
 
 }
 
+// AbstractChannel 将 connect() 方法委托给 pipeline 实现
+// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. 调用 Unsafe.connect 方法
 private static void doConnect( final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
     final Channel channel = connectPromise.channel();
     if (localAddress == null) {
@@ -54,44 +53,56 @@ private static void doConnect( final SocketAddress remoteAddress, final SocketAd
         channel.connect(remoteAddress, localAddress, connectPromise);
     }
 }
-// AbstractChannel 将 connect() 方法委托给 pipeline 实现
-// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. 调用 Unsafe.connect 方法
 
-```
+#+end_src
 
+* 事件顺序
+| 事件         | 描述                                                         |
+|--------------+--------------------------------------------------------------|
+| Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr() |
+| Active       |                                                              |
+| Read         |                                                              |
+| ReadComplete |                                                              |
+| Inactive     |                                                              |
+| unRegistered |                                                              |
 
-# 事件顺序
 
 1. pipeline.fireChannelRegistered();
 
-> channel 与 IO线程(EventLoop) 绑定,
-> NIO执行 SocketChannel.register(selector, 0, this);
-> > 通知所有的 ChannelHandler.handlerAdded(ctx)
-> 发送事件
+#+BEGIN_QUOTE
+1. channel 与 IO线程(EventLoop) 绑定,
+2. NIO执行 SocketChannel.register(selector, 0, this);
+3. 通知所有的 ChannelHandler.handlerAdded(ctx)
+4. 发送事件
+#+END_QUOTE
 
 2. pipeline.fireChannelActive();
-
-> 在 Registered 后, 判断 isActive(), firstRegistration 发送 channelActive 事件
-> isActive() 对于NIOSocket 来说, ch.isOpen() && ch.isConnected(); 底层通道 open 并且已经建立连接时为激活状态.
-> NIOServerSocket 则是 isOpen() && javaChannel().socket().isBound(); 底层通道 open 并且已经监听本地端口时为激活状态.
-> Active 事件从 Head 开始传播. HeadContext 重写了 fireChannelActive(); 其他handler执行后, 会执行 readIfIsAutoRead() 方法(默认配置就是autoRead)
-> 会调用 Channel.read() 方法. 而 AbstractChannel 实现了 read() 调用 pipeline.read(), 然后是从tail开始调用.最后会到head中的 read() 方法
-> HeadContext.read() 调用了 unsafe.beginRead() 方法. AbstractUnsafe.read() 调用抽象方法 doBeginRead() 处理异常
-> AbstractNioChannel 实现了 doBeginRead() 方法, 给关联的Channel 注册了 readInterestOp 字段的事件 (NioSocketChannel的构造器中初始化为 OP_READ)
-> 此后NioEventLoop 的 run()的循环就可以获取到通道的 OP_READ 事件.
-> 在NioEventLoop中的可以找到对应事件的处理方法, OP_READ事件会调用 unsafe.read()
-> NioByteUnsafe.read() 实现了从 javaChannel 中读取字节到 ByteBuf 的过程
+#+BEGIN_QUOTE
+在 Registered 后, 判断 isActive(), firstRegistration 发送 channelActive 事件
+isActive() 对于NIOSocket 来说, ch.isOpen() && ch.isConnected(); 底层通道 open 并且已经建立连接时为激活状态.
+NIOServerSocket 则是 isOpen() && javaChannel().socket().isBound(); 底层通道 open 并且已经监听本地端口时为激活状态.
+Active 事件从 Head 开始传播. HeadContext 重写了 fireChannelActive(); 其他handler执行后, 会执行 readIfIsAutoRead() 方法(默认配置就是autoRead)
+会调用 Channel.read() 方法. 而 AbstractChannel 实现了 read() 调用 pipeline.read(), 然后是从tail开始调用.最后会到head中的 read() 方法
+HeadContext.read() 调用了 unsafe.beginRead() 方法. AbstractUnsafe.read() 调用抽象方法 doBeginRead() 处理异常
+AbstractNioChannel 实现了 doBeginRead() 方法, 给关联的Channel 注册了 readInterestOp 字段的事件 (NioSocketChannel的构造器中初始化为 OP_READ)
+此后NioEventLoop 的 run()的循环就可以获取到通道的 OP_READ 事件.
+在NioEventLoop中的可以找到对应事件的处理方法, OP_READ事件会调用 unsafe.read()
+NioByteUnsafe.read() 实现了从 javaChannel 中读取字节到 ByteBuf 的过程
+#+END_QUOTE
 
 4. pipeline.fireChannelRead(byteBuf);
 5. pipeline.fireChannelReadComplete();
 
-> 在循环读取 javaChannel 中的可读字节到结束后(没有可读字节了) 结束循环, 发送readCompleted() 事件. 从 Head 开始
-> Head 向下传递事件, 并在其他handler结束后,
-> (?存疑) 再次调用 readIfIsAutoRead() 完成 OP_READ 事件的注册(如果有需要的话, 某些情况下 read() 方法会移除 OP_READ)
 
-# Netty client 初始化流程
+#+BEGIN_QUOTE
+在循环读取 javaChannel 中的可读字节到结束后(没有可读字节了) 结束循环, 发送readCompleted() 事件. 从 Head 开始
+Head 向下传递事件, 并在其他handler结束后,
+(?存疑) 再次调用 readIfIsAutoRead() 完成 OP_READ 事件的注册(如果有需要的话, 某些情况下 read() 方法会移除 OP_READ)
+#+END_QUOTE
 
-```java
+* Netty client 初始化流程
+
+#+begin_src java
 public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
 
   // EventLoopGroup, 每个channel 会从中分配出一个线程进行绑定
@@ -153,11 +164,10 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
   }
 
 }
-```
+#+end_src 
 
-```java
+#+begin_src java
     protected abstract class AbstractUnsafe implements Unsafe {
-
 
         @Override
         public final void register(EventLoop eventLoop, final ChannelPromise promise) {
@@ -237,13 +247,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             }
         }
     }
-```
+#+end_src 
 
+** Connect 流程
 
-
-## Connect 流程
-
-```java
+#+begin_src java
 public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
 
   private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
@@ -281,7 +289,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
       return promise;
     }
   }
-
 }
-```
+
+#+end_src
 
