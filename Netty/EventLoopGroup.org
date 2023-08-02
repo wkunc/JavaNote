@@ -3,8 +3,8 @@
 #+title: EventLoop
 
 * EventExecutorGroup
-重新声明了那些返回值是 java.util.concurrent.Future 的方法.
-将返回值声明为netty提供的增强的 Future 类
+重新声明了 java.util.concurrent.ScheduledExecutorService 接口上那些返回值是 java.util.concurrent.Future 的方法.
+将返回值声明为Netty提供的增强的 io.netty.util.concurrent.Future 类
 
 #+begin_src java
 interface EventExcutorGroup extends ScheduledExecutorService  {
@@ -19,12 +19,18 @@ interface EventExcutorGroup extends ScheduledExecutorService  {
 }
 #+end_src
 
-* AbstractEventExecutorGroup
-将 submit(), schedule(), scheduleAtFixedRate(),
-scheduleWithFixedDelay(), invokeAll(), invokeAny() 等方法传递给 next()
-方法获取的child 执行器去执行.
+** AbstractEventExecutorGroup
 
-以及 shutdownGracefully() 的默认实现
+将 ~submit()~, ~schedule()~, ~scheduleAtFixedRate()~, ~scheduleWithFixedDelay()~, ~invokeAll()~, ~invokeAny()~ 等方法
+传递给 ~next()~ 方法获取的child EventExecutor 执行器去执行.
+以及提供 ~shutdownGracefully()~ 的默认实现委托给另一个完整参数的 ~shutdownGracefully()~ 方法
+
+#+begin_src java
+  @Override
+  public Future<?> shutdownGracefully() {
+      return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+  }
+#+end_src
 
 * MultithreadEventExecutorGroup
 用多线程处理任务的基本实现

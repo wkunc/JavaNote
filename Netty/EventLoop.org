@@ -1,6 +1,9 @@
+#+STARTUP: showeverything
+#+options: VISIBILITY showeverything
 #+title: EventLoop
 #+author: wkunc
 #+date:<2023-07-28 五> 
+
 * EventLoop
 [[file:EventLoopGroup.org][EventLoop]]
 [[file:EventLoopGroup.png][EventLoop]]
