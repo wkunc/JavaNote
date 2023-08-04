@@ -1,151 +1,8 @@
-# Vertx
 
-Vertx 作为核心类类似于 Spring的ApplicationContenxt. 
-由许多的接口实现类组成比如: ClusterManager, FileSystem等等. 类似一个门面模式(Face)
-这里先关注对 Netty EventLoop 的使用
+* NetServer
 
-```java
-public class VertxImpl implements VertxInternal, MetricsProvider {
-
-  final WorkerPool workerPool;
-  final WorkerPool internalWorkerPool;
-  private final VertxThreadFactory threadFactory;
-  private final ExecutorServiceFactory executorServiceFactory;
-  private ThreadFactory eventLoopThreadFactory;
-  private final EventLoopGroup eventLoopGroup;
-  private final EventLoopGroup acceptroEventLoopGroup;
-
-  private final Transport transport;
-
-
-  /**
-  * 简单VertxBuilder的代码查看
-  * threadFactory = VertxThreadFactory.INSTANCE;
-  * executorServiceFactory = ExecutorServiceFactory.INSTANCE;
-  *
-  *
-  *
-  */
-  VertxImpl(VertxOptions options, ClusterManager clusterManager,
-            NodeSelector nodeSelector, VertxMetrics metrics,
-            VertxTracer<?, ?> tracer, Transport transport,
-            FileResolver fileResolver, VertxThreadFactory threadFactory,
-            ExecutorServiceFactory executorServiceFactory) {
-
-    // Sanity check
-    if (Vertx.currentContext() != null) {
-      log.warn("You're already on a Vert.x context, are you sure you want to create a new Vertx instance?");
-    }
-
-  
-    Boolean useDaemonThread = options.getUseDaemonThread();
-    // IO工作线程大小, 20
-    int workerPoolSize = options.getWorkerPoolSize();
-    // 阻塞任务线程池大小, 20
-    int internalBlockingPoolSize = options.getInternalBlockingPoolSize();
-
-  
-    // EventLoop的最大执行时长, 默认 2s
-    long maxEventLoopExecuteTime = options.getMaxEventLoopExecuteTime();
-    TimeUnit maxEventLoopExecuteTimeUnit = options.getMaxEventLoopExecuteTimeUnit();
-    ThreadFactory acceptorEventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecuteTime, maxEventLoopExecuteTimeUnit, "vert.x-acceptor-thread-", false);
-
-    // 最大执行时长, 默认 60s
-    TimeUnit maxWorkerExecuteTimeUnit = options.getMaxWorkerExecuteTimeUnit();
-    long maxWorkerExecuteTime = options.getMaxWorkerExecuteTime();
-
-    // 创建了两个 ExecutorService, 一个是work, 一个是internal work.
-    ThreadFactory workerThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxWorkerExecuteTime, maxWorkerExecuteTimeUnit, "vert.x-worker-thread-", true);
-    ExecutorService workerExec = executorServiceFactory.createExecutor(workerThreadFactory, workerPoolSize, workerPoolSize);
-    PoolMetrics workerPoolMetrics = metrics != null ? metrics.createPoolMetrics("worker", "vert.x-worker-thread", options.getWorkerPoolSize()) : null;
-    ThreadFactory internalWorkerThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxWorkerExecuteTime, maxWorkerExecuteTimeUnit, "vert.x-internal-blocking-", true);
-    ExecutorService internalWorkerExec = executorServiceFactory.createExecutor(internalWorkerThreadFactory, internalBlockingPoolSize, internalBlockingPoolSize);
-    PoolMetrics internalBlockingPoolMetrics = metrics != null ? metrics.createPoolMetrics("worker", "vert.x-internal-blocking", internalBlockingPoolSize) : null;
-
-    closeFuture = new CloseFuture(log);
-    maxEventLoopExecTime = maxEventLoopExecuteTime;
-    maxEventLoopExecTimeUnit = maxEventLoopExecuteTimeUnit;
-    eventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecTime, maxEventLoopExecTimeUnit, "vert.x-eventloop-thread-", false);
-    // 创建了用于IO的 EventLoopGroup
-    eventLoopGroup = transport.eventLoopGroup(Transport.IO_EVENT_LOOP_GROUP, options.getEventLoopPoolSize(), eventLoopThreadFactory, NETTY_IO_RATIO);
-    // 接收者线程池, 大小为1并且ioRatio为100, 表示不会执行任何非IO工作.
-    acceptorEventLoopGroup = transport.eventLoopGroup(Transport.ACCEPTOR_EVENT_LOOP_GROUP, 1, acceptorEventLoopThreadFactory, 100);
-    // WorkerPool 只是简单的Executor容器, 帮助我们管理 PoolMetrics 和其监控的Pool保持同步关闭
-    internalWorkerPool = new WorkerPool(internalWorkerExec, internalBlockingPoolMetrics);
-    namedWorkerPools = new HashMap<>();
-    workerPool = new WorkerPool(workerExec, workerPoolMetrics);
-    defaultWorkerPoolSize = options.getWorkerPoolSize();
-    maxWorkerExecTime = maxWorkerExecuteTime;
-    maxWorkerExecTimeUnit = maxWorkerExecuteTimeUnit;
-
-    this.checker = checker;
-    this.useDaemonThread = useDaemonThread;
-    this.executorServiceFactory = executorServiceFactory;
-    this.threadFactory = threadFactory;
-    this.transport = transport;
-    this.sharedData = new SharedDataImpl(this, clusterManager);
-    //省略其他代码...
-  }
-
-  // 一个简单的包装, 自定义了线程的名称, 指定了线程最大执行时长
-  private static ThreadFactory createThreadFactory(VertxThreadFactory threadFactory, BlockedThreadChecker checker, Boolean useDaemonThread, long maxExecuteTime, TimeUnit maxExecuteTimeUnit, String prefix, boolean worker) {
-    AtomicInteger threadCount = new AtomicInteger(0);
-    return runnable -> {
-      VertxThread thread = threadFactory.newVertxThread(runnable, prefix + threadCount.getAndIncrement(), worker, maxExecuteTime, maxExecuteTimeUnit);
-      checker.registerThread(thread, thread.info);
-      if (useDaemonThread != null && thread.isDaemon() != useDaemonThread) {
-        thread.setDaemon(useDaemonThread);
-      }
-      return thread;
-    };
-  }
-
-  //ExecutorServiceFactory中的提供的实现. 使用JDK的Eexcutor框架提供的固定线程池.
-  ExecutorServiceFactory INSTANCE = (threadFactory, concurrency, maxConcurrency) ->
-    Executors.newFixedThreadPool(maxConcurrency, threadFactory);
-
-}
-```
-
-## Context
-Handler 执行上下文.
-通常来说一个 Context 是EventLoop Contenxt, 与一个指定的 EventLoop 线程绑定.
-因此该上下文的执行始终发生在完全相同的event loop线程上.
-```java
-public interface Context {
-
-  // 主要提供的方法，运行一个异步任务.
-  void runOnContext(Handler<Void> action);
-
-  // 运行阻塞任务, 与runOnContext不同, 不会运行在event loop线程中.
-  <T> void executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered, Handler<AsyncResult<@Nullable T>> resultHandler);
-
-  <T> Future<@Nullable T> executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered);
-
-}
-
-public interface ContextInternal extends Context {
-  static ContextInternal current() {
-    Thread thread = Thread.currentThread();
-    if (thread instanceof VertxThread) {
-      return ((VertxThread) thread).context();
-    } else {
-      VertxImpl.ContextDispatch current = VertxImpl.nonVertxContextDispatch.get();
-      if (current != null) {
-        return current.context;
-      }
-    }
-    return null;
-  }
-
-}
-```
-
-# NetServer
-
-## TCPServerBase
-
-```java
+** TCPServerBase
+#+begin_src java
 public abstract class TCPServerBase implements Closeable, MetricsProvider {
 
   protected final Context creatingContext;
@@ -175,9 +32,9 @@ public abstract class TCPServerBase implements Closeable, MetricsProvider {
   }
   
 }
-```
+#+end_src
 
-```java
+#+begin_src java
 private synchronized Future<Channel> listen(SocketAddress localAddress, ContextInternal context) {
   // 首先判断是否已经监听过了
   if (listening) {
@@ -312,11 +169,9 @@ private synchronized Future<Channel> listen(SocketAddress localAddress, ContextI
     }
   }
 }
+#+end_src
 
-```
-
-
-```java
+#+begin_src java
 class ServerChannelLoadBalancer extends ChannelInitializer<Channel> {
 
   private final VertxEventLoopGroup workers;
@@ -391,4 +246,4 @@ class ServerChannelLoadBalancer extends ChannelInitializer<Channel> {
   }
 
 }
-```
+#+end_src

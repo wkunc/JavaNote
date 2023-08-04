@@ -1,48 +1,9 @@
-* Core
+* Vertx
+Vertx 作为核心类类似于 Spring的ApplicationContenxt.
+由许多的接口实现类组成比如: ClusterManager, FileSystem等等.
+类似一个门面模式(Face) 这里先关注对 Netty EventLoop 的使用
 
-Vertx 作为核心类类似于 Spring的ApplicationContenxt. 
-由许多的接口实现类组成比如: ClusterManager, FileSystem等等. 类似一个门面模式(Face)
-这里先关注对 Netty EventLoop 的使用
-
-
-** VertxThreadFactory
-@code java
-public interface VertxThreadFactory extends VertxServiceProvider {
-
-  VertxThreadFactory INSTANCE = new VertxThreadFactory() {
-  };
-
-  @Override
-  default void init(VertxBuilder builder) {
-    if (builder.threadFactory() == null) {
-      builder.threadFactory(this);
-    }
-  }
-
-  /**
-    * 创建一个VertxThread对象.
-    */
-  default VertxThread newVertxThread(Runnable target, String name, boolean worker, long maxExecTime, TimeUnit maxExecTimeUnit) {
-    return new VertxThread(target, name, worker, maxExecTime, maxExecTimeUnit);
-  }
-}
-
-@end
-
-
-** VertxThread
-@code java
-/**
-实现了阻塞线程监控
-*/
-public class VertxThread extends FastThreadLocalThread implements BlockedThreadChecker.Task {
-
-}
-@end
-
-
-** Vertx
-@code java
+#+begin_src java
 public class VertxImpl implements VertxInternal, MetricsProvider {
 
   final WorkerPool workerPool;
@@ -57,10 +18,11 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
 
 
   /**
-  * 通过简单VertxBuilder的代码查看
+  * 简单VertxBuilder的代码查看
   * threadFactory = VertxThreadFactory.INSTANCE;
   * executorServiceFactory = ExecutorServiceFactory.INSTANCE;
-  * 等同于调用JDK中的执行器框架 Executors.newFixedThreadPool(maxConcurrency, threadFactory);
+  *
+  *
   *
   */
   VertxImpl(VertxOptions options, ClusterManager clusterManager,
@@ -75,7 +37,6 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     }
 
   
-    // 是否为守护线程
     Boolean useDaemonThread = options.getUseDaemonThread();
     // IO工作线程大小, 20
     int workerPoolSize = options.getWorkerPoolSize();
@@ -83,10 +44,9 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     int internalBlockingPoolSize = options.getInternalBlockingPoolSize();
 
   
-    //EventLoop的最大执行时长, 默认 2s. 
+    // EventLoop的最大执行时长, 默认 2s
     long maxEventLoopExecuteTime = options.getMaxEventLoopExecuteTime();
     TimeUnit maxEventLoopExecuteTimeUnit = options.getMaxEventLoopExecuteTimeUnit();
-    //创建acceptor的ThreadFactory. Reactor模式中Acceptor复杂接收IO事件并分发给Worker线程, Vertx是单个Acceptor模式(NIO来说所有的通道不管是Server还是Client都会注册到同一个Selector上).
     ThreadFactory acceptorEventLoopThreadFactory = createThreadFactory(threadFactory, checker, useDaemonThread, maxEventLoopExecuteTime, maxEventLoopExecuteTimeUnit, "vert.x-acceptor-thread-", false);
 
     // 最大执行时长, 默认 60s
@@ -126,8 +86,7 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     //省略其他代码...
   }
 
-  // 一个简单的包装, 自定义了线程的名称, 是否是守护线程,指定了线程最大执行时长.
-  // 并将新创建的VertxThread注册到 BlockedThreadChecker 中
+  // 一个简单的包装, 自定义了线程的名称, 指定了线程最大执行时长
   private static ThreadFactory createThreadFactory(VertxThreadFactory threadFactory, BlockedThreadChecker checker, Boolean useDaemonThread, long maxExecuteTime, TimeUnit maxExecuteTimeUnit, String prefix, boolean worker) {
     AtomicInteger threadCount = new AtomicInteger(0);
     return runnable -> {
@@ -140,6 +99,45 @@ public class VertxImpl implements VertxInternal, MetricsProvider {
     };
   }
 
+  //ExecutorServiceFactory中的提供的实现. 使用JDK的Eexcutor框架提供的固定线程池.
+  ExecutorServiceFactory INSTANCE = (threadFactory, concurrency, maxConcurrency) ->
+    Executors.newFixedThreadPool(maxConcurrency, threadFactory);
+
 }
-@end
+#+end_src
+
+** Context
+Handler 执行上下文. 通常来说一个 Context 是EventLoop Contenxt,
+与一个指定的 EventLoop 线程绑定.
+因此该上下文的执行始终发生在完全相同的event loop线程上.
+
+#+begin_src java
+public interface Context {
+
+  // 主要提供的方法，运行一个异步任务.
+  void runOnContext(Handler<Void> action);
+
+  // 运行阻塞任务, 与runOnContext不同, 不会运行在event loop线程中.
+  <T> void executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered, Handler<AsyncResult<@Nullable T>> resultHandler);
+
+  <T> Future<@Nullable T> executeBlocking(Handler<Promise<T>> blockingCodeHandler, boolean ordered);
+
+}
+
+public interface ContextInternal extends Context {
+  static ContextInternal current() {
+    Thread thread = Thread.currentThread();
+    if (thread instanceof VertxThread) {
+      return ((VertxThread) thread).context();
+    } else {
+      VertxImpl.ContextDispatch current = VertxImpl.nonVertxContextDispatch.get();
+      if (current != null) {
+        return current.context;
+      }
+    }
+    return null;
+  }
+
+}
+#+end_src
 

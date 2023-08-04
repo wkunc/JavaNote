@@ -1,7 +1,7 @@
 * TaskQueue
 
 从ContextBase中看到这个类. 实现了队列任务逻辑.
-@code java
+#+begin_src java
   public class TaskQueue {
 
   static final Logger log = LoggerFactory.getLogger(TaskQueue.class);
@@ -90,4 +90,4 @@
     }
   }
 }
-@end
+#+end_src

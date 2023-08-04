@@ -2,7 +2,7 @@
 
 ** AsyncResult
 
-@code java
+#+begin_src java
 public interface AsyncResult<T> {
 
   T result();
@@ -155,17 +155,18 @@ public interface AsyncResult<T> {
     return otherwise(err -> null);
   }
 }
-@end
+#+end_src
 
 
 ** Future
-   在AsyncResult的基础上增加:
-   ~ 增加回调onComplete() 方法新增
-   ~ 增加 compose(), transform(), eventually() 等Future连接起来的方法
-   > 和 map() otherwise() 方法不同, map和otherwise是在Future成功/失败后修改结果/Throwable的方法
+
+在AsyncResult的基础上增加:
+- 增加回调onComplete() 方法新增
+- 增加 compose(), transform(), eventually() 等Future连接起来的方法
+> 和 map() otherwise() 方法不同, map和otherwise是在Future成功/失败后修改结果/Throwable的方法
 
 
-@code  java
+#+begin_src java
 public interface Future<T> extends AsyncResult<T> {
    /**
    * Has the future completed?
@@ -265,15 +266,15 @@ public interface Future<T> extends AsyncResult<T> {
   }
 
 }
-@end
+#+end_src
 
 ** Promise
-   Promise提供complete(),tryComplete(),fail(),tryFail()等完成方法
-   以及 future() 方法返回关联的Future<T>
 
-   获取 Promise 对象在后续调用完成方法, 然后返回关联的Future 是用户接口实现的常见用法
+Promise提供complete(),tryComplete(),fail(),tryFail()等完成方法
+以及 future() 方法返回关联的Future<T>
+获取 Promise 对象在后续调用完成方法, 然后返回关联的Future 是用户接口实现的常见用法
   
-@code java
+#+begin_src java
 public interface Promise<T> extends Handler<AsyncResult<T>> {
 
 
@@ -385,5 +386,5 @@ public interface Promise<T> extends Handler<AsyncResult<T>> {
   Future<T> future();
 
 }
-@end
+#+end_src
 

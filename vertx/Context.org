@@ -1,6 +1,7 @@
-* Cotext
+#+title: Context
+* Context
 
-@code java
+#+begin_src java
 public interface Context {
   // 主要提供的方法，运行一个异步任务.
   void runOnContext(Handler<Void> action);
@@ -15,7 +16,11 @@ public interface Context {
   Handler<Throwable> exceptionHandler();
 
 }
+#+end_src 
 
+* ContextInternal
+
+#+begin_src java
 public interface ContextInternal extends Context {
 
   static ContextInternal current() {
@@ -127,9 +132,13 @@ public interface ContextInternal extends Context {
   }
 
 }
-@end
+#+end_src 
 
-@code java
+** ContextBase
+
+[[file:./TaskQueue.org][TaskQueue]]
+
+#+begin_src java
 public abstract class ContextBase implements ContextInternal {
 
   private final VertxInternal owner;
@@ -270,11 +279,12 @@ public abstract class ContextBase implements ContextInternal {
   protected abstract <T> void emit(ContextInternal ctx, T argument, Handler<T> task);
 
 }
-@end
+
+#+end_src 
 
 ** WorkerContext
 
-@code java
+#+begin_src java
 public class WorkerContext extends ContextBase {
 
   WorkerContext(VertxInternal vertx,
@@ -395,5 +405,4 @@ public class WorkerContext extends ContextBase {
     return Context.isOnWorkerThread();
   }
 }
-
-@end
+#+end_src 
