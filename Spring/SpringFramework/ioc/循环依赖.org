@@ -154,3 +154,23 @@ beanDefinitionNames 这个的顺序取决于BeanDefinition注册的顺序.
 
 这时需要查看Spring配置类,xml解析的相关代码.
 
+
+**** 重复运行流水线, 打包出的镜像偶发循环依赖的原因
+
+=Idea= 运行时会取决于target/classes 目录里的 *文件顺序* 也就是字母顺序
+=Spring Boot jar= 会取决于jar包里的 *文件顺序*, 也就取决于 =maven-jar-plugin= 实现的打包顺序
+公司使用的 =maven-jar-plugin= 插件版本为 =3.1.2= 此时打包时的文件顺序是随机的 *(只看了现象未分分析3.1.2代码)*
+每次运行 =mvn clean package= 产生的jar包中都有不同的结果
+
+*** Maven 打包设置
+查看 [[https://github.com/apache/maven-jar-plugin][maven-jar-plugin]] 源码. 可以找到解决方法
+
+#+begin_src xml
+    <properties>
+        <!--使用3.2.0以上版本的打包插件可以固定jar包中class的顺序>
+        <!--配置outputTimestamp可以按照字母顺序排序-->
+        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <project.build.outputTimestamp>${maven.build.timestamp}</project.build.outputTimestamp>
+    </properties>
+#+end_src xml
+
