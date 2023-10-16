@@ -1,0 +1,62 @@
+#+startup: perview
+
+* TODO Mysql 锁实践 [0/7] [0%]
+参考文档: [[HTTPS://DEV.MYSQL.COM/DOC/REFMAN/8.0/EN/INNODB-LOCKING.HTML][MYSQL-Innoodb Locking]]
+
+** TODO Share and Exclusive Locks(共享/排他锁)
+  InnoDB 实现了两种标准的 *行级* 的锁定 ~共享锁~ 和 ~排他锁~
+
+  - 共享锁允许持有它的事务读取行, 所以又称读锁, 官方也叫 ~S锁~
+  - 排他锁允许持有它的事务更新或者删除行, 所以又称写锁, 官方也叫 ~X锁~
+
+  锁的申请
+  1. 如果 T1 事务持有r行上的 ~S锁~, T2事务对r行可以申请获得S锁, 但是不能申请X锁
+  2. 如果 T1 事务持有r行上的 ~x锁~, T2事务对r行上的任何锁申请都获得, 需要等待T1释放r行的锁定
+
+** TODO Intention Locks(意向锁)
+  InnoDB 支持 /multiple granularity locking(多粒度锁定)/, 允许 ~行锁~ 和 ~表锁~ 共存.
+  为了使多粒度级别的锁定实用, InnoDB使用意向锁.
+  意向锁是表级锁, 指示事务稍后需要对表中的行实用那种类型的锁.
+
+** TODO Record Locks(记录锁)
+   记录锁是索引记录上的锁
+
+** TODO Gap Locks(间隙锁)
+   用于锁定一个区间, 特点是不是互斥的. 不同事务可以或同一个区间的间隙锁.
+   select * from test where code = 7 for update;
+   此时只有code = 5和9的记录, 找不到7的记录.就会产生间隙锁来锁定(5,9)这个区间. 注意是个开区间记录5和9并没有被锁定.可以被修改.
+
+
+** TODO Next-key Locks
+
+
+** TODO Insert-intention Locks(插入意向锁)
+
+** TODO AUTO-INC Locks
+
+
+** 测试情况
+  SQL执行时都开启了手动事务
+
+*** 只根据主键进行查询
+**** 查询 = 条件查询
+     产生 间隙锁
+**** 查询 >, <, in 条件查询
+     产生 Next-Key Lock
+
+*** 根据索引字段查询
+  #+begin_src sql
+  select * from film where title = 'ACADEMY DINOSAUR' for update;
+  #+end_src
+  |-------------+------------+-----------+---------------+-----------------------|
+  | OBJECT_NAME | INDEX_NAME | LOCK_TYPE | LOCK_MODE     | LOCK_DATA             |
+  |-------------+------------+-----------+---------------+-----------------------|
+  | film        |            | TABLE     | IX            |                       |
+  | film        | idx_title  | RECORD    | X             | 'ACADEMY DINOSAUR', 1 |
+  | film        | PRIMARY    | RECORD    | X,REC_NOT_GAP | 1                     |
+  | film        | idx_title  | RECORD    | X,GAP         | 'ACE GOLDFINGER', 2   |
+  |-------------+------------+-----------+---------------+-----------------------|
+
+*** 查询非索引字段
+
+    NODEA

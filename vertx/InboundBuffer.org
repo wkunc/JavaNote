@@ -1,0 +1,260 @@
+
+*  InboundBuffer 代码解读
+
+  通过背压将元素传输到处理程序的缓冲区。
+  缓冲区是软限制的，即生产者可以写入任意数量的元素，并且应与缓冲区合作以免使其过载。
+  写入缓冲区 当生产者向缓冲区写入元素时，write 方法返回的布尔值指示是否可以继续安全地添加更多元素或停止。
+
+  #+begin_src java
+  public class InboundBuffer<E> {
+    /**
+     * A reusable sentinel for signaling the end of a stream.
+     */
+    public static final Object END_SENTINEL = new Object();
+
+    private final ContextInternal context;
+    // 缓存的元素个数
+    private final ArrayDeque<E> pending;
+    // 水位线, 也就 pending 队列中最多存储的消息个数. 超过write() 方法会返回 false. 告诉生产者应该暂停write
+    private final long highWaterMark;
+    // 当前需求的元素个数. 等于Long.MAX_VALUE时,相当于处于 flowing 模式
+    private long demand;
+    // 注册的消费者处理逻辑
+    private Handler<E> handler;
+    // todo
+    private boolean overflow;
+    // drainHandler, 当前Buffer中缓存的元素都被消费后调用, 可以用来注册恢复生产者的生产逻辑
+    private Handler<Void> drainHandler;
+    private Handler<Void> emptyHandler;
+    private Handler<Throwable> exceptionHandler;
+    // todo 初始值false, 当 demand 或者排队元素大小是 0 时设置为false.
+    // 是否处于发送状态, 如果是的话, write 方法需要将元素放到pending中, 而不是立刻触发,保证元素的消费顺序.
+    private boolean emitting;
+
+    public InboundBuffer(Context context) {
+      this(context, 16L);
+    }
+
+    public InboundBuffer(Context context, long highWaterMark) {
+      if (context == null) {
+        throw new NullPointerException("context must not be null");
+      }
+      if (highWaterMark < 0) {
+        throw new IllegalArgumentException("highWaterMark " + highWaterMark + " >= 0");
+      }
+      this.context = (ContextInternal) context;
+      this.highWaterMark = highWaterMark;
+      this.demand = Long.MAX_VALUE;
+      // empty ArrayDeque's constructor ArrayDeque allocates 16 elements; let's delay the allocation to be of the proper size
+      this.pending = null;
+    }
+  }
+  #+end_src
+
+
+** Write
+   #+begin_src java
+  /**
+   * 写入元素到buffer中. 如果可以元素会同步传递给 handler(消费者逻辑). 
+   * 否则就排队, 等待稍后传递
+   * 
+   * 如果返回 false 时, 生产者应该停止写入
+   */
+  public boolean write(E element) {
+    checkThread();
+    Handler<E> handler;
+    synchronized (this) {
+      // 由于 emitting 在 deamnd 或者 pending.size == 0 时为false,
+      // 而要想进入else 需要两个都是false, deamnd != 0 的话, 一定没有排队的元素. 所以这里 else 的逻辑不会导致消息的顺序有问题
+      if (demand == 0L || emitting) {
+        // 延迟初始化缓存, 可以精确初始化需要的大小. 这里就设置了缓存的大小为1
+        // 之前版本时在构造器就初始化了 ArrayDeque.
+        if (pending == null) {
+          pending = new ArrayDeque<>(1);
+        }
+        pending.add(element);
+        return checkWritable();
+      } else {
+        if (demand != Long.MAX_VALUE) {
+          --demand;
+        }
+        emitting = true;
+        handler = this.handler;
+      }
+    }
+    handleEvent(handler, element);
+    return emitPending();
+  }
+
+  private boolean checkWritable() {
+    if (demand == Long.MAX_VALUE) {
+      return true;
+    } else {
+      long actual = size() - demand;
+      boolean writable = actual < highWaterMark;
+      overflow |= !writable;
+      return writable;
+    }
+  }
+
+  /**
+   * 批量写入元素的版本, 
+   * Write an {@code iterable} of {@code elements}.
+   *
+   * @see #write(E)
+   * @param elements the elements to add
+   * @return {@code false} when the producer should stop writing
+   */
+  public boolean write(Iterable<E> elements) {
+    checkThread();
+    synchronized (this) {
+      final int requiredCapacity;
+      if (pending == null) {
+        if (elements instanceof Collection) {
+          requiredCapacity = ((Collection<E>) elements).size();
+        } else {
+          requiredCapacity = 1;
+        }
+        pending = new ArrayDeque<>(requiredCapacity);
+      }
+      for (E element : elements) {
+        pending.add(element);
+      }
+      if (demand == 0L || emitting) {
+        return checkWritable();
+      } else {
+        emitting = true;
+      }
+    }
+    return emitPending();
+  }
+
+  // 将排队的元素发给消费者, 
+  // 直到满足消费者需要的数量(deamnd == 0) 或者没有消息可以发送(pending.size() == 0)
+  // 此时停止发送, 将 emitting 设置为 false.
+  private boolean emitPending() {
+    E element;
+    Handler<E> h;
+    while (true) {
+      synchronized (this) {
+        int size = size();
+        if (demand == 0L) {
+          emitting = false;
+          boolean writable = size < highWaterMark;
+          overflow |= !writable;
+          return writable;
+        } else if (size == 0) {
+          emitting = false;
+          return true;
+        }
+        if (demand != Long.MAX_VALUE) {
+          demand--;
+        }
+        assert pending != null;
+        element = pending.poll();
+        h = this.handler;
+      }
+      handleEvent(h, element);
+    }
+  }
+   #+end_src
+
+** pause/fetch/resume
+  #+begin_src java
+
+  /**
+   * Pause the buffer, it sets the buffer in {@code fetch} mode and clears the actual demand.
+   *
+   */
+  public synchronized InboundBuffer<E> pause() {
+    demand = 0L;
+    return this;
+  }
+
+  /**
+   * Resume the buffer, and sets the buffer in {@code flowing} mode.
+   * <p/>
+   * Pending elements in the buffer will be delivered asynchronously on the context to the handler.
+   * <p/>
+   * This method can be called from any thread.
+   *
+   * @return {@code true} when the buffer will be drained
+   */
+  public boolean resume() {
+    return fetch(Long.MAX_VALUE);
+  }
+
+     /**
+   * Request a specific {@code amount} of elements to be fetched, the amount is added to the actual demand.
+   * <p/>
+   * Pending elements in the buffer will be delivered asynchronously on the context to the handler.
+   * <p/>
+   * This method can be called from any thread.
+   *
+   * @return {@code true} when the buffer will be drained
+   */
+  public boolean fetch(long amount) {
+    if (amount < 0L) {
+      throw new IllegalArgumentException();
+    }
+    synchronized (this) {
+      demand += amount;
+      if (demand < 0L) {
+        demand = Long.MAX_VALUE;
+      }
+      if (emitting || (isEmpty() && !overflow)) {
+        return false;
+      }
+      emitting = true;
+    }
+    context.runOnContext(v -> drain());
+    return true;
+  }
+
+  /**
+   * Drain the buffer.
+   * <p/>
+   * Calling this assumes {@code (demand > 0L && !pending.isEmpty()) == true}
+   */
+  private void drain() {
+    int emitted = 0;
+    Handler<Void> drainHandler;
+    Handler<Void> emptyHandler;
+    while (true) {
+      E element;
+      Handler<E> handler;
+      synchronized (this) {
+        int size = size();
+        if (size == 0) {
+          emitting = false;
+          if (overflow) {
+            overflow = false;
+            drainHandler = this.drainHandler;
+          } else {
+            drainHandler = null;
+          }
+          emptyHandler = emitted > 0 ? this.emptyHandler : null;
+          break;
+        } else if (demand == 0L) {
+          emitting = false;
+          return;
+        }
+        emitted++;
+        if (demand != Long.MAX_VALUE) {
+          demand--;
+        }
+        assert pending != null;
+        element = pending.poll();
+        handler = this.handler;
+      }
+      handleEvent(handler, element);
+    }
+    if (drainHandler != null) {
+      handleEvent(drainHandler, null);
+    }
+    if (emptyHandler != null) {
+      handleEvent(emptyHandler, null);
+    }
+  }
+  #+end_src
+

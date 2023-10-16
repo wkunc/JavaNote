@@ -1,0 +1,20 @@
+* VertxHandler
+
+#+begin_src java
+public final class VertxHandler<C extends ConnectionBase> extends ChannelDuplexHandler {
+
+  public static <C extends ConnectionBase> VertxHandler<C> create(Function<ChannelHandlerContext, C> connectionFactory) {
+    return new VertxHandler<>(connectionFactory);
+  }
+
+  private final Function<ChannelHandlerContext, C> connectionFactory;
+  private C conn;
+  private Handler<C> addHandler;
+  private Handler<C> removeHandler;
+
+  private VertxHandler(Function<ChannelHandlerContext, C> connectionFactory) {
+    this.connectionFactory = connectionFactory;
+  }
+}
+
+#+end_src

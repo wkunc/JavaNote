@@ -1,0 +1,29 @@
+* ConnectionBase
+
+#+begin_src java
+public abstract class ConnectionBase {
+  public final VoidChannelPromise voidPromise;
+  protected final VertxInternal vertx;
+  protected final ChannelHandlerContext chctx;
+  protected final ContextInternal context;
+  private Handler<Throwable> exceptionHandler;
+  private Handler<Void> closeHandler;
+  private int writeInProgress;
+  private Object metric;
+  private SocketAddress remoteAddress;
+  private SocketAddress realRemoteAddress;
+  private SocketAddress localAddress;
+  private SocketAddress realLocalAddress;
+  private ChannelPromise closePromise;
+  private Future<Void> closeFuture;
+  private long remainingBytesRead;
+  private long remainingBytesWritten;
+
+  // State accessed exclusively from the event loop thread
+  private boolean read;
+  private boolean needsFlush;
+  private boolean closed;
+
+}
+#+end_src
+
