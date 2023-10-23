@@ -186,8 +186,6 @@ private static void doConnect(
 
 #+end_src
 
-* Netty client 初始化流程
-
 ** Register 流程
 Channel注册通用逻辑部分
 #+begin_src java
@@ -276,5 +274,117 @@ protected abstract class AbstractUnsafe implements Unsafe {
 ** Connect 流程
 
 ** Read 流程
+   默认情况下 autoRead 为true, active 事件中会调用beginRead() 方法
+   Nio模式下就会去注册对read事件的监听.
+   NioEventLoop 循环中获取到channel准备好read时就会触发NioUnsafe.read()方法
+
+#+begin_src java 
+// AbstractNioByteChannel.NioByteUnsafe
+@Override
+public final void read() {
+  final ChannelConfig config = config();
+  if (shouldBreakReadReady(config)) {
+      clearReadPending();
+      return;
+  }
+  final ChannelPipeline pipeline = pipeline();
+  final ByteBufAllocator allocator = config.getAllocator();
+  // RecvByteBufAllocator字面意思, 负责接受方的 byteBuf 的分配.
+  // 有多种实现不同的策略来达到每次分配合理的byteBuf大小
+  // 减少分配次数(多次分配自然会影响性能)且不浪费内存(不会分配过大的byteBuf)
+  // NIO默认情况下使用 AdaptiveRecvByteBufAllocator (默认值在DefaultChannelConfig构造器中)
+  final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
+  allocHandle.reset(config);
+
+  ByteBuf byteBuf = null;
+  boolean close = false;
+  try {
+      do {
+          // 先用分配器分配一个 byteBuf
+          byteBuf = allocHandle.allocate(allocator);
+          // doReadBytes(byteBuf) 就是调用底层方法读取字节到byteBuf中,并返回读取到字节数
+          // 调用 allocHandle.lastBytesRead(long) 方法记录本次读取字节数量
+          allocHandle.lastBytesRead(doReadBytes(byteBuf));
+          // 如果本次读取字节 <=0 说明没有读取到任何内容, 释放byteBuf.
+          // 如果 < 0 说明是EOF, 读已关闭
+          if (allocHandle.lastBytesRead() <= 0) {
+              // nothing was read. release the buffer.
+              byteBuf.release();
+              byteBuf = null;
+              close = allocHandle.lastBytesRead() < 0;
+              if (close) {
+                  // There is nothing left to read as we received an EOF.
+                  readPending = false;
+              }
+              break;
+          }
+
+          // 增长读取次数
+          allocHandle.incMessagesRead(1);
+          readPending = false;
+          pipeline.fireChannelRead(byteBuf);
+          byteBuf = null;
+      // continueReading() 是否要继续读取
+      } while (allocHandle.continueReading());
+
+      allocHandle.readComplete();
+      pipeline.fireChannelReadComplete();
+
+      if (close) {
+          closeOnRead(pipeline);
+      }
+  } catch (Throwable t) {
+      handleReadException(pipeline, byteBuf, t, close, allocHandle);
+  } finally {
+      // Check if there is a readPending which was not processed yet.
+      // This could be for two reasons:
+      // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+      // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+      //
+      // See https://github.com/netty/netty/issues/2254
+      if (!readPending && !config.isAutoRead()) {
+          removeReadOp();
+      }
+  }
+}
+#+end_src 
+
+
+AbstractUnsafe.java
+#+begin_src java
+@Override
+public RecvByteBufAllocator.Handle recvBufAllocHandle() {
+  if (recvHandle == null) {
+      recvHandle = config().getRecvByteBufAllocator().newHandle();
+  }
+  return recvHandle;
+}
+#+end_src
+
+~DefaultChannelConfig~ 的构造器中指定了默认的采用的 ~RecvByteBufAllocator~
+#+begin_src java
+public DefaultChannelConfig(Channel channel) {
+    this(channel, new AdaptiveRecvByteBufAllocator());
+}
+
+protected DefaultChannelConfig(Channel channel, RecvByteBufAllocator allocator) {
+    setRecvByteBufAllocator(allocator, channel.metadata());
+    this.channel = channel;
+}
+
+private void setRecvByteBufAllocator(RecvByteBufAllocator allocator, ChannelMetadata metadata) {
+    checkNotNull(allocator, "allocator");
+    checkNotNull(metadata, "metadata");
+    // 大部分时候 maxMessagesPerRead = 16
+    if (allocator instanceof MaxMessagesRecvByteBufAllocator) {
+        ((MaxMessagesRecvByteBufAllocator) allocator).maxMessagesPerRead(metadata.defaultMaxMessagesPerRead());
+    }
+    setRecvByteBufAllocator(allocator);
+}
+
+#+end_src
+
 
 ** Close 流程
+
+

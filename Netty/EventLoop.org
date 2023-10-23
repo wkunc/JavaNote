@@ -5,8 +5,6 @@
 #+date:<2023-07-28 五> 
 
 * EventLoop
-[[file:EventLoopGroup.org][EventLoop]]
-[[file:EventLoopGroup.png][EventLoop]]
 
 处理Channle的所有IO操作, 一个 EventLoop 实例通常会处理多个 Channel,
 但这可能取决于实现细节和内部结构(netty兼容一个连接一个线程的形式)
