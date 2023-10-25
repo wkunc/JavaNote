@@ -7,5 +7,9 @@
 *.iws
 *.iml
 *.ipr
+
+# 忽略obsidian
+.obsidian
+
 # 忽略MacOS
 \.DS_Store

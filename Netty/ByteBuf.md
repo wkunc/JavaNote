@@ -1,3 +1,4 @@
+#Netty
 # ByteBuf
 网络数据的基本单位总是字节. Java NIO 提供了*ByteBuffer*作为它的字节容器,
 但是这个类使用起来过于复杂, 而且也有些繁琐.
