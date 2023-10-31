@@ -375,6 +375,7 @@ private void setRecvByteBufAllocator(RecvByteBufAllocator allocator, ChannelMeta
 
 ## Write 流程
 
+### `write(msg, promise)`
 write 作为出站事件从tail开始传播
 ```java
 @Override  
@@ -438,7 +439,10 @@ public final void write(Object msg, ChannelPromise promise) {
 }
 ```
 
-`unsafe.flush()`
+### `unsafe.flush()`
+
+[[ChannelOutboundBuffer#`addFlush()`]]
+
 ```java
 @Override
 public final void flush() {
@@ -452,7 +456,9 @@ public final void flush() {
     outboundBuffer.addFlush();
     flush0();
 }
+```
 
+```java
 @SuppressWarnings("deprecation")
 protected void flush0() {
     if (inFlush0) {
@@ -498,7 +504,6 @@ protected void flush0() {
 ### `dowWrite()`
 
 * AbstractNioByteChannel.java
-获取当前待写入entry.
 
 ``` java
 @Override
@@ -506,6 +511,8 @@ protected void doWrite(ChannelOutboundBuffer in) throws Exception {
     // 写循环次数, 默认16次(ps: 读循环默认也是16次)
     int writeSpinCount = config().getWriteSpinCount();
     do {
+        // 获取当前待写入entry.msg, 返回空说明已经写完了所有msg
+        // 清除 OpWrite 可写事件监听
         Object msg = in.current();
         if (msg == null) {
             // Wrote all messages.
