@@ -2,7 +2,7 @@
 Feign.Builder
 Feign提供了一个builder用来构造 FeignClient
 
-* List<RequestInterceptor>
+* List\<RequestInterceptor>
 * Contract
 * Client
 * Retryer

@@ -1,0 +1,40 @@
+* 线程中断
+
+#+begin_src java
+
+  class Thread {
+
+    // 设置线程的中断状态
+    public void interrupt() {
+        if (this != Thread.currentThread()) {
+            checkAccess();
+
+            // thread may be blocked in an I/O operation
+            synchronized (interruptLock) {
+                Interruptible b = nioBlocker;
+                if (b != null) {
+                    interrupted = true;
+                    interrupt0();  // inform VM of interrupt
+                    b.interrupt(this);
+                    return;
+                }
+            }
+        }
+        interrupted = true;
+        interrupt0();  // inform VM of interrupt
+    }
+
+    // 返回线程的中断状态
+    public boolean isInterrupted() {
+        return interrupted;
+    }
+
+    // 静态方法, 获取并清除当前线程的中断状态
+    // 这是清除中断状态的唯一方法
+    public static boolean interrupted() {
+        return currentThread().getAndClearInterrupt();
+    }
+
+  }
+
+#+end_src

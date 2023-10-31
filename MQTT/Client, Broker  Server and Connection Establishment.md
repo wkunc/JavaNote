@@ -19,16 +19,17 @@ MQTT 连接总是发生在一个 client 与 mqtt broker 之间. client 之间不
 
 *MQTT-Packet*
 CONNECT
-|field | example |
-|------|-------------|
+
+| field | example |
+| ------ | ------------- |
 |cliend|"client-1" |
 |cleanSession| true | 
-|username (optional) | "hans"
-|password (optional) | "letmein"
-|lastWillTopic (optional) | "/hans/will"
-|lastWillQos (optional) | 2
+|username (optional) | "hans" |
+|password (optional) | "letmein" |
+|lastWillTopic (optional) | "/hans/will" |
+|lastWillQos (optional) | 2 |
 |lastWillMessage (optional) | "unexpected exit"
-|lastWillRetain (optional) | false
+|lastWillRetain (optional) | false |
 |keepAlive| 60  
 
 * ClientId 
