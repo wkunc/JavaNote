@@ -17,7 +17,7 @@ Person listSimpleById(String id);
 运行时会报错, 提示没有ids这个名字的参数
 > Parameter 'ids' not found. Available parameters are  \["collection", "list"\]
 ```java
-List<Person> listSimpleByIds(List<String> id);
+List<Person> listSimpleByIds(List<String> ids);
 
 ```
 看起来`-parameters`失效了. 本质原因是Mybatis对单个参数的特殊处理.
