@@ -1,4 +1,19 @@
-用链表的结构存储添加的`msg`
+# ChannelOutBoundBuffer
+AbstractChannel 使用的内部数据结构来存储其挂起的出站写入请求.
+所以其构造器只有一个地方使用, 那就是 `AbstractChannel.AbstractUnsafe`
+```java
+protected abstract class AbstractUnsafe implements Unsafe {
+    private volatile ChannelOutboundBuffer outboundBuffer = new ChannelOutboundBuffer(AbstractChannel.this);
+    // ...
+}
+```
+
+用链表的结构存储添加的`msg`,
+有3个指针分别是
+1. `flushedEntry` 链表的头, 表示第一个等待 flush(写入) 的消息
+2. `unflushedEntry` 链表中第一个未标记需要flush的消息, 在其到头之间的消息都需要flush(写入), 之后的消息都不需要flush
+3. `tailEntry` 链表的尾
+
 ```java
 public final class ChannelOutboundBuffer {
 
@@ -12,7 +27,7 @@ public final class ChannelOutboundBuffer {
     private Entry unflushedEntry;
     // The Entry which represents the tail of the buffer
     private Entry tailEntry;
-    // The number of flushed entries that are not written yet
+    // The number of flushed entries that are not written yet (尚未写入的元素个数)
     private int flushed;
 
     private int nioBufferCount;
@@ -50,6 +65,7 @@ public void addMessage(Object msg, int size, ChannelPromise promise) {
 		tail.next = entry;
 	}
 	tailEntry = entry;
+    // unflushedEntry 为空说明之前所有的msg都已经写入了,本次的msg是第一个未写入的节点
 	if (unflushedEntry == null) {
 		unflushedEntry = entry;
 	}
@@ -102,7 +118,7 @@ public void addFlush() {
 
 ## `current()`
 
-返回当前待刷新的entry.
+返回当前第一个待刷新的entry. 也就是 flushedEntry 指针对应的msg.
 如果返回null说明所有entry都已经刷新完了, 没有可写的东西.
 ```java
 public Object current() {

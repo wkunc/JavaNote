@@ -376,22 +376,24 @@ private void setRecvByteBufAllocator(RecvByteBufAllocator allocator, ChannelMeta
 ## Write 流程
 
 ### `write(msg, promise)`
-write 作为出站事件从tail开始传播
+write 作为出站事件从经过的handler顺序是 tail -> head
+
 ```java
+// io.netty.channel.AbstractChannel 定义的通用实现
 @Override  
 public ChannelFuture write(Object msg, ChannelPromise promise) {  
     return pipeline.write(msg, promise);  
 }
 ```
 
-所以在`head`上实现了write方法, 转发给`unsafe.write()`
+所以在`DefaultChannelPipeline.HeadContext`上实现了write方法, 转发给`unsafe.write()`
 ```java
-@Override  
+@Override
 public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {  
     unsafe.write(msg, promise);  
 }
 ```
-`unsafe.write()`实现了写逻辑的大致逻辑. 
+`AbstractUnsafe.write()`实现了写逻辑的大致逻辑. 
 其实就是调用[[ChannelOutboundBuffer#`addMessage()`]]将 `Object msg` 添加待写入的链表中
 ```java
 @Override  
@@ -419,9 +421,12 @@ public final void write(Object msg, ChannelPromise promise) {
   
     int size;  
     try {  
-        // 子类实现消息的过滤
+        // 子类实现消息的过滤, 比如:
         // NioByteChannel 支持 ByteBuf 或者 Fegion
+        // NioDatagramChannel 支持 DatagramPacket  ByteBuf AddressedEnvelope
+        // 而xxxServerChannel没有写入事件, 所以方法直接抛出 UnsupportedOperationException
         msg = filterOutboundMessage(msg);  
+        // 确定msg对象的大小, 
         size = pipeline.estimatorHandle().size(msg);  
         if (size < 0) {  
             size = 0;  
