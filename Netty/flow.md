@@ -2,6 +2,7 @@
 
 | 事件         | 描述                                                                                                                     |
 |--------------|--------------------------------------------------------------------------------------------------------------------------|
+| HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                                              |
 | Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                                             |
 | Active       | Channel.isActive() 返回true 时调用                                                                                       |
 | Read         | Netty 默认开启autoRead, 所以 NIO 在连接后会注册read事件. EventLoop 发现channel准备read时, 调用对应的方法获取到字节时调用 |

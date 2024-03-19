@@ -1,4 +1,6 @@
 # RecvByteBufAllocator
+和 ChannelOutboundBuffer 相似, 主要负责入站消息对应的内存大小分配.
+来保证从底层channel读取消息时分配的 byteBuf 大小足够的大(可以减少从channel读取的次数), 又不至于过大导致内存浪费
 
 ```java
 public interface RecvByteBufAllocator {
