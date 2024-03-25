@@ -151,6 +151,49 @@ public class LockSupport {
 park() 方法会使当前线程停止调度, 也就是 Wait 状态.
 1. 除非其他线程调用了 LockSuppor.unpark(thread) 使对应线程解锁
 2. 线程中断, 也就是调用 thread.interrupt()
-3. The call spuriously (that is, for no reason) returns. (ps:无理由的返回, 不知道咋触发的)
+3. The call spuriously (that is, for no reason) returns. (ps: 虚假唤醒)
 
 unpark() 则可以解锁指定线程. 让线程继续执行
+
+# spurious wakeups (虚假唤醒)
+建议查看 stackoverflow 上相关内容
+[do spurious wakeups in java actually happen](https://stackoverflow.com/questions/1050592/do-spurious-wakeups-in-java-actually-happen)
+[why-does-pthread-cond-wait-have-spurious-wakeups](https://stackoverflow.com/questions/8594591/why-does-pthread-cond-wait-have-spurious-wakeups)
+
+## 第一种虚假唤醒
+[spurious wakeups blog](https://opensourceforgeeks.blogspot.com/2014/08/spurious-wakeups-in-java-and-how-to.html)
+大概是说, linux 所有代码都可能由于硬件发生异常导致暂时中断. 包括线程调度的程序.
+
+然后考虑在中断时期它(线程调度程序)可能错过一些通知线程恢复的信号.
+调度程序如果什么也不做, 由于错过恢复信号,线程将永远不会被唤醒.
+所以调度程序选择唤醒所有等待线程
+
+## 代码导致的虚假唤醒
+
+考虑经典的生产-消费模式. 比如说有一个共享队列有两个消费者一个生产者
+1. Thread1 获取了锁, 然后从队列中获取一个元素进行操作, 此时队列中没有元素了
+2. Thread2 获取了锁, 发现队列中没有元素, 调用wait()等, 让出锁并等待唤醒
+3. Thread3 获取锁, 向队列中生产了一个元素, 并唤醒所有等待线程(也就是Thread2).
+4. 此时线程1刚好处理完第一个元素, 继续循环发现队列存在元素. 获取了该元素 并是否锁
+5. Thread2 被唤醒, 然后获取锁, 然后发现队列中仍然没有元素(由于被Thread1先获取了锁, 先获取了元素)
+
+此时对于Thread2来说可以说是*虚假唤醒*. 被唤醒了但是没有满足唤醒条件.
+
+> 上面的例子是正确代码导致的"虚假唤醒"
+> 而不正确的代码自然也可以导致虚假唤醒, 比如说错误的调用了 notify(), LockSupport.unpark() 
+> 导致的唤醒, 也可以称为虚假唤醒
+
+## pthread_cond_wait 为啥不处理系统虚假唤醒
+为啥设计出了虚假唤醒.
+> Spurious wakeups may sound strange, but on some multiprocessor systems,
+> making condition wakeup completely predictable might substantially slow all condition variable operations.
+大概是说在多处理器系统上, 实现完全的条件唤醒非常的消耗性能
+
+更有趣的说法
+> 就是之前说得的代码层面的虚假唤醒无法避免
+> 也就是说即使不考虑系统的虚假唤醒. 用户也必须要考虑代码导致的虚假唤醒
+> 从而把 LockSupport.park() 之类的方法放在循环中. 才能写出健壮的程序
+> 所以就不需要在系统库层面上处理, 系统导致的虚假中断. 因为用户应该要处理代码的虚假中断
+> 所以不需要处理系统导致的虚假中断, 也不会给用户代码增加额外的开销
+> 并且不处理还可以让用户强制去处理虚假中断, 从而写出健壮的代码还能避免处理系统虚假中断的开销.
+
