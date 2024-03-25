@@ -85,6 +85,72 @@ Thread.join(), 方法通常用于让当前线程挂起等待目标线程完成�
 ```
 
 # interrupt 线程中断
+虽然没有把线程中断和取消语意关联起来, 但是实际上用中断来处理取消之外的任何事情都是不明智的.
 
+任务的取消, 在远古时代Thread.stop()方法可以达成目的. 直接将运行线程给停止,自然可以达到取消任务的目的.
+但是发现强制取消线程会导致各种问题. 停止线程会直接释放线程获取的锁, 可能把修改到一半的对象对外暴露
+所以不要使用 stop() 方法.
 
+所以最简单的思路就是定义一个标记, 让线程检测这个标记位,如果被修改了就自己在合适的位置进行结束.
+```java
+public class PrimeGenerator implements Runnable{
+  private final List<BigInteger> primes = new ArrayList<>();
+  private volatile boolean cancelled;
 
+  @Override
+  public void run() {
+    BigInteger p = BigInteger.ONE;
+    while (!cancelled) {
+      p = p.nextProbablePrime();
+      synchronized (this) {
+        primes.add(p);
+      }
+    }
+  }
+
+  public void cancel() {
+    cancelled = true;
+  }
+
+  public synchronized List<BigInteger> get() {
+    return new ArrayList<>(primes);
+  }
+
+}
+```
+根据取消标记的思路, 我们很容易实现可取消的任务.
+
+当然这里也存在问题, 那就是如果我们在while循环中调用了一些阻塞线程的库函数.
+比如说将 `List.add()` 替换为 `BlockingQueue.put()` 操作.
+当队列满后, 线程将会阻塞在while流程中, 此时就没有机会检查自定义的取消标记了.
+因为官方的阻塞操作,不会去检测我们自定义的标记.
+
+所以java就官方定一个线程的取消标记叫做 `interrupted`. jdk中的阻塞操作会检测这个标记.
+如果发现标记被设置为`true`时, 会抛出 `InterruptedException` 异常. 这样就停止了阻塞操作.
+并且告诉调用者发生了线程中断, 应该取消任务.
+```java
+    private volatile boolean interrupted;
+```
+
+# Locksupport
+
+```java
+public class LockSupport {
+    private LockSupport() {} // Cannot be instantiated.
+
+    public static void park() {
+        U.park(false, 0L);
+    }
+
+    public static void unpark(Thread thread) {
+        if (thread != null)
+            U.unpark(thread);
+    }
+}
+```
+park() 方法会使当前线程停止调度, 也就是 Wait 状态.
+1. 除非其他线程调用了 LockSuppor.unpark(thread) 使对应线程解锁
+2. 线程中断, 也就是调用 thread.interrupt()
+3. The call spuriously (that is, for no reason) returns. (ps:无理由的返回, 不知道咋触发的)
+
+unpark() 则可以解锁指定线程. 让线程继续执行
