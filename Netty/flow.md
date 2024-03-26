@@ -4,11 +4,12 @@
 |--------------|--------------------------------------------------------------------------------------------------------------------------|
 | HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                                              |
 | Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                                             |
+| Connect      | 调用了Channel.connet() 方法进行连接                                                                                      |
 | Active       | Channel.isActive() 返回true 时调用                                                                                       |
 | Read         | Netty 默认开启autoRead, 所以 NIO 在连接后会注册read事件. EventLoop 发现channel准备read时, 调用对应的方法获取到字节时调用 |
 | ReadComplete |                                                                                                                          |
 | Inactive     |                                                                                                                          |
-| unRegistered |                                                                                                                          |
+| unRegistered | 将Channel和EventLoop分开, 会取消之前注册的事件也就是 SelectionKey.cancel() . 注意的是unRegistered不代表连接会被关闭      |
 
 1.  pipeline.fireChannelRegistered();
 
@@ -51,6 +52,7 @@ private ChannelFutre doBind(final SocketAddress loaclAddress) {
 }
 ```
 
+客户端的connect方法
 ``` java
 private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
   // 1. 用 ChnnelFactory 创建 Channel
@@ -59,7 +61,8 @@ private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, fin
   final ChannelFuture regFuture = initAndRegister();
   final Channel channel = regFuture.channel();
 
-  // 2. 保证在 regFuture 之后执行 doResolveAndConnect0(); 进行connect
+  // 2. 保证在 regFuture 之后执行 doResolveAndConnect0(); 
+  // 如果此时 regFuture 未完成就注册一个 Listener, 在成功后调用 doResolveAndConnect0()
   if (regFuture.isDone()) {
     if (!regFuture.isSuccess()) {
       return regFuture;
@@ -139,6 +142,8 @@ final ChannelFuture initAndRegister() {
 
 
 // Bootstrap.java 188
+// promise 是 channel.newPromise() 获取的, 且没有设置过EventExecutor.
+// 所以Listener会在对应channel关联的EventLoop上执行
 private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress,
                                            final SocketAddress localAddress, final ChannelPromise promise) {
 
@@ -154,7 +159,8 @@ private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress 
 
 // Bootstrap.java 240
 // AbstractChannel 将 connect() 方法委托给 pipeline 实现
-// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. 调用 Unsafe.connect 方法
+// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. (出站事件从tail开始传播)
+// 调用 Unsafe.connect 方法
 private static void doConnect(
         final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
 
