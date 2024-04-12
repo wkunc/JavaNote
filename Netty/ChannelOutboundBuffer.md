@@ -1,3 +1,4 @@
+#Netty
 # ChannelOutBoundBuffer
 AbstractChannel 使用的内部数据结构来存储其挂起的出站写入请求.
 所以其构造器只有一个地方使用, 那就是 `AbstractChannel.AbstractUnsafe`

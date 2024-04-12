@@ -20,11 +20,12 @@ interface ChannelHandler定义的生命周期操作,
 在 ChannelHandler 被添加到 ChannelPipeline 中或者被从 ChannelPipeline 中移除
 时会调用这些操作. 这些方法中的每一个都接受一个 ChannelHandlerContext 参数
 
-|类型|描述|
-|----|----|
-|handlerAdded|当把ChannelHandler添加到ChannelPipeline中时被调用
-|handlerRemoved|当从ChannelPipeline中移除ChannelHandler时被调用
-|execptionCaught|当处理过程中在ChannelPipeline中有错误产生时被调用.
+| 类型              | 描述                                      |
+| --------------- | --------------------------------------- |
+| handlerAdded    | 当把ChannelHandler添加到ChannelPipeline中时被调用 |
+| handlerRemoved  | 当从ChannelPipeline中移除ChannelHandler时被调用  |
+| execptionCaught | 当处理过程中在ChannelPipeline中有错误产生时被调用.       |
+|                 |                                         |
 
 # ChannelPipeline 接口
 如果你任务 ChannelPipline 是一个拦截流经 Channel 的

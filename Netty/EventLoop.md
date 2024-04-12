@@ -1,5 +1,5 @@
 # EventLoop
-![EventLoop类图|600](./NioEventLoop.png)
+![EventLoop类图|600](NioEventLoop.png)
 处理`Channle`的所有IO操作, 一个 EventLoop 实例通常会处理多个`Channel`, 但这可能取决于实现细节和内部结构(netty兼容一个连接一个线程的形式).
 从类图上可以看到, EventLoop 接口是继承自 `EventExecutorGroup`.
 就像 `EventLoopGroup` 接口继承自 `EventExecutorGroup` 一样 在向上可以看到 JDK 定义的 `ScheduledExecutorService`, `ExecutorService`, `Executor` 等接口
@@ -231,7 +231,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
                     // 如果当前没有延时任务, 也没有任何普通任务, 就调用 selector.select() 阻塞当前线程到返回为止.
                     // 如果期间有别的线程调用了 protected void wakeup(boolean inEventLoop) 方法则会停止select动作重新唤醒线程
-                    // (PS: 比如说execute()方法)
+                    // PS: 比如说execute()方法
                     case SelectStrategy.SELECT:
                         // 获取下一个延时任务的时间, 如果没有的化就返回 -1;
                         long curDeadlineNanos = nextScheduledTaskDeadlineNanos();

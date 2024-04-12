@@ -1,3 +1,4 @@
+#Netty
 # 事件顺序
 
 | 事件         | 描述                                                                                                                     |
@@ -94,6 +95,50 @@ private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, fin
 }
 
 
+// Bootstrap.java 188
+// promise 是 channel.newPromise() 获取的, 且没有设置过EventExecutor.
+// 所以Listener会在对应channel关联的EventLoop上执行
+private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress,
+                                           final SocketAddress localAddress, final ChannelPromise promise) {
+
+    // 代码逻辑简化为2个步骤
+    // 1. 获取地址解析器, 解析远程地址(DNS相关)
+    AddressResolver<SocketAddress> resolver = this.resolver.getResolver(eventLoop);
+    final Future<SocketAddress> resolveFuture = resolver.resolve(remoteAddress);
+
+   // 2. 建立连接
+    doConnect(resolveFuture.getNow(), localAddress, promise);
+
+}
+
+// Bootstrap.java 240
+// AbstractChannel 将 connect() 方法委托给 pipeline 实现
+// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. (出站事件从tail开始传播)
+// 调用 Unsafe.connect 方法
+private static void doConnect(
+        final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
+
+    // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
+    // the pipeline in its channelRegistered() implementation.
+    final Channel channel = connectPromise.channel();
+    channel.eventLoop().execute(new Runnable() {
+        @Override
+        public void run() {
+            if (localAddress == null) {
+                channel.connect(remoteAddress, connectPromise);
+            } else {
+                channel.connect(remoteAddress, localAddress, connectPromise);
+            }
+            connectPromise.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+        }
+    });
+}
+
+```
+
+## Register 流程
+
+```java
 // AbstractBootstrap.java 307
 final ChannelFuture initAndRegister() {
     Channel channel = null;
@@ -139,50 +184,7 @@ final ChannelFuture initAndRegister() {
 
     return regFuture;
 }
-
-
-// Bootstrap.java 188
-// promise 是 channel.newPromise() 获取的, 且没有设置过EventExecutor.
-// 所以Listener会在对应channel关联的EventLoop上执行
-private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress,
-                                           final SocketAddress localAddress, final ChannelPromise promise) {
-
-    // 代码逻辑简化为2个步骤
-    // 1. 获取地址解析器, 解析远程地址(DNS相关)
-    AddressResolver<SocketAddress> resolver = this.resolver.getResolver(eventLoop);
-    final Future<SocketAddress> resolveFuture = resolver.resolve(remoteAddress);
-
-   // 2. 建立连接
-    doConnect(resolveFuture.getNow(), localAddress, promise);
-
-}
-
-// Bootstrap.java 240
-// AbstractChannel 将 connect() 方法委托给 pipeline 实现
-// DefaultChannelPipeline 实现调用 tail.connect(), 会经过所有ChannelHandler 最后到达HeadContext. (出站事件从tail开始传播)
-// 调用 Unsafe.connect 方法
-private static void doConnect(
-        final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
-
-    // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
-    // the pipeline in its channelRegistered() implementation.
-    final Channel channel = connectPromise.channel();
-    channel.eventLoop().execute(new Runnable() {
-        @Override
-        public void run() {
-            if (localAddress == null) {
-                channel.connect(remoteAddress, connectPromise);
-            } else {
-                channel.connect(remoteAddress, localAddress, connectPromise);
-            }
-            connectPromise.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-        }
-    });
-}
-
 ```
-
-## Register 流程
 
 Channel注册通用逻辑部分
 
@@ -271,6 +273,7 @@ protected abstract class AbstractUnsafe implements Unsafe {
 
 ## Connect 流程
 
+[[Unsafe#Unsafe.connect()]]
 ## Read 流程
 
 默认情况下 autoRead 为true, active 事件中会调用beginRead() 方法 Nio模式下就会去注册对read事件的监听. NioEventLoop 循环中获取到channel准备好read时就会触发NioUnsafe.read()方法
@@ -513,7 +516,7 @@ protected void flush0() {
 }
 ```
 
-### `dowWrite()`
+### `doWrite()`
 
 * AbstractNioByteChannel.java
 
