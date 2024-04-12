@@ -28,3 +28,79 @@ try {
 > 默认又是写错误自动关闭的, 会导致client没有收到最后的 `Disconnect` 包
 > 感觉大部分情况下都应该将 `autoClose` 设置为false.
  
+
+## 1175
+
+该方法可能在 channelRegistered event 发送前调用, 
+所以为了保证register事件在connect之前(这样用户才有机会在连接之前初始化好pipeline)
+使用 channel.eventLoop().execute() 执行连接逻辑
+
+> [!TIP]
+> 为啥能在channelRegistered event 发送前调用呢
+> 因为 register 返回的future, 没有立刻完成时, 会向其添加Listener(方便注册成功后开始执行连接).
+> 而register流程中注册成功时先 promies.trySuccess(), 此时就会直接通知Listener
+> 然后在调用 fireRegisterEvent() 发送事件
+
+```java
+private static void doConnect(
+        final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
+    // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
+    // the pipeline in its channelRegistered() implementation.
+    final Channel channel = connectPromise.channel();
+    channel.eventLoop().execute(new Runnable() {
+        @Override
+        public void run() {
+            if (localAddress == null) {
+                channel.connect(remoteAddress, connectPromise);
+            } else {
+                channel.connect(remoteAddress, localAddress, connectPromise);
+            }
+            connectPromise.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+        }
+    });
+}
+```
+
+## 13452
+Netty 对 `Selector` 的优化存在缺陷. `SelectedSelectionKeySet` 未实现 `contains()` 方法.
+在`MacOS`, `Windows` 上会丢失Event.
+
+> 根据Issues中的描述, 可以知道在`MacOS`中如果一个通道同时有多个事件 read event (1) and write event(4)
+> linux 会合并返回 5, 而MacOS会分开返回
+> 由于之前的`contions`实现固定返回`false`所以导致, 统一调用`channel.translateAndSetReadyOps`.
+> 这个调用会覆盖上次的readyOps, 一次循环设置了 read ops, 下一次循环设置了 write 
+> 导致read event无了
+> 正确实现`contains`后同一个通道第二个事件处理调用`channel.translateAndUpdateReadyOps`会进行拼接
+> 从而不丢失事件
+
+`KQueueSelectorImpl.updateSelectedKeys()`
+```java
+if (selectedKeys.contains(ski)) {
+    // first time this file descriptor has been encountered on this
+    // update?
+    if (me.updateCount != updateCount) {
+        if (ski.channel.translateAndSetReadyOps(rOps, ski)) {
+            numKeysUpdated++;
+            me.updateCount = updateCount;
+        }
+    } else {
+        // ready ops have already been set on this update
+        ski.channel.translateAndUpdateReadyOps(rOps, ski);
+    }
+} else {
+    ski.channel.translateAndSetReadyOps(rOps, ski);
+    if ((ski.nioReadyOps() & ski.nioInterestOps()) != 0) {
+        selectedKeys.add(ski);
+        numKeysUpdated++;
+        me.updateCount = updateCount;
+    }
+}
+```
+
+## 13849
+
+## 12610
+
+## 11729
+
+## 11708
