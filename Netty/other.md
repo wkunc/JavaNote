@@ -9,19 +9,15 @@
 
 在此Issues之前 Netty 在写入时碰到`IOException`时会主动调用`AbstractUnsafe.close()`关闭连接
 
-```java
-try{
-doWrite(outboundBuffer);
-}catch(
-Throwable t){
-    outboundBuffer.
-
-failFlushed(t);
-    if(t instanceof IOException){
-
-close(voidPromise());
+```
+try {
+    doWrite(outboundBuffer);
+} catch (Throwable t) {
+    outboundBuffer.failFlushed(t);
+    if (t instanceof IOException) {
+        close(voidPromise());
     }
-    }
+}
 ```
 
 如果server向client发送 Disconnect 等包后,关闭连接. 数据到达client时, 正好处于写入流程中.
@@ -68,7 +64,8 @@ private static void doConnect(
 }
 ```
 
-## 13452
+## (13452) Netty对Selector的优化操作可能导致丢失IO事件
+2023/6/16修复
 
 Netty 对 `Selector` 的优化存在缺陷. `SelectedSelectionKeySet` 未实现 `contains()` 方法.
 在`MacOS`, `Windows` 上会丢失Event.
@@ -83,43 +80,81 @@ Netty 对 `Selector` 的优化存在缺陷. `SelectedSelectionKeySet` 未实现 
 
 `KQueueSelectorImpl.updateSelectedKeys()`
 
-```java
-if(selectedKeys.contains(ski)){
+```
+if (selectedKeys.contains(ski)) {
     // first time this file descriptor has been encountered on this
     // update?
-    if(me.updateCount !=updateCount){
-    if(ski.channel.
-
-translateAndSetReadyOps(rOps, ski)){
-numKeysUpdated++;
-me.updateCount =updateCount;
+    if (me.updateCount != updateCount) {
+        if (ski.channel.translateAndSetReadyOps(rOps, ski)) {
+            numKeysUpdated++;
+            me.updateCount = updateCount;
         }
-            }else{
-            // ready ops have already been set on this update
-            ski.channel.
-
-translateAndUpdateReadyOps(rOps, ski);
+    } else {
+        // ready ops have already been set on this update
+        ski.channel.translateAndUpdateReadyOps(rOps, ski);
     }
-        }else{
-        ski.channel.
-
-translateAndSetReadyOps(rOps, ski);
-    if((ski.
-
-nioReadyOps() &ski.
-
-nioInterestOps())!=0){
-    selectedKeys.
-
-add(ski);
-
-numKeysUpdated++;
-me.updateCount =updateCount;
+} else {
+    ski.channel.translateAndSetReadyOps(rOps, ski);
+    if ((ski.nioReadyOps() & ski.nioInterestOps()) != 0) {
+        selectedKeys.add(ski);
+        numKeysUpdated++;
+        me.updateCount = updateCount;
     }
-        }
+}
 ```
 
-## 13849
+## (13843) 使用NIO的情况下应该要支持Connect操作的取消
+(2024/2/18修复)
+Allow to cancel connect() operations when using non-blocking IO
+当使用非阻塞IO时允许connect操作的取消.
+```java
+//io.netty.channel.nio.AbstractNioChannel.AbstractNioUnsafe
+public final void connect(
+    final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
+    // 调用connect后就会将 promise 设置为不可取消.
+    // 导致的结果就是调用BootStrap.connect()之后获取到的ChannelFuture实际上是不可取消的.
+    // 而nio应该支持可取消的connect操作
+    if (!promise.setUncancellable() || !ensureOpen(promise)) {
+        return;
+    }
+    // ... 省略下面代码
+
+    // 如果在doConnect没有直接连接成功，会提交一个延时任务(到时间如果还没连接成功就是连接超时)
+    if (doConnect(remoteAddress, localAddress)) {
+        fulfillConnectPromise(promise, wasActive);
+    } else {
+        // 省略提交连接超时任务的代码
+
+        // 由于上面提交了连接超时的延时任务, 如果说后续取消了连接操作. 那么就需要及时取消连接超时任务
+        // 当然由于开始就设置了不可取消, 其实这部分代码是无法触发的.
+        promise.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (future.isCancelled()) {
+                    if (connectTimeoutFuture != null) {
+                        connectTimeoutFuture.cancel(false);
+                    }
+                    connectPromise = null;
+                    close(voidPromise());
+                }
+            }
+        });
+    }
+}
+```
+
+修改后的代码就不在设置promise为不可取消, 只是简单的检测是否结束(成功完成和取消都是结束)
+```java
+public final void connect(
+    final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
+    // Don't mark the connect promise as uncancellable as in fact we can cancel it as it is using
+    // non-blocking io.
+    if (promise.isDone() || !ensureOpen(promise)) {
+        return;
+    }
+}
+```
+
 
 ## 12610
 
