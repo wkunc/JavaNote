@@ -1,6 +1,7 @@
-# Reactor Core 
+# Reactor Core
 
 ## Flux, an Asynchronous Sequence of O~N Items
+
 一个异步的多个元素的序列.
 
 Flux<T> 是标准的 Publisher<T> (代表0~N个元素的异步序列)

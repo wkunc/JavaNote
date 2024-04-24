@@ -1,6 +1,5 @@
 # SecuritryFilterChain
 
-
 ```java
 public interface SecurityFilterChain {
 
@@ -9,8 +8,6 @@ public interface SecurityFilterChain {
 	List<Filter> getFilters();
 }
 ```
-
-
 
 ```java
 public final class DefaultSecurityFilterChain implements SecurityFilterChain {

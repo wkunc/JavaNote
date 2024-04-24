@@ -1,15 +1,18 @@
 #ResultMap
 
 ## association
+
 关联元素处理"有一个类型"的关系(就是包含一个引用).
 比如说 Account 拥有一个 UserInfo.
 
 不同之处在于, 需要告诉MyBatis如何加载关联:
 MyBatis 有两种加载方式:
+
 1. 嵌套Select查询: 通过执行另一个SQL映射语句来加载期望的复杂类型.
-2. 嵌套结果映射: 
+2. 嵌套结果映射:
 
 ### 嵌套Select查询
+
 ```xml
 <resultMap id="myset" type="Account" autoMapping="false">
     <constructor>
@@ -31,7 +34,7 @@ MyBatis 有两种加载方式:
 
 <select id="findAccountById" parameterType="long" resultType="Account">
     select * from account where id = #{id}
-</select> 
+</select>
 
 <select id="findUserInfoById" parameterType="long" resultType="UserInfo">
     select * from userInfo where id = #{id}
@@ -45,6 +48,7 @@ MyBatis 有两种加载方式:
 这样的方式很简单, 但在大型数据集或大型数据表上表现不佳.
 这个问题被称为 "N+1" 问题(在hibernate中也有):
 指的是这样的行为:
+
 1. 执行了一个单独的SQL语句来获取结果的一个列表(1) select * from account where enable = true;
 2. 对列表的每条记录, 执行了一个select查询来加载详细信息(N) select * from userInfo where id = ?;
 
@@ -56,6 +60,7 @@ Mybatis 提供了延迟加载, 将大量语句分散开来.
 所以还存在另一种方法
 
 ### 关联的嵌套结果映射
+
 ```xml
 <resultMap id="accountMap" type="Account" autoMapping="false">
     <constructor>
@@ -112,6 +117,7 @@ A.id|A.username|A.password|A.enable|A.userInfo\_Id|...|U.id|U.nickname|U.introdu
 接下来只需要取出每个值放置到对应位置.
 
 # ResultMap 解析过程
+
 在总的配置加载时, 解析 mappers 节点时会加载对应的 mapper.xml.
 并用 XMLMapperBuilder 开始每一个 mapper.xml的解析.
 在解析单个映射文件时会解析到 <result/> 节点.

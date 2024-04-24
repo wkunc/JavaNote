@@ -1,9 +1,11 @@
 # Spring Type Conversion
 
 # Converter SPI
+
 这个接口用来将 source 对象转换成 target 对象类型.
 注意是实现这个接口必须考虑线程安全, 以便于共享使用.
 实现类可以另外实现 ConditionalConverter
+
 ```java
 public interface Converter<S, T> {
 
@@ -98,10 +100,12 @@ final class StringToBooleanConverter implements Converter<String, Boolean> {
 ```
 
 # ConverterFactory
+
 一个生产 Converter 的工厂
 S : 原来的类型
 R : 目标类型
 T : 目标类型包括子类型
+
 ```java
 public interface ConverterFactory<S, R> {
     <T extends R> Converter<S, T> getConverter(Class<T> targetType);

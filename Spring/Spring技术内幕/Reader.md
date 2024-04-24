@@ -1,10 +1,13 @@
 [](BeanDefinitionReader.PNG)
+
 # AbstractBeanDefinitionReader
+
 下面是AbstractBeanDefinitionReader的字段和初始化分析:
+
 ```java
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
-    // 需要一个可以注册解析出来的Definition的地方 
+    // 需要一个可以注册解析出来的Definition的地方
 	private final BeanDefinitionRegistry registry;
     // 一个资源定位器用来定位 Resource 位置
 	private ResourceLoader resourceLoader;
@@ -120,7 +123,7 @@
 			}
 		}
 	}
-	// 
+	//
 	protected int doLoadBeanDefinitions(InputSource inputSource, Resource resource)
 			throws BeanDefinitionStoreException {
 		try {
@@ -143,6 +146,7 @@
 ```
 
 # BeanDefinitionDocumentReader
+
 ```java
 	protected void doRegisterBeanDefinitions(Element root) {
 		BeanDefinitionParserDelegate parent = this.delegate;
@@ -234,7 +238,8 @@
 	}
 ```
 
- 最后还是调用了 DeanDefinitionParserDelegate 上的方法来完成解析
+最后还是调用了 DeanDefinitionParserDelegate 上的方法来完成解析
+
  ```java
  	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele) {
 		return parseBeanDefinitionElement(ele, null);

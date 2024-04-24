@@ -26,19 +26,23 @@ PreparedStatement prepareStatement(String sql, String[] columnNames)
 这些int 值都在 java.sql.ResultSet 中作为静态常量提供.
 
 结果集类型
+
 1. ResultSet.TYPE_FORWARD_ONLY = 1003; // ResultSet 的光标只能向前移动
 2. ResultSet.TYPE_SCORLL_INSENSITIVE = 1004; // ResultSet 的光标可以滚动(前进,后退都可以), 对数据更改不敏感(insensitive)
 3. ResultSet.TYPE_SCORLL_SENSITIVE = 1005; // ResultSet 的光标可以滚动(前进,后退都可以), 对数据更改敏感(sensitive)
 
 结果集并发
+
 1. ResultSet.CONCUR_READ_ONLY = 1007; // 只读
 2. ResultSet.CONCUR_UPDATEABLE = 1008; // 可更新
 
 结果集保持力
+
 1. ResultSet.HOLD_CURSORS_OVER_COMMIT //
 2. ResultSet.HOLD_CURSORS_AT_COMMIT //
 
 # ResultSet
+
 ResultSet 中移动光标的方法. 最开始时游标处于第一项之前.
 
 1. next(): 向下移动

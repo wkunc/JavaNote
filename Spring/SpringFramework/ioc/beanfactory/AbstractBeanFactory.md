@@ -4,22 +4,21 @@
 
 它是Spring最基础的BeanFactory, 实现了 ConfigurableBeanFactory 的全部功能.
 
-
 不假定 Listable beanFactory, 因此可以作为所有的BeanFactory的基类.
 但也因此 对 BeanDefinition 的访问变的"昂贵"
 
-通过基类 DefaultSingletonBeanRegistry 提供了, 
+通过基类 DefaultSingletonBeanRegistry 提供了,
 singleton/prototype 确定,
 FactoryBean 处理,
 别名管理,
 用于 childBeanDefinition 和 BeanDefinition meger.
 
-子类要实现的主要模板方法是: 
+子类要实现的主要模板方法是:
+
 1. getBeanDefinition(): 给指定beanName查找一个 BeanDefinition
 2. createBean(): 给定一个 BeanDefinition 创建一个 bean 实例
 
 以及访问BeanDefinition的方法
-
 
 ```java
 public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {

@@ -1,4 +1,5 @@
 # OpenFeign
+
 Feign is a Java to HTTP client binder inspired by Retrofit, JAXRS-2.0, and WebSocket.
 Feign's first goal was reducing the complexity of binding Denominator uniformly to HTTP APIs regardless of ReSTfulness.
 
@@ -17,6 +18,7 @@ Java 到 HttpClient 端绑定程序. Feign的目标是减少与Restfulness 无�
 | @Body        | Method           | 请求body模板.                                                                                                  |
 
 # 模板与表达式
+
 Fegin 的 `expression` 是 简单字符串表达式 (Level 1), 由 URI Template - RFC 6570 定义
 被@Param注解的方法参数, 扩展了表达式.
 
@@ -49,6 +51,7 @@ public interface Github {
 > 如果表达式未定义, 则删除查询参数.
 
 Empty String
+
 ```java
 public void test() {
    Map<String, Object> parameters = new LinkedHashMap<>();
@@ -60,6 +63,7 @@ public void test() {
 ```
 
 Missing
+
 ```
 public void test() {
    Map<String, Object> parameters = new LinkedHashMap<>();
@@ -71,6 +75,7 @@ public void test() {
 ```
 
 Undefined
+
 ```java
 public void test() {
    Map<String, Object> parameters = new LinkedHashMap<>();
@@ -82,12 +87,11 @@ public void test() {
 
 ## Request Header Expansion
 
-
 ## Body Expansion
 
-
 # Customization (自定义)
-Feign 有一个可以定制的方面, 对于简单的情况, 
+
+Feign 有一个可以定制的方面, 对于简单的情况,
 可以使用 Feign.builder() 来使用自定义组件构造API接口.
 
 ```java

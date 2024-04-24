@@ -1,4 +1,4 @@
-# 2.3 High Availability, Zones and Regions (高可用,  区域与地区)
+# 2.3 High Availability, Zones and Regions (高可用, 区域与地区)
 
 Eureka Server 没有后端存储, 但是注册表中的所有服务实例都必须发送心跳链接以使其注册保持最新.
 (因此可以在内存中完成).

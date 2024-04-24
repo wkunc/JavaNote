@@ -1,4 +1,5 @@
 # Transaction Management
+
 ```java
 public interface PlatformTransactionManager {
     TransactionStatus getTransaction(TransactionDefinition definition);
@@ -6,7 +7,6 @@ public interface PlatformTransactionManager {
     void rollback(TransactionStatus status);
 }
 ```
-
 
 ```java
 public interface TransactionStatus extends SavePointManager {

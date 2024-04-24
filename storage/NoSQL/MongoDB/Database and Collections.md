@@ -1,19 +1,23 @@
 MongoDB 把 Document 存储到 collection 中, collection 包含在 database.
 
 # Access a Database
+
 我们需要一个连接到部署的MongoDB的 MongoClient 实例.
 使用这个实例的 getDatabase() 方法来访问一个 database.
 
 指明要访问的 database 的 name, 如果没有这个name的 database.
 MongoDB 会创建这个数据库在你第一次存储数据到这个数据库中.
+
 ```java
 MongoDatabase database = mongoClient.getDatabase("test");
 ```
+
 > 注意:
 > MongoDatabase 实例是一个 不可变的 对象.和String一样.
 
 # Access a Collection
-我们有一个 MongoDatabase 实例, 使用它的 getCollection() 
+
+我们有一个 MongoDatabase 实例, 使用它的 getCollection()
 方法来访问一个 Collection.
 
 需要指明访问的Collection的name.
@@ -21,6 +25,7 @@ MongoDatabase database = mongoClient.getDatabase("test");
 ```java
 MongoCollection<Document> collection = database.getCollection("test");
 ```
+
 > 注意:
 > MongoCollection 实例是一个 不可变的 对象.和String一样.
 
@@ -29,6 +34,7 @@ MongoCollection<Document> collection = database.getCollection("test");
 我们还可以使用各种选项的方法显式创建集合, 例如设置最大大小或文档验证规则.
 
 ## 明确的创建 Collection
+
 使用 MongoDatabase 提供的 createCollection() 方法我们可以显式的创建集合.
 显式创建集合的时候, 可以使用 CreateCollectionOptions 类指定各种*集合选项*.
 例如: 最大大小或文档验证规则.
@@ -53,7 +59,9 @@ for (String name : database.listCollectionNames()) {
 ```
 
 # 删除一个Collection
+
 调用对应Colleciton的 MongoCollection实例上的 drop() 方就可以删除对应Collection
+
 ```java
 MongoCollection<Document> collection = database.getCollection("contacts");
 collection.drop();

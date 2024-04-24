@@ -1,6 +1,7 @@
 # 如何自定义yml解析流程
 
 需求来源于开发时, 配置里为了方便需要获取全部的类型
+
 1. 方案1, 手动维护, 在 all-type-code 下维护上面所有的类型
 2. 方案2, all-type-code, 不作为属性没有对应的字段, 在类上实现一个 getAllTypeCode() 方法, 每次获取其他属性拼接起来
 3. 方案3, 查找`SpringBoot`yml支持, 看看是否存在 `${key}` 之类的语法来支持这个需求
@@ -24,6 +25,7 @@
 ```
 
 经过查找, 发现yml原始语法中就有merge key相关语法, 以及引用标签语法
+
 ```yml
   aca:
     face-type-code: &face
@@ -41,12 +43,13 @@
       <<: *lock
       <<: *elevator
 ```
+
 但是merge key语法是设计用于合并两个 map 类型
 上述写法 all-type-code 就得是 `List<List<String>>`
 然后我们就需要让 yaml 解析时可以将其展开
 
-
 ## 翻阅SpringBoot使用的yaml解析库, 找到扩展点
+
 通过yaml的tag语法, 可以实现自定义的标签解析
 所以我们定于
 
@@ -108,7 +111,7 @@
 
 ## 如何替换SpringBoot的yml解析
 
-在`spring-boot.jar` 的`spring.factories`中可以找到. 
+在`spring-boot.jar` 的`spring.factories`中可以找到.
 所以我们只要去实现 PropertySourceLoader 接口就好了,
 所以我简单粗暴的就去继承原来的实现类, 然后把自定义标签`flatten`的处理逻辑注册进去.
 就大功告成

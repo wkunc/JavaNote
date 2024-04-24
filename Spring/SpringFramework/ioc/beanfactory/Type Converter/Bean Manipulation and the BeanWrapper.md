@@ -4,13 +4,12 @@ org.springframework.beans 包中一个非常重要的类是 `BeanWrapper`以及�
 `BeanWrapperImpl`.
 
 `BeanWrapper`提供了
+
 1. set and get property value (单个或者多个)
 2. get property descriptors
 3. query properties to determine if they are readable or writeable
 4. support nested properties. 运行无限深度的子属性设置
 5. support standard JavaBeans `PropertyChangeListeners` and `VetoableChangeListeners`
-
-
 
 ## Built-int propertyEditor Implementations
 
@@ -21,11 +20,11 @@ Spring 使用 `PropertyEditor` 抽象来实现 Object 和 String 之间的转换
 > 而且 web 环境下也有这种需求, 毕竟http请求里的内容本质都是 String.
 > 而我们通常需要转换, Spring 帮开发者做这种事, 减少了重复劳动
 
-
 ## Spring Type Conversion
-在Spring 3时, 引入了 core.convert 包.  提供了 `通用` 的类型转换系统.
 
-该系统定义了一个用户实现类型转换逻辑的 SPI 
+在Spring 3时, 引入了 core.convert 包. 提供了 `通用` 的类型转换系统.
+
+该系统定义了一个用户实现类型转换逻辑的 SPI
 和一个用于在运行时执行类型转换的API.
 在 Spring 容器中, 可以使用此系统作为 `PropertyEditor` 实现的替代方法,
 以将外部化的 bean 属性字符串转换为所需要的属性类型.

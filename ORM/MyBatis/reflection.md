@@ -1,9 +1,11 @@
 # 反射工具箱
+
 Reflector ReflectorFactory
 
 Reflector 是 MyBatis 反射的基础, 每个Reflector对象都对应一个类,
 在Reflector中缓存了反射操作需要使用的类的元信息.
 Reflector中的字段含义如下:
+
 ```java
     //对应的 Class 类型
     private final Class<?> type;
@@ -34,6 +36,7 @@ Reflector中的字段含义如下:
 ```
 
 Reflector 的构造器要求指定解析的 Class 对象, 并填充上述集合
+
 ```java
     public Reflector(Class<?> clazz) {
         type = clazz;
@@ -58,9 +61,11 @@ Reflector 的构造器要求指定解析的 Class 对象, 并填充上述集合
         }
     }
 ```
+
 addGetMethods() 方法主要负责解析类中定义的 getter 方法,
 addSetMethods() 方法主要负责解析类中定义的 setter 方法.
 两者比较类似, 下面以 addGetMethods() 方法为例.
+
 ```java
     private void addGetMethods(Class<?> cls) {
         Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
@@ -71,9 +76,9 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
         Method[] methods = getClassMethods(cls);
 
         /*
-        *主要步骤2:遍历上一步返回的 Method 数组, 
+        *主要步骤2:遍历上一步返回的 Method 数组,
         *从中选择出 getter 方法,将其记录到 conflictingGetters 集合中
-        *conflictingGetters 集合(HashMap<String, List<Method>>类型), 
+        *conflictingGetters 集合(HashMap<String, List<Method>>类型),
         *key为属性名, value是属性对应的 getter 方法集合
         */
         for (Method method : methods) {
@@ -101,7 +106,9 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
         resolveGetterConflicts(conflictingGetters);
     }
 ```
+
 主要步骤一:
+
 ```java
     private Method[] getClassMethods(Class<?> cls) {
         Map<String, Method> uniqueMethods = new HashMap<String, Method>();
@@ -161,7 +168,9 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
         }
     }
 ```
+
 步骤3:
+
 ```java
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
@@ -200,7 +209,7 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
   }
 
   /*
-  * 
+  *
   */
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
@@ -213,6 +222,7 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
 ```
 
 接下来看看 addFields() 方法的执行过程
+
 ```java
     private void addFields(Class<?> clazz) {
         // 获得 class 声明的所有字段
@@ -247,6 +257,7 @@ addSetMethods() 方法主要负责解析类中定义的 setter 方法.
 ReflectorFactory 接口主要实现了对 Reflector 对象的创建和缓存.
 Mybatis 只提供了一个DefaultReflectorFactory实现类, 这个类相当简单就不仔细分析了
 我们也可以自己实现一个然后再配置文件中声明, 从而实现功能扩展
+
 ```java
     public interface ReflectorFactory {
         boolean isClassCacheEnabled();
@@ -255,8 +266,9 @@ Mybatis 只提供了一个DefaultReflectorFactory实现类, 这个类相当简�
     }
 ```
 
-这个默认的 ReflectiorFactory 实现非常的简单, 
+这个默认的 ReflectiorFactory 实现非常的简单,
 MyBatis也允许我们自己实现这个类从而实现特殊功能
+
 ```java
 public class DefaultReflectorFactory implements ReflectorFactory {
     private boolean classCacheEnabled = true;

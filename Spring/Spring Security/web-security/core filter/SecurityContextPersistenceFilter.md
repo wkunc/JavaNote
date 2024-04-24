@@ -1,7 +1,7 @@
 # SecurityContextPersistenceFilter
 
 根据应用程序的类型,可能需要制定一种策略来存储用户操作之间的安全上下文.
-在典型的Web应用程序中,用户登录一次, 然后通过其会话ID进行标识.  服务器缓存持续时间会话的主体信息.  
+在典型的Web应用程序中,用户登录一次, 然后通过其会话ID进行标识. 服务器缓存持续时间会话的主体信息.
 在Spring Security中,
 在请求之间存储SecurityContext的责任落在SecurityContextPersistenceFilter上,
 它默认将上下文存储为HTTP请求之间的HttpSession属性.
@@ -11,7 +11,7 @@
 这样做根本没有道理-始终使用SecurityContextHolder代替.
 
 许多其他类型的应用程序(例如,无状态RESTful Web服务)不使用HTTP会话,
-并且将在每个请求上重新进行身份验证. 
+并且将在每个请求上重新进行身份验证.
 但是,将SecurityContextPersistenceFilter包含在链中以确保在每次请求后清除SecurityContextHolder仍然很重要.
 
 > 自己的理解: 在没有使用安全框架时, 传统的Web应用下,
@@ -21,21 +21,21 @@
 > 所以SpringSecurity使用了设计了 SecurityContextHolder, 用来存储SecurityContext(凭证信息).
 > 默认的方式是使用 ThreadLocal 保存每一个线程的 SecurityContext.
 > 鉴权过程变成了和 SecurityContextHolder 交互获取认证身份信息, 判断有无权限.(就不依赖运行环境, 可以在任何环境中使用)
-> 
+>
 > 然后再Web环境下, 用户进行登陆后, 后续请求就不再需要进行认证.
 > (在没有使用安全框架前, 直接和HttpSession进行交互可以直接实现)
 > 我们还是会再Session中保存认证信息, 但是为了框架的适应性, 它被已经设计为不予任何环境API(Session)交互.
 > 所以我们需要在每次请求过程到访问控制系统(FilterSecurityInterceptor)前,
 > 正确的从Session中获取认证信息, 重新填充 SecurityContextHolder.
 > 使得如果一个用户经过了认证, 那么后续的请求就不再需要认证.
-> 
+>
 > 然后由于SecurityContextHolder是与Thread相关的,
 > 在Servlet下, 每次请求由一个Thread处理, Tomcat管理一个线程池.
 > 线程是重复使用的, 当一个用户请求进入分配一个空闲线程处理, 响应完成后回收.
-> 如果一个线程被分配给一个用户进行登陆逻辑后, 
+> 如果一个线程被分配给一个用户进行登陆逻辑后,
 > SecurityContextHodler 使用的ThreadLocal中就会保存这个线程和其当前用户登陆的认证信息.
 > 如果我们在每次响应完成后不清除认证信息,
-> 下一次这个 Thread, 被Servlet容器用来处理另一个用户的请求时, 
+> 下一次这个 Thread, 被Servlet容器用来处理另一个用户的请求时,
 > SecurityContextHolder 就会有一个错误的认证信息(上一个没有被清理的用户信息)
 > 从而导致错误. (明明是B用户的请求, 但是系统中的认证信息却是A用户).
 > 所以在请求完成后, 清理 SecurityContextHolder 是必要的.
@@ -43,7 +43,6 @@
 从上面的说明我们可以看出, 这个Filter的主要目的就是在同一个用户的请求之间传播SecurityContext,
 而默认行为是将其存储在HttpSession中, 在每个请求进入时尝试获取Session, 并从中获取SecurityContext
 如果能获取到就说明这个请求代表的用户是经过认证的.
-
 
 ```java
 public class SecurityContextPersistenceFilter extends GenericFilterBean {
@@ -119,6 +118,7 @@ public class SecurityContextPersistenceFilter extends GenericFilterBean {
 ```
 
 # SecurityContextRepository
+
 ```java
 public interface SecurityContextRepository {
 

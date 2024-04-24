@@ -16,12 +16,12 @@ MyBatis / iBATIS格式的SQL Map文件
 （可选）DAO接口和类
 
 必须至少指定一个\<table>元素作为\<context>元素的必需子元素。您可以指定无限制的表元素。
->### (Required Attributes)必要参数
+> ### (Required Attributes)必要参数
 >|Attribute|Description
 >|---------|-----------
 >|tableName|	The name of the database table(数据库表名)
 
->### Optional Attributes(可选参数)
+> ### Optional Attributes(可选参数)
 >|Attribute|Description
 >|---------|-----------
 >|schema(模式)| not required(不是必须的,如果你的数据库不存在模式)
@@ -33,7 +33,7 @@ MyBatis / iBATIS格式的SQL Map文件
 >|enableInsert|Signifies whether an insert statement should be generated.The default is true.(是否生成 insert 语句)
 >|modelType(模型类型)|用来覆盖全局的modelType
 
->### Supported Properties(支持属性值)
+> ### Supported Properties(支持属性值)
 > ***
 > 如\<Property name="" value="">
 > |Property Name|Property Values
@@ -41,19 +41,21 @@ MyBatis / iBATIS格式的SQL Map文件
 > |constructorBased|default=false
 
 ## Child Elements
+
 > \<property> (0..N)
-> 
+>
 > \<generatedKey> (0 or 1)
-> 
+>
 > \<domainObjectRenamingRule> (0 or 1)
-> 
+>
 > \<columnRenamingRule> (0 or 1)
-> 
+>
 > \<columnOverride> (0..N)
-> 
+>
 > \<ignoreColumn> (0..N)
 
 ## domainObjectRenamingRule
+
 和 columnRenamingRule 相似,
 mybatis默认用表名命名 POJO ,而表名会有前缀等如sys_user, 这个元素可以去除匹配的前缀生成想要的 POJO 对象名
 > ### Required Attributes(必须属性)
@@ -67,7 +69,10 @@ mybatis默认用表名命名 POJO ,而表名会有前缀等如sys_user, 这个�
 > 列如: \<domainObjectRenamingRule searchString="^Sys" replaceString="" />
 
 ## columnOverride
-MyBatis Generator (MBG) uses the \<columnOverride> element to change certain attributes(某些属性) of an introspected(反思,内省的) database column from the values that would be calculated by default. This element is an optional child element of the \<table> element.
+
+MyBatis Generator (MBG) uses the \<columnOverride> element to change certain attributes(某些属性) of an introspected(
+反思,内省的) database column from the values that would be calculated by default. This element is an optional child
+element of the \<table> element.
 > ### Required Attributes(必须属性)
 > |Attribute|Description
 > |---------|-----------
@@ -80,6 +85,7 @@ MyBatis Generator (MBG) uses the \<columnOverride> element to change certain att
 > |type|
 
 ## generatedKey
+
 帮你生成在 \<insert> 标签中生成一个 \<selectKey>主要用不能自动生成主键的情况
 > ### Required Attributes(必须属性))
 > |Attribute|Description

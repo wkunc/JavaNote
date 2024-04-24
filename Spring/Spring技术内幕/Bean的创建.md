@@ -1,5 +1,7 @@
 # IoC容器的依赖注入
+
 首先, 依赖
+
 ```java
 public Object getBean(String name) throws BeansException {
     return doGetBean(name, null, null, false);
@@ -182,6 +184,7 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 createBean()
 doGetBean() 方法中调用了 createBean() 方法但是这是一个抽象方法在子类
 AbstractAutowireCapableBeanFactory 中实现.
+
 ```java
 protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
         throws BeanCreationException {
@@ -240,7 +243,9 @@ protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable O
     }
 }
 ```
+
 在 createBean() 中调用 doCreateBean()
+
 ```java
 protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
         throws BeanCreationException {

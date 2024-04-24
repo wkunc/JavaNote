@@ -4,7 +4,9 @@
 当然, 这个类只是对父类中的 Bean 提供了默认配置, 真正的Bean 信息在其父类中
 
 # WebMvcConfigurationSupport
+
 This class registers the following HandlerMappings:
+
 1. RequestMappingHandlerMapping
 2. HandlerMapping
 3. BeanNameUrlHandlerMapping
@@ -12,28 +14,32 @@ This class registers the following HandlerMappings:
 5. HandlerMapping
 
 Registers these HandlerAdapters:
+
 1. RequestMappingHandlerAdapter
 2. HttpRequestHandlerAdapter
 3. SimpleControllerHandlerAdapter
 
-Register a HandlerExceptionResolverComposite 
+Register a HandlerExceptionResolverComposite
 with this chain of exception resolvers:
+
 1. ExceptionHandlerExceptionResolver
 2. ResponseStatusExceptionResolver
 3. DefalutHandlerExceptionResolver
 
 Registers an AntPathMatcher and a UrlPathHelper to be used by:
+
 1. the **RequestMappingHandlerMapping**
 2. the **HandlerMapping** for ViewControllers
 3. and the **HanderMapping** for serving resouces
 
 Note that those beans can be configured with a PathMatchConfigurer.
-Both the RequestMappingHandlerAdapter and the ExceptionHandlerExceptionResolver 
+Both the RequestMappingHandlerAdapter and the ExceptionHandlerExceptionResolver
 are configured with default instances of the following by default:
 
 1. ContentNegotiationManager
 2. DefaultFormattingConversionService
-3. org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean if a JSR-303 implementation is available on the classpath
+3. org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean if a JSR-303 implementation is available
+   on the classpath
 4. range of HttpMessageConverters depending on the third-party libraries available on the classpath.
 
 上面是类的描述
@@ -41,7 +47,9 @@ are configured with default instances of the following by default:
 以下是自己的理解
 
 # RequestMappingHandlerMapping
+
 支持被 @RequestMapping 注解的方法
+
 ```java
 @Bean
 public RequestMappingHandlerMapping requestMappingHandlerMapping() {
@@ -81,6 +89,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # PathMatcher 和 UrlPathHelper
+
 ```java
 	@Bean
 	public PathMatcher mvcPathMatcher() {
@@ -98,6 +107,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # ContentNegotiationManager
+
 ```java
     //使用了 Builder 模式
 	@Bean
@@ -114,6 +124,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # viewControllerHandlerMapping
+
 ```java
 	@Bean
 	public HandlerMapping viewControllerHandlerMapping() {
@@ -133,7 +144,9 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # BeanNameUrlHandlerMapping
+
 好像是用来解决 Controller bean 上的路径的
+
 ```java
 	@Bean
 	public BeanNameUrlHandlerMapping beanNameHandlerMapping() {
@@ -146,6 +159,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # resourceHandlerMapping
+
 ```java
     //同样使用了 Builder 模式
 	@Bean
@@ -173,6 +187,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # mvcResourceUrlProvider
+
 ```java
     // A ResourceUrlProvider bean for use with MVC dispatcher
 	@Bean
@@ -191,17 +206,19 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # defaultServletHandlerMapping
+
 ```java
 	@Bean
 	public HandlerMapping defaultServletHandlerMapping() {
         //还是 Builder 模式
-		DefaultServletHandlerConfigurer configurer = new DefaultServletHandlerConfigurer(this.servletContext); //还是一个用于自定义的方法 configureDefaultServletHandling(configurer); 
+		DefaultServletHandlerConfigurer configurer = new DefaultServletHandlerConfigurer(this.servletContext); //还是一个用于自定义的方法 configureDefaultServletHandling(configurer);
 		HandlerMapping handlerMapping = configurer.buildHandlerMapping();
 		return (handlerMapping != null ? handlerMapping : new EmptyHandlerMapping());
 	}
 ```
 
 # requestMappingHandlerAdapter
+
 ```java
 	@Bean
 	public RequestMappingHandlerAdapter requestMappingHandlerAdapter() {
@@ -235,6 +252,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # FormattingConversionService
+
 ```java
 	@Bean
 	public FormattingConversionService mvcConversionService() {
@@ -245,6 +263,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # mvcValidator
+
 ```java
 	@Bean
 	public Validator mvcValidator() {
@@ -273,6 +292,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # CompositeUriComponentsContributor
+
 ```java
 	@Bean
 	public CompositeUriComponentsContributor mvcUriComponentsContributor() {
@@ -282,6 +302,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # HttpRequestHandlerAdapter
+
 ```java
 	@Bean
 	public HttpRequestHandlerAdapter httpRequestHandlerAdapter() {
@@ -297,6 +318,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # HandlerExceptionResolver
+
 ```java
 	@Bean
 	public HandlerExceptionResolver handlerExceptionResolver() {
@@ -314,6 +336,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # ViewResolver
+
 ```java
 	@Bean
 	public ViewResolver mvcViewResolver() {
@@ -339,6 +362,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # HandlerMappingIntrospector
+
 ```java
 	@Bean @Lazy
 	public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {

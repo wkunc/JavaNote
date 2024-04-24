@@ -1,4 +1,5 @@
 # Feign Face
+
 Feign.Builder
 Feign提供了一个builder用来构造 FeignClient
 
@@ -18,7 +19,5 @@ Feign提供了一个builder用来构造 FeignClient
 * ExceptionPropagationPolicy propagationPolicy = NONE;
 
 # Feign Component
-
-
 
 ParseHandlersByName

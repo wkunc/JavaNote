@@ -1,35 +1,41 @@
 # HandlerMethodArgumentResolver
+
 ![]()
 
 这个接口的实现类很多, 体现了SpringMVC HandlerMethod 支持的参数类型很多,
 我将它分为一下三类:
-1. AbstractNamedValueMethodArgumentResolver, 
-这个类别的解决器专门解析被 @RequsetParam, @RequestHeader, @PathVariable, @MatrixVariable,  @RequestAttribute, @Value, @SessionAttribute, @CookieValue.
-这八个注解标识的并且类型不为 Map 的参数.
+
+1. AbstractNamedValueMethodArgumentResolver,
+   这个类别的解决器专门解析被 @RequsetParam, @RequestHeader, @PathVariable, @MatrixVariable, @RequestAttribute, @Value,
+   @SessionAttribute, @CookieValue.
+   这八个注解标识的并且类型不为 Map 的参数.
 
 2. 负责解析被 @RequestParam, @RequestHeader, @PathVariable, @MatrixVariable.
-这四个注解标志并且类型是 Map 类型的参数.(为什么和上面相比少了4个呢? 因为另外4个注解从定义上来了只会获取到一个值, 如一个Cookie name 只能获取到一个对应的cookie值)
-和两个类似的专门解决 Map.class 和 Model.class 类型的参数的解析器.
+   这四个注解标志并且类型是 Map 类型的参数.(为什么和上面相比少了4个呢? 因为另外4个注解从定义上来了只会获取到一个值,
+   如一个Cookie name 只能获取到一个对应的cookie值)
+   和两个类似的专门解决 Map.class 和 Model.class 类型的参数的解析器.
 
 3. 负责解析 Servlet API类型的参数如: OutputStream, InputStream, Session, ServletRequest,... 等等的解析器
-两个 ServletRequestMethodArgumentResovler, ServletResponseMethodArgumentResovler.
+   两个 ServletRequestMethodArgumentResovler, ServletResponseMethodArgumentResovler.
 
-4. 负责解析 @ModelAttribute 的 ServletModelAttributeMethodProcessor, (感觉特别有趣所以单独分类) 
+4. 负责解析 @ModelAttribute 的 ServletModelAttributeMethodProcessor, (感觉特别有趣所以单独分类)
 
 5. 负责解析其他额外类型(SessionStatus, Errors, RedirectAttributes, UriComponentsBuilder) 的解决器:
 
-7. 基于HttpMessageConverter接口实现的解决器(3个): 重点 
+7. 基于HttpMessageConverter接口实现的解决器(3个): 重点
 
-6. 负责将解析逻辑委托给内部的 WebArgumentResovler 接口的当成适配器的实现类(目的是给用户扩展): 
+6. 负责将解析逻辑委托给内部的 WebArgumentResovler 接口的当成适配器的实现类(目的是给用户扩展):
 
 共计24个
 
 # AbstractNamedValueMethodResolver
+
 用于从命名值解析方法参数的抽象基类.
 请求参数, 请求头, 路径变量 等是命名值的示例.
 每个都可以有一个名称, 一个是否必须的标志, 和一个默认值.
 
 其子类定义如何执行以下操作:
+
 1. 获取方法参数的命名值信息
 2. 将名称解析为参数值
 3. 在需要参数值时处理缺少的参数值
@@ -37,6 +43,7 @@
 
 默认值字符串可以是 ${...} 占位符或 SpringEL #{...}.
 为此必须提供 ConfigurableBeanFactory 实例进行初始化.
+
 ```java
 public abstract class AbstractNamedValueMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -66,7 +73,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 ```
 
 ```java
-// 实现HandlerMethodArgumentResolver接口定义的方法. 实现执行流程, 细节交给子类, 
+// 实现HandlerMethodArgumentResolver接口定义的方法. 实现执行流程, 细节交给子类,
 // 使用了模板方法设计模式.
 @Override
 @Nullable
@@ -92,10 +99,10 @@ public final Object resolveArgument(MethodParameter parameter, @Nullable ModelAn
 
     // 下面就是没有解析成功后的处理,
     // 1. 如果是有默认值的, 就使用注解中提供的默认值.
-    // 2. 如果注解表面这个参数 required = true, 并且参数不是 Option<> 类型, 
+    // 2. 如果注解表面这个参数 required = true, 并且参数不是 Option<> 类型,
     // 就执行 handleMissingValue() 默认实现是抛出 ServletRequestBindingException
     // 3. 无法从request中绑定, 并且没有默认值, 也不是 required.
-    // 就执行 handleNullValue() 方法, 内部有个简单的逻辑, 判断参数类型是否为 boolean, 是的话返回 false, 
+    // 就执行 handleNullValue() 方法, 内部有个简单的逻辑, 判断参数类型是否为 boolean, 是的话返回 false,
     // 判断参数是否是基本类型(int, double..)由于基本类型不能为null所以会抛出IllegalStateException
     // 其他类型一律返回null
     if (arg == null) {
@@ -135,10 +142,12 @@ public final Object resolveArgument(MethodParameter parameter, @Nullable ModelAn
 ```
 
 # AbstractMessageConverterMethodArgumentResolver
+
 利用 HttpMessageConverter 接口实现的参数解析器.
 
-这个抽象父类没有实现 HandlerMethodArgumentResolver 接口中的方法, 
+这个抽象父类没有实现 HandlerMethodArgumentResolver 接口中的方法,
 只是提供了使用内部的 List\<HttpMessageConverter> 从 Request 中读取对象的方法.
+
 ```java
 public abstract class AbstractMessageConverterMethodArgumentResolver implements HandlerMethodArgumentResolver {
 

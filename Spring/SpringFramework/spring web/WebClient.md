@@ -1,4 +1,5 @@
 # RestTemplate
+
 提供了11种不同的方法, 发送http请求.
 10种有3种重载, 1种有8个重载, 一共38个.
 
@@ -19,6 +20,7 @@
 execute() 最后又都是调用一个内部方法 doExecute()
 
 首先学习两个简单的函数式接口. 分别表示对request, response的处理.
+
 ```java
 /**
  * 请求时回调接口, 允许操作 request Header, 或者 request Body.
@@ -29,8 +31,8 @@ execute() 最后又都是调用一个内部方法 doExecute()
  * 2. RestTemplate.httpEntityCallback(Object)
  * 3. RestTemplate.httpEntityCallback(Object, Type)
  */
-public interface RequestCallback { 
- 
+public interface RequestCallback {
+
 	void doWithRequest(ClientHttpRequest request) throws IOException;
 
 }
@@ -101,6 +103,7 @@ protected <T> T doExecute(URI url, @Nullable HttpMethod method, @Nullable Reques
     }
 }
 ```
+
 # RestTemplate 具体实现
 
 ## HttpAccessor
@@ -139,7 +142,7 @@ public abstract class HttpAccessor {
 
     // 主要逻辑, 调用RequestFactory创建 ClientHttpRequest 后使用初始化器进行初始化
     // 比较特殊的点是 通过 getRequestFactory() 方法获取 ClientFactory, 而不是直接访问字段
-    // 
+    //
 	protected ClientHttpRequest createRequest(URI url, HttpMethod method) throws IOException {
 		ClientHttpRequest request = getRequestFactory().createRequest(url, method);
 		initialize(request);
@@ -162,6 +165,7 @@ public interface ClientHttpRequestInitializer {
 添加了拦截器机制的 Http 访问器.
 并且可以看到这里重写了 getRequestFactory() 方法.
 这也是为什么 HttpAccessor 要通过 getRequestFactory() 方法进行访问而不是直接通过字段.
+
 ```java
 public abstract class InterceptingHttpAccessor extends HttpAccessor {
 
@@ -210,10 +214,11 @@ public abstract class InterceptingHttpAccessor extends HttpAccessor {
 ```
 
 ## ClientHttpRequestFactory
+
 上面 HttpAccessor 到 InterceptingHttpAccessor, 都用到了 ClientHttpRequestFactory 抽象.
 
-
 很直白的抽象, 通过 createRequest() 方法创建一个 ClientHttpRequest 的工厂.
+
 ```java
 public interface ClientHttpRequestFactory {
 

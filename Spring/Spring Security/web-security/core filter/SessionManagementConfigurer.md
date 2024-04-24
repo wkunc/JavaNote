@@ -1,7 +1,7 @@
 # SessionManagementConfigurer
 
 Spring Security 的 Session 管理功能的配置类, 主要负责构建 SessionManagerFilter.
-学习SessionManagerFilter可以知道, Session管理功能是插件化的, 
+学习SessionManagerFilter可以知道, Session管理功能是插件化的,
 通过 SessionAuthenticationStrategy(session 认证策略)实现.
 
 ```java
@@ -28,7 +28,7 @@ public final class SessionManagementConfigurer<H extends HttpSecurityBuilder<H>>
 	private InvalidSessionStrategy invalidSessionStrategy;
 	private String invalidSessionUrl;
 
-    // 默认的失败策略 
+    // 默认的失败策略
 	private String sessionAuthenticationErrorUrl;
 	private AuthenticationFailureHandler sessionAuthenticationFailureHandler;
 

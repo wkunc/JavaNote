@@ -1,4 +1,5 @@
 # Linux 目录约定
+
 Filesystem Hierarchy Standard (FHS) 标准.
 
 分为四种
@@ -13,6 +14,7 @@ Filesystem Hierarchy Standard (FHS) 标准.
 4. 可变的: 经常改变的文件.
 
 事实上, FHS针对目录树只定义了三个目录应该放什么类型的文件.
+
 1. /(根目录) : 与系统开机启动有关的文件
 2. /usr (unix software resource): 与程序安装/执行有关
 3. /var (variable): 与系统运作过程有关.

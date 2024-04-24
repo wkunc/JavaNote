@@ -1,8 +1,10 @@
 # BeanDefinitionReader
+
 ![](../imgs/BeanDefinitionReader.PNG)
 
 Simple interface for bean definition readers.
 这个接口负责向 BeanDefinitionRegistry 中注册 BeanDefinition
+
 ```java
 public interface BeanDefinitionReader {
     //这几个方法其实反应了实现类中会有什么
@@ -18,9 +20,12 @@ public interface BeanDefinitionReader {
     int loadBeanDefinitions(String... locations);
 }
 ```
+
 ## AbstractBeanDefinitionReader
+
 字段和构造器.
 实现了 BeanDefinitionReader 接口. 有一个方法没有实现
+
 ```java
 public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable, BeanDefinitionReader{
     private final BeanDefinitionRegistry registry;
@@ -55,6 +60,7 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
     }
 }
 ```
+
 ## 核心代码
 
 ```java
@@ -131,7 +137,9 @@ public abstract int loadBeanDefinitions(Resource resource);
 然后一些 setter/getter 方法
 
 # XmlBeanDefinitionReader
+
 字段含义
+
 ```java
 public static final int VALIDATION_NOTE = XmlValidationModeDetector.VALIDATION_NOTE;
 public static final int VALIDATION_AUTO = XmlValidationModeDetector.VALIDATION_AUTO;
@@ -149,12 +157,13 @@ private DocumentLoader documentLoader = new DefaultDocumentLoader();
 private EntityResolver entityResolver;
 private ErrorHandler errorHandler = new SimpleSaxErrorHandler();
 private final XmlValidationModeDetector validationModeDetector = new XmlValidationModeDetector();
-private final ThreadLocal<Set<EncodedResource>> resourcesCurrentlyBeingLoaded = 
+private final ThreadLocal<Set<EncodedResource>> resourcesCurrentlyBeingLoaded =
         new NamedThreadLocal<>("XML bean definition resources currently being loaded");
 ```
 
 XmlBeanDefinitionReader 实现了这个抽象方法
 这个方法是启动解析的方法
+
 ```java
 public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefinitionStoreException {
     Assert.notNull(encodedResource, "EncodedResource must not be null");
@@ -199,7 +208,7 @@ public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefin
     }
 }
 
-// 负责加载出 Document 对象, 然后通过这个文档对象进行注册行为, 
+// 负责加载出 Document 对象, 然后通过这个文档对象进行注册行为,
 // 以及在解析 Document 对象时抛出异常进行捕捉和处理.
 protected int doLoadBeanDefinitions(InputSource inputSource, Resource resource)
         throws BeanDefinitionStoreException {
@@ -254,6 +263,7 @@ public int registerBeanDefinitions(Document doc, Resource resource) throws BeanD
 ```
 
 # DefaultBeanDefinitionDocumentReader
+
 ```java
 public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
     this.readerContext = readerContext;

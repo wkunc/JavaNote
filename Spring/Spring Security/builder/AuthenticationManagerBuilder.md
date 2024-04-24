@@ -1,15 +1,15 @@
 # AuthenticationManagerBuilder
+
 负责构建 AuthenticationManager, 相对独立.
 因为不论是 web 环境下的认证, 还是非web环境下的认证, 都需要AuthenticationManager.
 所以Spring Security 对它的配置类也是相当独立的由 @EnableGlobalAuthentication 注解添加.
 
 无论是web-security还是method-security的注解内部都有这个@EnableGlobalAuthentication 注解.
 
-
 通过之前对AuthenticManager接口及其Spring Security提供的默认实现 ProviderManager 的学习.
 我们知道 ProviderManager 会将执行过程委托给内部 support 当前 token 类型的 AuthicationProvider 对象.
 并且在自己无法支持认证的情况下, 会试着委托给自己的 parent (如果有的话).
-所以需要一个 AuthenticationProvider 列表, 或者一个 parentAuthenticationManager. 
+所以需要一个 AuthenticationProvider 列表, 或者一个 parentAuthenticationManager.
 
 这两个东西必须拥有至少一个才能构建 ProviderManager 否则报错 *参考 isConfigured()方法*
 
@@ -44,7 +44,7 @@ public class AuthenticationManagerBuilder
 ```
 
 ```java
-// 实现 ProviderManagerBuilder 接口, 主要的配置接口, 
+// 实现 ProviderManagerBuilder 接口, 主要的配置接口,
 // 通过这个方法为将要构建的ProviderManager提供接口实现.
 // 对应的负责配置这个Builder的 SecurityConfiguerer 也是利用这个接口向其设置实现
 public AuthenticationManagerBuilder authenticationProvider(
@@ -83,7 +83,7 @@ protected ProviderManager performBuild() throws Exception {
         logger.debug("No authenticationProviders and no parentAuthenticationManager defined. Returning null.");
         return null;
     }
-    // 调用构造器, 并设置. 
+    // 调用构造器, 并设置.
     ProviderManager providerManager = new ProviderManager(authenticationProviders,
             parentAuthenticationManager);
     if (eraseCredentials != null) {
@@ -108,10 +108,11 @@ protected ProviderManager performBuild() throws Exception {
 ```
 
 特殊方法
+
 ```java
 // 本质上就是和父类一样的思路, 添加一个 SecurityConfiguerer 对象, 到集合中.
 // 不过要求这个 Configurer 对象是特定子接口的实现.
-// 从传入的 Conigurer 对象中获取 UserDetailsService 
+// 从传入的 Conigurer 对象中获取 UserDetailsService
 private <C extends UserDetailsAwareConfigurer<AuthenticationManagerBuilder, ? extends UserDetailsService>> C apply(
         C configurer) throws Exception {
     this.defaultUserDetailsService = configurer.getUserDetailsService();
@@ -120,9 +121,9 @@ private <C extends UserDetailsAwareConfigurer<AuthenticationManagerBuilder, ? ex
 
 // 基于上面方法实现的配置方法, 我们在安全配置类中使用的方法就是这里.
 // 除了LDAP auth是不同的以外,
-// 其他三个都是 AbstractDaoAutheicationConfiguer 的子类, 
-// 负责创建一个 DaoAuthenticationProvider. 
-// 根据对 AuthenticationManager 接口的学习, 
+// 其他三个都是 AbstractDaoAutheicationConfiguer 的子类,
+// 负责创建一个 DaoAuthenticationProvider.
+// 根据对 AuthenticationManager 接口的学习,
 // 我们知道 DaoAuthenticationProvider 是基于 UserDetailsService 实现的支持 UsernamePasswordToken 类型认证请求的提供者
 // 所以这三个方法不同就是配置 UserDetailsService 方式.
 // 如果想学习源码的话, 就看看 userDetailsService() 方法使用的 SecurityConfigurer 实现吧.
@@ -146,15 +147,15 @@ public LdapAuthenticationProviderConfigurer<AuthenticationManagerBuilder> ldapAu
 }
 ```
 
-
 # @EnableGlobalAuthentication
+
 Spring Security 提供了一个@EnableGlobalAuthentication 注解,
 用来配置全局的 AuthenticationManagerBuilder.
-会自己从IOC中获取 AuthenticationProvider 的实现, 
+会自己从IOC中获取 AuthenticationProvider 的实现,
 或者是 UserDetailsService 的Bean配置为DaoAuthenticationProvider.
 也可以是显式的利用 @Autowired 获取配置的 AuthenticationManagerBuilder 实例, 调用上面的方法进行配置.
-> 注意: 上面说的三种方式是互斥的, 只会有一种生效, 
-> 比如说IOC中有一个 DaoAuthenticationProvider Bean, 我们也提供了一个UserDetailsService. 
+> 注意: 上面说的三种方式是互斥的, 只会有一种生效,
+> 比如说IOC中有一个 DaoAuthenticationProvider Bean, 我们也提供了一个UserDetailsService.
 > 通过Spring的Order机制确定 securityConfig 类生效的顺序,
 > order 值越小优先级越高(排序算法通常是从小到大排序的, 所以越小越在前面)
 > 设置是查找使用 AuthenticationProvider 实例, 然后才检测 UserDetailsService, 当然显式的配置是最大的.

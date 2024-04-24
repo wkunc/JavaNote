@@ -1,7 +1,8 @@
 # TestContext
+
 Spring TextContext Framework (位于org.springframework.test.context包中)
 提供了通用的, 注解驱动的单元测试和集成测试支持, 它与使用中的测试框架无关.
-TestContext框架非常重视约定优于配置, 
+TestContext框架非常重视约定优于配置,
 合理的默认值可以通过基于注解的配置覆盖.
 
 除了通用测试基础结构之外, TestContext框架还为JUnit4, JUnit 5 和TestNG
@@ -9,6 +10,7 @@ TestContext框架非常重视约定优于配置,
 此外Spring为 JUnit4 提供了一个自定义JUnit Runner和自定义JUnit规则.
 
 ## Key Abstractions (关键抽象)
+
 框架的核心包括TestContextManager类和TestContext,
 TestExcutionListener, SmartContextLoader 接口.
 
@@ -27,9 +29,10 @@ TestContext还委托SmartContextLoader在需要时加载ApplicationContext.
 *TestContextManager*是Spring TestContext Framework 的主要入口点,
 负责管理单个 TestContext 并在明确定义的测试执行点向每个注册的
 TestExceutionListener 发送事件.
+
 * @BeforeClass 方法之前
 * 测试实例化之后
-* @Before 方法之前 
+* @Before 方法之前
 * 在执行@Test 测试方法之前, 但在测试设置之后
 * 在执行@Test 测试方法之后, 但在测试设置之后
 * @After 方法之后

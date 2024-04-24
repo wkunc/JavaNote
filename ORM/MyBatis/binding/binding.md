@@ -1,8 +1,10 @@
 # binding 模块
+
 这个模块的功能就是实现神奇的将sql语句和mapper接口连接起来的关键
 MyBatis会自己产生对应Mapper接口的代理对象, 注册到 MapperRegistry中
 
 # MapperRegistry&MapperProxyFactory
+
 ```java
 public class MapperRegistry {
     // Configuration 是 MyBatis 配置文件在Java中的表示
@@ -81,9 +83,11 @@ public class MapperRegistry {
     }
 }
 ```
+
 ----
 MapperProxyFactory
 很显然这个类是MyBatis的Mapper代理类生成工厂
+
 ```java
 public class MapperProxyFactory<T> {
     // 要生成的代理接口
@@ -101,7 +105,7 @@ public class MapperProxyFactory<T> {
     public Map<Method, MapperMethod> getMethodCache() {
         return methodCache;
     }
-    
+
     /*
     * 这里使用的是 JDK 动态代理
     * Proxy.newInstance(ClassLoader loader, Class<?>[] interfaces, InvocationHandler h);

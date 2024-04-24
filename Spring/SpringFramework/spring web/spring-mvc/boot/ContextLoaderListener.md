@@ -1,7 +1,9 @@
 # ContextLoaderListener
+
 这个类是我们在 web.xml 中配置的监听器, 很显然这个监听器的实现基本在父类 ContextLoader 中.
 它实现了Servlet规范中 ServletContextListener, 主要拥有监听 ServletContext 初始化事件和
 销毁事件的对应方法. 方法实现都是调用从父类**ContextLoader**中继承的方法
+
 ```java
 public class ContextLoaderListener extends ContextLoader implements ServletContextListener {
 	public ContextLoaderListener() {
@@ -21,7 +23,9 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 
 }
 ```
+
 # ContextLoader
+
 我们不会显式的创建这个类的对象, 只是在加载其唯一子类ContextLoaderListener的时候会触发
 这个类的加载, 然后这个类有一段 static 初始化代码段. 在静态初始化阶段会从ClassPath中加载一个
 叫 ContextLoader.properties 的属性文件. 做为默认策略配置
@@ -115,7 +119,7 @@ public class ContextLoader {
 		try {
             // 如果 this.context 是 null 说明调用的是无参构造器, 是通过web.xml配置的.
             // 所以调用 createWebApplicationContext() 方法创建一个 ApplicationContext
-            // 内部是解析web.xml配置的参数 "contextClass", 加载指定的 Class 对象, 通过Class对象创建实例 
+            // 内部是解析web.xml配置的参数 "contextClass", 加载指定的 Class 对象, 通过Class对象创建实例
 			if (this.context == null) {
 				this.context = createWebApplicationContext(servletContext);
 			}

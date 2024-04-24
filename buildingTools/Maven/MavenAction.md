@@ -1,4 +1,5 @@
 # 生命周期和插件
+
 Maven 拥有三套相互独立的生命周期, 它们分别为Clean, default, site
 
 1. clean 生命周期的目的是清理项目
@@ -6,12 +7,15 @@ Maven 拥有三套相互独立的生命周期, 它们分别为Clean, default, si
 3. site 生命周期的目的是建立项目站点
 
 ## clean 生命周期
+
 clean 生命周期包含三个阶段
+
 1. pre-clean
 2. clean
 3. post-clean
 
 ## default 生命周期
+
 default 定义了真正构建时所需要执行的所有步骤
 它是所有生命周期中最核心的部分
 
@@ -40,12 +44,14 @@ default 定义了真正构建时所需要执行的所有步骤
 23. deploy
 
 ## site 生命周期
+
 pre-site
 site
 post-site
 site-deploy
 
 # 插件目标
+
 Maven 的核心仅仅定义了抽象的生命周期, 具体的任务是交给插件完成的.
 插件以独立的构件形式存在, 因此, Maven 核心的分发包只有3MB的大小,
 Maven 会在需要的适合下载并使用插件
@@ -58,6 +64,7 @@ Maven 会在需要的适合下载并使用插件
 可以复用的代码, 因此将这些功能聚集在一个插件里, 每个插件就是一个插件的目标
 
 # 内置插件
+
 maven-clean-plugin
 maven-resources-plugin
 maven-compiler-plugin
@@ -68,8 +75,9 @@ maven-jar-plugin
 maven-install-plugin
 maven-deploy-plugin
 
-
 # Maven 多模块
+
 # 聚合和继承
+
 聚合就是多模块, 但是只是简单的在一个工程中配置了多个模块, 它们之间还没有联系
 继承就是为了简化这些模块的 pom.xml 中的依赖,插件等

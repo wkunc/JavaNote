@@ -1,4 +1,5 @@
 # SpringFactoriesLoader
+
 Java 提供了一个SPI机制 ServerLoader, 本质上就是用ClassLoader加载
 META-INF/service 文件中指定的类.
 
@@ -7,10 +8,10 @@ SpringFactoriesLoader 类是这个机制的入口.
 和Java 提供的ServerLoader一样, 这个SpringFactoriesLoader会加载
 META-INF/spring.factories文件.
 
-
 只公开了两个方法, 一个是 loadFactories(), loadFactoryNames().
 很显然, loadFactories() 会用到 loadFactoryNames().
 首先加载所有注册的类名, 然后为每个类进行实例化.
+
 ```java
 /*
 * 框架内部通用的目标 factory 加载机制.
@@ -67,7 +68,7 @@ public final class SpringFactoriesLoader {
 
     /*
     * 首先这个类有缓存, 也就说基本上只会加载一次.
-    * 
+    *
     * 利用缓存
     * 返回的内容相当与所有的 META-INF/spring.factories 文件的内存表示
     */

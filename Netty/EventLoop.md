@@ -1,8 +1,11 @@
 # EventLoop
+
 ![EventLoop类图|600](NioEventLoop.png)
-处理`Channle`的所有IO操作, 一个 EventLoop 实例通常会处理多个`Channel`, 但这可能取决于实现细节和内部结构(netty兼容一个连接一个线程的形式).
+处理`Channle`的所有IO操作, 一个 EventLoop 实例通常会处理多个`Channel`, 但这可能取决于实现细节和内部结构(
+netty兼容一个连接一个线程的形式).
 从类图上可以看到, EventLoop 接口是继承自 `EventExecutorGroup`.
-就像 `EventLoopGroup` 接口继承自 `EventExecutorGroup` 一样 在向上可以看到 JDK 定义的 `ScheduledExecutorService`, `ExecutorService`, `Executor` 等接口
+就像 `EventLoopGroup` 接口继承自 `EventExecutorGroup` 一样 在向上可以看到 JDK
+定义的 `ScheduledExecutorService`, `ExecutorService`, `Executor` 等接口
 
 实现也是从JDK提供的`AbstractExecutorService` 继承而来的
 
@@ -170,10 +173,11 @@ private void startThread() {
 
 ## DefaultEventLoop.run()
 
-可以看到 run 方法的实现非常简单. 
+可以看到 run 方法的实现非常简单.
+
 - 调用 takeTask() 获得一个任务
-- 执行 runnable 
-- 更新最后执行时间 
+- 执行 runnable
+- 更新最后执行时间
 - 判断当前是否收到了shutdown请求, 如果有break出循环
 
 ``` java
@@ -336,6 +340,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 ```
 
 ### netty对于key处理过程的优化
+
 ```java
     private void processSelectedKeys() {
         if (selectedKeys != null) {
@@ -351,6 +356,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 实现优化的地方,会发现netty使用反射机制, 将sun.nio.ch.SelectorImpl#selectedKeys 字段替换为了自己的
 SelectedSelectionKeySet(数组结构, 实现set接口). 原始实现采用了 HashSet 存储.
 对比数据结构的区别, 应该是有利于插入和遍历的性能.
+
 ```java
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;

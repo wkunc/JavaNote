@@ -1,11 +1,14 @@
 # JsonFactory
+
 这是 jackson-core 包中的, 这个包重要提供了 Event Stream 流API.
 
 这几个机制和XML解析时是同一个思路, 通过事件流来处理XML文档.
 
 # Reading from Stream-of-Events
+
 事件流是一种抽象, 不是具体的事物, 首先要决定如何暴露它或者说表示它.
 这有许多可能性, 这里列举常见的3种方案.
+
 1. 作为可迭代的事件对象流, 这是Stax Event API的做法, 优点是访问的简单性和对象封装, 允许在处理期间保留Event对象.
 2. 作为在事件发生时表示事件回调, 将所有数据作为回调参数传递.这是 SAX API的做法(这个比较熟悉)
 3. 作为允许一次访问关于一个事件的逻辑游标, 这是 Stax Cursor API 的做法.
@@ -18,6 +21,7 @@ JackJosn 使用了第三种方法来实现它的Event Stream API.
 并访问令牌游标指向的数据和属性.
 
 readJsonToJavaObject
+
 ```java
 JsonFactory factory = new JsonFactory();
 factory.enable(JsonParser.Feature.ALLOW_COMMENTS);

@@ -1,5 +1,7 @@
 # BeanNameGenerator
+
 一个用于给指定Bean生成Name的策略接口
+
 ```java
 public interface BeanNameGenerator {
     String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry);
@@ -7,6 +9,7 @@ public interface BeanNameGenerator {
 ```
 
 这个接口有两个实现
+
 ```java
 // 委托给 BeanDefinitionReaderUtils.generateBeanName() 方法实现
 /**
@@ -50,7 +53,7 @@ public static String generateBeanName(
     }
 
     String id = generatedBeanName;
-    // 如果是 InnerBean 的话, 最后的Name 会拼接 "#" + hash串 
+    // 如果是 InnerBean 的话, 最后的Name 会拼接 "#" + hash串
     if (isInnerBean) {
         // Inner bean: generate identity hashcode suffix.
         id = generatedBeanName + GENERATED_BEAN_NAME_SEPARATOR + ObjectUtils.getIdentityHexString(definition);
@@ -70,6 +73,7 @@ public static String generateBeanName(
 ```
 
 这个就是为了的基于注解配置自动beanName生成器.
+
 ```java
 public class AnnotationBeanNameGenerator implements BeanNameGenerator {
     private static final String COMPONENT_ANNOTATION_CLASSNAME = "org.springframework.stereotype.Component";
@@ -101,7 +105,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
                     String strVal = (String) value;
                     if (StringUtils.hasLength(strVal)) {
                         if (beanName != null && !strVal.equals(beanName)) {
-                            throw new IllegalStateException("Stereotype annotations suggest inconsistent " + 
+                            throw new IllegalStateException("Stereotype annotations suggest inconsistent " +
                                     "component names: '" + beanName + "' vsersus '" + strVal + "'");
                         }
                         beanName = strVal;
@@ -116,9 +120,9 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
             Set<String> metaAnnotationTypes, Map<String, Object> attributes) {
         boolean isStereotype = annotationType.equals(COMPONENT_ANNOTATION_CLASSNAME) ||
                 (metaAnnotationTypes != null && metaAnnotationTypes.contains(COMPONENT_ANNOTATION_CLASSNAME)) ||
-                annotationType.equals("javax.annotation.ManagedBean") || 
+                annotationType.equals("javax.annotation.ManagedBean") ||
                 annotationType.equals("java.inject.Named");
-        
+
         return (isStereotype && attributes != nulli && attributes.containsKey("value"));
     }
 

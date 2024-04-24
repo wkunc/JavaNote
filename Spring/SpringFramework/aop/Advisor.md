@@ -1,4 +1,5 @@
 # Advisor
+
 切面: 包含增强逻辑和连接点信息.
 
 Adivce(增强)既包含横切代码, 又包含部分连接点信息(方法前, 方法后, 还是环绕).
@@ -10,6 +11,7 @@ Spring 用 Advisor 接口表示切面概念.
 
 * Advisor: 表示一般切面, 仅包含一个Advice. 因为Advice包含了横切代码和连接点信息.所以光一个Advice就是一个切面.
 * PointcutAdvisor: 代表具有切点的切面, 包含Advice和Pointcut两个类.
-* IntroductionAdvisor: 引介切面, 引介增强是针对整个类的, 所以只需要选择需要被增强的类就是, 所以引介切面是由一个引介增强和一个ClassFilter(确定需要增强的类)组成.
+* IntroductionAdvisor: 引介切面, 引介增强是针对整个类的, 所以只需要选择需要被增强的类就是,
+  所以引介切面是由一个引介增强和一个ClassFilter(确定需要增强的类)组成.
 
 

@@ -8,8 +8,8 @@
 broker 会在client关闭连接后立刻删除session信息.
 这个字段允许设置的最大值时 UNIT\_MAX (4,294,967,295) 大概是136年
 
-
 ## Message Expiry Interval
+
 在 PUBLISH packet 中, client 可以设置每个消息的 expiry interval(以秒为单位).
 这个时间间隔定义了 broker 需要保存这个消息多久(为了那些尚未连接的订阅者)
 如果没有设置, 那么 broker 会永远保存.

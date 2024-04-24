@@ -1,8 +1,9 @@
 # RunnerBuilder
+
 ![](RunnerBuilder.PNG)
 RunnerBuilder顾名思义就是用来创建Runner的建造者.
 每个测试Class会返回一个Runner.
-一共有7种RunnerBuilder类, 
+一共有7种RunnerBuilder类,
 
 * IgnoredBuilder (处理类上的Ignore注解,如果有这个注解就为这个测试类返回IgnoreClassRunner)
 * AnnotationBuilder (处理@RunWith注解, 如果有这注解就为这个测试类尝试创捷指定的Runner)
@@ -13,6 +14,7 @@ RunnerBuilder顾名思义就是用来创建Runner的建造者.
 * AllDefaultPossibilitiesBuilder (组合了上面的Builder,下面详解)
 
 AllDefaultpossibilitesBuilder 就是组合所有的 RunnerBuilder,为传入的 测试类查找最好的RunnerBuilder(就是对应的Runner).
+
 ```java
 public class AllDefaultPossibilitiesBuilder extends RunnerBuilder {
     private final boolean canUseSuiteMethod;
@@ -54,6 +56,7 @@ public class AllDefaultPossibilitiesBuilder extends RunnerBuilder {
 ```
 
 # Runner
+
 ![](Runner.PNG)
 主要讲解BlockJUnit4ClassRunner.
 父类ParentRunner在初始化的过程中会初始化对应TestClass对象,
@@ -61,6 +64,7 @@ public class AllDefaultPossibilitiesBuilder extends RunnerBuilder {
 同时还会检验测试类是否符合要求.
 
 Runner 的核心就是 run(RunNotifier notifier)方法.
+
 ```java
 public abstract class Runner implements Describable {
     public abstract Description getDescription();
@@ -110,7 +114,7 @@ public abstract class ParentRunner<T> extends Runner implements Filterable, Sort
     protected ParaentRunner(Class<?> testClass) throws InitializationError {
         // 给指定测试类创建TestClass, 简单的new TestClass(testclass)而已.
         this.testClass = createTestClass(testClass);
-        // 验证测试类是否符合要求, 
+        // 验证测试类是否符合要求,
         validate();
     }
 
@@ -153,7 +157,7 @@ public abstract class ParentRunner<T> extends Runner implements Filterable, Sort
     // 忽略BeforeClass方法的处理逻辑之后, 主要逻辑是调用 runChildren(notifier)方法.
     protected Statement classBlock(final RunNotifier notifier) {
         Statement statement = childernInvoker(notifier);
-        // 
+        //
         if (!areAllChildernIgnored()) {
             // 给statement添加执行 BeforeClass, AfterClass, ClassRunles 的逻辑.
             // 使用了静态代理模式
@@ -175,7 +179,7 @@ public abstract class ParentRunner<T> extends Runner implements Filterable, Sort
 
     // 真正的调用, getFilteredChildren() 方法返回@Test测试方法集合,
     // 用RunnerScheduler来执行它.所以runChild(each, notifier)是真正的逻辑.
-    // runChild 又是一个抽象方法由子类实现, 而子类 BlockJUnit4ClassRunner 中的逻辑是判断@Ignore方法, 
+    // runChild 又是一个抽象方法由子类实现, 而子类 BlockJUnit4ClassRunner 中的逻辑是判断@Ignore方法,
     // 然后调用 runLeaf() 方法, 这是一个从父类 ParentRunner 继承的方法.
     private void runChildren(final RunNotifier notifier) {
         // 还记得这个 scheduler 的逻辑是调用 Runnable.run()方法
@@ -185,7 +189,7 @@ public abstract class ParentRunner<T> extends Runner implements Filterable, Sort
             for (final T each : getFilteredChildren()) {
                 currentScheduler.schedule(new Runnable() {
                     public void run() {
-                        // 这里使用 类名.this. 指定this是外部类对象, 
+                        // 这里使用 类名.this. 指定this是外部类对象,
                         // 而不是这个Runnable对象.
                         ParentRunner.this.runChild(each, notifier);
                     }
@@ -233,6 +237,7 @@ public abstract class ParentRunner<T> extends Runner implements Filterable, Sort
 ```
 
 ## BlockJUnit4ClassRunner
+
 ```java
 protected List<FrameworkMethod> getChildren() {
     return computeTestMethods();

@@ -1,7 +1,10 @@
 # Buffer
+
 如何获得*缓冲器*. ByteBuffer 提供了两种方式, 四个静态方法.
+
 1. 通过分配获得一个空的Buffer
 2. 通过包装已有的byte[]获得Buffer
+
 ```java
 public static ByteBuffer allocate(int capacity) {
     if (capacity < ) {
@@ -19,6 +22,7 @@ public static ByteBuffer wrap(byte[] array, int offset, length) {
 ```
 
 # HeapByteBuffer
+
 多数情况下会new HeapByteBuffer().
 HeapByteBuffer 是ByteBuffer的子类.
 
@@ -42,13 +46,13 @@ ByteBuffer(int mark, int pos, int lim, int cap, byte[] hb, int offset) {
 ```java
 Buffer(int mark, int pos, int lim, int cap) {
     if (cap < 0)
-        throw new 
+        throw new
     this.capacity = cap;
     limit(lim);
     position(pos);
     if (mark >= 0) {
         if (mark > pos)
-            throw new 
+            throw new
         this.mark = mark;
     }
 }
@@ -70,9 +74,11 @@ mark: 标记, 是用来调整pos位置的记号. 因为get()/put()都会使pos�
 在调用某些方法后向前移动我们的pos(). 让我们可以反复读写.
 
 ## ByteBuffer的使用
+
 get() 系列方法.
 除了get(int index) 这个决定的get方法.
 其他get方法均会移动 pos.
+
 ```java
 // 这两个方法没有实现交给 ByteBuffer 子类实现
 public abstract byte get();
@@ -86,7 +92,7 @@ public ByteBuffer get(byte[]) {
 public ByteBuffer get(byte[] dst, int offset, int length) {
     checekBounds(offset, length, dst.length);
     if (length > remaining())
-        throw new 
+        throw new
     // 确定复制完成后数组的下标. 执行length个循环.调用get()方法
     int end = offset + length;
     for (int i = offset; i < end; i++)
@@ -105,17 +111,17 @@ public final ByteBuffer put(byte[] src) {
 public final ByteBuffer put(byte[] src, int offset, int length) {
     checkBounds(offset, length, src.length);
     if (length > remaining())
-        throw new 
+        throw new
     for (int i = offset; i < end; i++)
         this.put(src[i]);
     return this;
 }
 public ByteBuffer put(ByteBuffer src) {
     if (src == this) {
-        throw new 
+        throw new
     }
     if (isReadOnly())
-        throw new 
+        throw new
     if (n > remaining())
         throw new
     for (int i = 0; i < n; i++)

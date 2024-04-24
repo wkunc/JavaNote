@@ -1,7 +1,9 @@
-# HandlerMapping 
+# HandlerMapping
+
 在Spring官方提供的配置中有5个HandlerMapping
 
 ## DefaultServletHandlerMapping
+
 这个 buildHandlerMapping() 方法返回的实际上是一个配置好的 SimpleUrlHandlerMapping
 这个 HandlerMapping 是为了将静态资源访问转发回Servlet容器的 defaultServlet.
 适用于 DispatcherServlet 映射了 "/" 的情况.
@@ -19,7 +21,9 @@ public HandlerMapping defaultServletHandlerMapping() {
 ```
 
 ## ResourceHandlerMapping
+
 这个registry.getHandlerMapping() 返回的也是个 SimpleUrlHandlerMapping
+
 ```java
 @Bean
 @Nullable
@@ -40,8 +44,11 @@ public HandlerMapping resourceHandlerMapping() {
     return handlerMapping;
 }
 ```
+
 ## viewControllerHandlerMapping
+
 这个registry.getHandlerMapping() 返回的也是个 SimpleUrlHandlerMapping
+
 ```java
 @Bean
 @Nullable
@@ -62,6 +69,7 @@ public HandlerMapping viewControllerHandlerMapping() {
 ```
 
 ## BeanNameHandlerMapping
+
 ```java
 @Bean
 public BeanNameUrlHandlerMapping beanNameHandlerMapping() {
@@ -74,6 +82,7 @@ public BeanNameUrlHandlerMapping beanNameHandlerMapping() {
 ```
 
 ## RequestMappingHandlerMapping
+
 ```java
 @Bean
 public RequestMappingHandlerMapping requestMappingHandlerMapping() {
@@ -116,6 +125,7 @@ public RequestMappingHandlerMapping requestMappingHandlerMapping() {
 ```
 
 # HandlerAdapter
+
 HttpRequestHandlerAdapter
 RequestMappingHandlerAdapter
 SimpleControllerHandlerAdapter

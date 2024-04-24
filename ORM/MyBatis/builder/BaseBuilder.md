@@ -2,8 +2,10 @@
 SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
 factory = builder.build(new FileInputStream("...."));
 ```
+
 很显然, MyBatis的初始化入口是 SqlSessionFactoryBuilder.build() 方法.
 具体实现如下:
+
 ```java
 public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
     try {
@@ -16,12 +18,14 @@ public SqlSessionFactory build(InputStream inputStream, String environment, Prop
         try {
             inputStream.close();
         } catch(IOException e)
-                                                
+
         }
     }
 }
 ```
+
 # BaseBuilder
+
 ```java
 public abstract class BaseBuilder {
     protected final Configuration configuration;
@@ -39,8 +43,10 @@ public abstract class BaseBuilder {
 ```
 
 # XMLConfigBuilder
+
 XMLConfigBuilder 是 BaseBuilder 的众多子类之一, 它主要负责解析 mybatis-config.xml
 核心字段如下:
+
 ```java
 // 是否解析过的标志
 private boolean parsed;
@@ -53,6 +59,7 @@ private final ReflectoryFactory localReflectorFactory = new DefaultReflectoryFac
 ```
 
 XMLConfigBuilder.parser() 方法是解析 mybatis-config.xml 配置文件的入口
+
 ```java
 public Configuration parse() {
     if (parsed) {
@@ -95,6 +102,7 @@ private void parseConfiguration(XNode root) {
 ```
 
 ## 解析properties节点
+
 ```java
 private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
@@ -136,13 +144,13 @@ private void propertiesElement(XNode context) throws Exception {
           if (resource != null && url == null && mapperClass == null) {
             ErrorContext.instance().resource(resource);
             InputStream inputStream = Resources.getResourceAsStream(resource);
-            // 对于每个 <mappers> 子标签, 
+            // 对于每个 <mappers> 子标签,
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
             mapperParser.parse();
           } else if (resource == null && url != null && mapperClass == null) {
             ErrorContext.instance().resource(url);
             InputStream inputStream = Resources.getUrlAsStream(url);
-            // 
+            //
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
             mapperParser.parse();
           } else if (resource == null && url == null && mapperClass != null) {
@@ -163,7 +171,7 @@ private void propertiesElement(XNode context) throws Exception {
   public void parse() {
     // 避免重复加载.
     if (!configuration.isResourceLoaded(resource)) {
-      // 1. 
+      // 1.
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
       bindMapperForNamespace();

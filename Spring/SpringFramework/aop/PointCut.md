@@ -1,23 +1,29 @@
 # PointCut
+
 一个完整的切点由 ClassFilter 和 MethodMatcher.
 一个确定哪些类需要被增强, 一个确定哪些方法需要被增强.
 
 ## ClassFilter
+
 相当简单的接口. 用来确定目标类
+
 ```java
 public interface ClassFilter {
     boolean matches(Class<?> clazz);
 }
 ```
+
 ![](./images/ClassFilter1.PNG)
 
-主要子类为 (ps: 我按复杂程度排的) 
+主要子类为 (ps: 我按复杂程度排的)
+
 * TypePatternClassFilter(利用 AspectJ type match 实现的)
 * AnnotationClassFilter(基于判断类上是否有指定类型的注解, 而决定是否匹配的)
 * RootClassFilter(一个基于是否是指定子类进行匹配)
 * TrueClassFilter(永远匹配的实现)
 
 ## MethodMatcher
+
 和ClassFilter相比更为复杂.
 ![](MethodMatcher.png)
 
@@ -44,13 +50,16 @@ public interface MethodMatcher {
 }
 ```
 
-
 ## PointCut实现
+
 我们知道所谓的 PointCut 就是一个ClassFilter 和 MethodMatcher的组合.
 所以Spring提供了一些定义好的组合.
-* ControlFlowPointcut (特殊的切点, 没有组合任何的ClassFilter, 和MethodMatcher 自己实现了这两个接口, getClassFilter() 返回的是this)
+
+* ControlFlowPointcut (特殊的切点, 没有组合任何的ClassFilter, 和MethodMatcher 自己实现了这两个接口, getClassFilter()
+  返回的是this)
 * ComposablePointcut
 * TruePoincut: TrueClassFilter 和 TrueMethodFilter 的组合, 匹配所有的类和所有的方法.
-* AnnotationMatchingPointcut (根据调用的构造器的不同, 可以构造出不同的连接点, 本质是组合基于注解的ClassFilter和MethodMatcher)
+* AnnotationMatchingPointcut (根据调用的构造器的不同, 可以构造出不同的连接点,
+  本质是组合基于注解的ClassFilter和MethodMatcher)
 * StaticMethodMatcherPointcut ()
 * DynmicMethodMatcherPointcut

@@ -24,6 +24,7 @@ public class ProxyCreatorSupport extends AdvisedSupport {
 ```
 
 ## AopProxyFactory
+
 实际上工作的接口, 根据 AdvisedSupport 对象(可以视为AOP的配置对象, 包含配置信息如: targetObject, Advisor,...)
 生成一个AopProxy 接口的实现对象.
 Spring 提供的 DefaultAopProxyFactory , 就是简单的根据配置信息确定调用哪一个 AopProxy 实现对象的构造器.
@@ -99,7 +100,6 @@ public class ProxyConfig implements Serializable {
 }
 ```
 
-
 ```java
 // TargetSource , List<Advisor> advisors, List<Class<?>>interfaces
 public class AdvisedSupport extends ProxyConfig implements Advised {
@@ -110,7 +110,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	/** Package-protected to allow direct access for efficiency. */
 	TargetSource targetSource = EMPTY_TARGET_SOURCE;
 
-    // 
+    //
 	private boolean preFiltered = false;
 
 	/** The AdvisorChainFactory to use. */
@@ -131,8 +131,9 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 
 提供一些方便配置方法, 可以直接添加 advice(内部会包装成合适的切面).
 当然也可以添加 Advisor.
+
 ```java
-// 
+//
 public void addAdvice(Advice advice) throws AopConfigException {
     int pos = this.advisors.size();
     addAdvice(pos, advice);
@@ -156,6 +157,7 @@ public void addAdvice(int pos, Advice advice) throws AopConfigException {
 ```
 
 ## AopProxy
+
 ```java
 final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializable {
 

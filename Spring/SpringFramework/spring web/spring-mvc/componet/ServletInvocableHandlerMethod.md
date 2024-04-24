@@ -1,4 +1,5 @@
 # InvocableHandlerMethod
+
 ![](HandlerMethod.png)
 HandlerMethod 的扩展(我们想调用HandlerMethod, 必须自己提供其包装方法的参数).
 而这个扩展类就是提供了一个自动从 Request 请求中自己解决参数的行为.
@@ -18,7 +19,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
     // 能够自己解决方法参数的核心.
 	private HandlerMethodArgumentResolverComposite resolvers = new HandlerMethodArgumentResolverComposite();
 
-    // 帮助获取参数名的工具, 要知道Java在编译的时候默认会把参数名抹去. 
+    // 帮助获取参数名的工具, 要知道Java在编译的时候默认会把参数名抹去.
     // 虽然我也不是很懂它是怎么做的, 但是它的功能就是获取参数名
 	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
@@ -90,9 +91,10 @@ protected Object[] getMethodArgumentValues(NativeWebRequest request, @Nullable M
 ```
 
 # ServletInvocableHandlerMethod
-如果说上面的子类提供了参数解析的功能, 
+
+如果说上面的子类提供了参数解析的功能,
 那么这个类就提供了返回值解析的功能.
-利用内部的 HandlerMethodReturnValueHandler list, 
+利用内部的 HandlerMethodReturnValueHandler list,
 
 提供了 invokeAndHandle(ServletWebRequest, ModelAndViewContainer, Object...)方法.
 

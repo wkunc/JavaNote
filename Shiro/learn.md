@@ -1,6 +1,9 @@
 # Authentication Sequence (认证流程)
+
 ## Step 1
+
 调用 Subject.login 方法传递 AuthenticationToken 实例, 它代表 User 的 principals(主体,账号,id) 和 credentials(凭证,密码)
+
 ```java
 Subject currentUser = SecurityUtils.getSubject();
 if (!currentUser.isAuthenticated()) {
@@ -23,9 +26,12 @@ if (!currentUser.isAuthenticated()) {
         }
     }
 ```
+
 ## Step 2
+
 Subject 实例(典型的是一个 DelegatingSubject,或它的子类) 通过调用 securityManager.login(token) 委托给 Application 中的
 SecurityManager, 真正的身份验证开始
+
 ```java
 //DelegatingSubject 类中 login()方法
 public void login(AuthenticationToken token) throws AuthenticationException {
@@ -69,8 +75,10 @@ public void login(AuthenticationToken token) throws AuthenticationException {
 ```
 
 ## Step 3
+
 SecurityManager 接收 token 然后简单的 delegates (代理) 它内部的 Authenticator (认证器) 实例, 调用认证器的认证方法
-Authericator 一般是 ModularRealmAuthenticator (模块化 Realm 认证器)实例, 它支持多Realm验证 
+Authericator 一般是 ModularRealmAuthenticator (模块化 Realm 认证器)实例, 它支持多Realm验证
+
 ```java
     //DefaultSecurityManager 类中的 login()
     public Subject login(Subject subject, AuthenticationToken token) throws AuthenticationException {
@@ -103,7 +111,9 @@ Authericator 一般是 ModularRealmAuthenticator (模块化 Realm 认证器)实�
 ```
 
 ## Step 4
+
 Authericator 如果有多个 Realm 就根据 AuthenticationStrategy(认证策略)执行认证, 如果是单个 Realm 就没必要使用认证策略
+
 ```java
     //
     protected AuthenticationInfo doAuthenticate(AuthenticationToken authenticationToken) throws AuthenticationException {
@@ -119,9 +129,11 @@ Authericator 如果有多个 Realm 就根据 AuthenticationStrategy(认证策略
 ```
 
 ## Step 5
+
 查询每个 Realm 查看它是否支持提交的 Token. 如果支持调用 Realm 的 getAuthenticationInfo()方法
 
 ## Save Time
+
 实现 Realm 接口是困难的,大多数人都选择继承 abstract AuthorizingRealm 类, 这个类实现了共同的 认证 和 授权流程
 
 # Credntials Matching(凭证匹配)

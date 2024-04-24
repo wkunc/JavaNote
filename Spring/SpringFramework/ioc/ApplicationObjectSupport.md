@@ -1,4 +1,5 @@
 # ApplicationObjectSupprot
+
 org.springframework.context.support 包中
 
 方便的父类如果想实现 aware of the application context

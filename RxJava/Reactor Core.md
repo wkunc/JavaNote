@@ -1,4 +1,5 @@
 # Simple Ways to Create a Flux or Mono and Subscribe to It
+
 简单的方式创建一个 Flux or Mono 并且订阅(Subscribe) 它
 -----------
 
@@ -10,23 +11,22 @@
 4. range()
 5. interval()
 
-
 ## subscribe method
 
 ```java
 // 1. 订阅并触发序列
-subscribe(); 
+subscribe();
 
 // 2. 对每个产生的值做一些什么
-subscribe(Consumer<? super T> consumer); 
+subscribe(Consumer<? super T> consumer);
 
 // 3. deal with values but also react to an error.
 subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer); 
+          Consumer<? super Throwable> errorConsumer);
 
 subscribe(Consumer<? super T> consumer,
           Consumer<? super Throwable> errorConsumer,
-          Runnable completeConsumer); 
+          Runnable completeConsumer);
 
 subscribe(Consumer<? super T> consumer,
           Consumer<? super Throwable> errorConsumer,
@@ -35,7 +35,6 @@ subscribe(Consumer<? super T> consumer,
 ```
 
 ## on Backpressure and Ways to Reshape Requests
-
 
 #4.4 Programmatically creating a sequence
 

@@ -1,4 +1,5 @@
 # Annotation
+
 1. @JsonProperty
 2. @JsonCreator
 3. @JsonAnyGetter and @JsonAnySetter
@@ -15,20 +16,23 @@
 
 这是一个快速示例:
 ExtendableBean实体具有name属性和一组以键/值对形式的可扩展属性:
+
 ```java
 public class ExtendableBean {
     public String name;
     private Map<String, String> properties;
- 
+
     @JsonAnyGetter
     public Map<String, String> getProperties() {
         return properties;
     }
 }
 ```
+
 在没有@JsonAnyGetter的时候,
 Jackson 将这个 properties 视为根对象的一个字段字段,
 字段类型是Object. 结果如下: 嵌套的json字符串.
+
 ```json
 {
   "name" : "wkunc",
@@ -39,9 +43,11 @@ Jackson 将这个 properties 视为根对象的一个字段字段,
   }
 }
 ```
-在标记上这个注解后, Jackson 将Map中的值视为根对象的属性. 
-忽略了这个map的存在, 它不会表现出来. 
+
+在标记上这个注解后, Jackson 将Map中的值视为根对象的属性.
+忽略了这个map的存在, 它不会表现出来.
 即使这个map是null或是empty也不会有影响.
+
 ```json
 {
   "name" : "wkunc",
@@ -54,18 +60,20 @@ Jackson 将这个 properties 视为根对象的一个字段字段,
   "name" : "wkunc",
 }
 ```
+
 这个注解有一个boolean类型 enabled 属性, 可以指示注解是否生效.
 
 最后附上这个注解的官方文档
 > 标记注释, 可用于将非静态, 无参数方法定义为"any getter".
 > 获取一组键/值对的访问器,
-> 作为包含POJO(类似于展开)的一部分和它具有的常规属性值一起被序列化, 
+> 作为包含POJO(类似于展开)的一部分和它具有的常规属性值一起被序列化,
 > 这通常用作" any setter”mutators的对应物(参见JsonAnySetter).
 > *请注意, 带注释的方法的返回类型必须是java.util.Map.*
 > **与JsonAnySetter一样, 应该只有一个属性使用此批注进行注释**
 > 如果注释了多个方法，则可能抛出异常.
 
 ### @JsonGeter
+
 @JsonGeter 是 @JsonProperty 的替代, 用于将方法标记为属性的getter方法
 在序列化时会调用方法获取属性值.
 
@@ -73,7 +81,7 @@ Jackson 将这个 properties 视为根对象的一个字段字段,
 public class MyBean {
     public int id;
     private String name;
- 
+
     @JsonGetter("MyName")
     public String getTheName() {
         return name;
@@ -81,12 +89,14 @@ public class MyBean {
 }
 
 ```
+
 ```json
 {
   "id" : 10,
   "MyName" : "wkunc"
 }
 ```
+
 相当于只能用在方法上的@JsonProperty. 并且只对序列化产生影响.
 
 > 标记注释,可用于定义非静态,无参数值返回(非空)方法,
@@ -96,6 +106,7 @@ public class MyBean {
 > 通过该方法进行调用,并且返回值将被序列化为属性的值.
 
 ### @JsonPeropertyOrder
+
 我们可以使用 @JsonPropertyOrder 注解来声明序列化时属性的顺序.
 
 ```java
@@ -106,17 +117,19 @@ public class MyBean {
     public String name;
 }
 ```
+
 ```json
 {
     "name":"My bean",
     "id":1
 }
 ```
->可用于定义序列化对象属性时要使用的排序(可能是部分)的注释。
+
+> 可用于定义序列化对象属性时要使用的排序(可能是部分)的注释。
 > 注释声明中包含的属性将首先（按定义的顺序）序列化，
 > 然后是定义中未包含的任何属性。
 > 注释定义将覆盖任何隐式排序
-> （例如保证Creator-properties在非创建者属性之前被序列化） 
+> （例如保证Creator-properties在非创建者属性之前被序列化）
 
 > 此注释可能会或可能不会对反序列化产生影响：
 > 对于基本JSON处理没有任何影响，
@@ -133,34 +146,47 @@ public class MyBean {
 ### @JsonSerialize
 
 ## Deserialization Annotation
+
 反序列化注解
 
 ### @JsonCreator
 
 ### @JacksonInject
+
 ### @JsonAnySetter
+
 ### @JsonSetter
+
 ### @JsonDeserialize
+
 ### @JsonAlias
 
 ## Property Inclusion Annotations
+
 指示Jackson是否包含被标记属性的注解.
 默认情况下会将对象的所有属性
 所以提供了各种用来标识哪些属性是不需要的.
 
 ### @JsonIgnoreProperties
+
 ### @JsonIgnore
+
 ### @JsonIgnoreType
+
 ### @JsonInclude
+
 ### @JsonAutoDetect
 
 ## Polymorphic Type Handling Annotations
+
 多态类型处理注解.
+
 * @JsonTypeInfo
 * @JsonSubTypes
 * @JsonTypeName
 
 ## General Annotations
+
 通用注解
 
 @JsonProperty

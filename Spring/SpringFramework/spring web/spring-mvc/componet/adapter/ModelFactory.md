@@ -1,11 +1,12 @@
 # ModelFactory
+
 用于再调用控制器方法前初始化 Model(就是调用@ModelAttribute方法和解析Session值),
 和再方法调用之后进行 update Model(还不知道更新是什么意思).
 
 所以这个类的public方法是:
+
 1. initModel()
 2. updateModel()
-
 
 ```java
 public final class ModelFactory {
@@ -33,13 +34,14 @@ public final class ModelFactory {
 	}
 }
 ```
+
 根据构造器我们知道要创建一个 ModelFactory,
 需要准备一个 SessionAttributesHandler
 和需要调用的 @ModelAttribute 方法集
-以及一个 DataBinderFactory 
-
+以及一个 DataBinderFactory
 
 RequestMappingHandlerAdapter 中的创建过程.
+
 ```java
 // 传入的 Factory 是之前的方法创建好的.
 private ModelFactory getModelFactory(HandlerMethod handlerMethod, WebDataBinderFactory binderFactory) {
@@ -73,6 +75,7 @@ private ModelFactory getModelFactory(HandlerMethod handlerMethod, WebDataBinderF
 ```
 
 # 模型数据的初始化
+
 ```java
 public void initModel(NativeWebRequest request, ModelAndViewContainer container, HandlerMethod handlerMethod)
         throws Exception {

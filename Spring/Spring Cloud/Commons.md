@@ -1,6 +1,5 @@
 # Spring Cloud Context: Application Context Services
 
-
 ## The Bootstrap Application Context
 
 Spring Cloud 应用程序通过创建 "bootstrap" context 来运行.
@@ -14,7 +13,6 @@ bootstrap Context 使用不同于主 applicationContext 的约定来定位外部
 bootstrap.yml(bootstrap.properties)
 
 # ServiceRegistry
-
 
 ```java
 /*
@@ -76,14 +74,13 @@ public interface ServiceInstance {
 }
 ```
 
-
-EurekaServiceRegistry 
+EurekaServiceRegistry
 
 ```java
 public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration> {
 
 
-    
+
 
 }
 ```

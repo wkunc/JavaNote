@@ -1,11 +1,11 @@
 # MongoDB
 
-[MongoDB support](https://docs.spring.io/spring-data/mongodb/docs/2.1.9.RELEASE/reference/html/#mongo.core) 
+[MongoDB support](https://docs.spring.io/spring-data/mongodb/docs/2.1.9.RELEASE/reference/html/#mongo.core)
 
 [MongoDB Repositories](https://docs.spring.io/spring-data/mongodb/docs/2.1.9.RELEASE/reference/html/#mongo.repositories)
 
-
 # MongoDB support
+
 * Spring配置支持基于Java的@Configuration类或Mongo驱动程序实例和副本集的XML命名空间.
 
 * MongoTemplate助手类, 可在执行常见的Mongo操作时提高工作效率.包括文档和POJO之间的集成对象映射。
@@ -27,11 +27,14 @@
 * 对JPA实体的跨存储持久性支持,使用MongoDB透明地保留和检索字段(不建议使用 - 无需替换即可删除)
 
 * GeoSpatial 集成.
+
 ## Connecting to MongoDB with Spring
+
 使用MongoDB with Spring时的首要任务之一是
 *使用IOC容器创建com.mongodb.MongoClient或com.mongodb.client.MongoClient对象*.
 
 有两种主要方法可以实现此目的.
+
 1. 使用原生的创建方式
 2. 使用Spring提供的FactoryBean
 
@@ -58,9 +61,11 @@ public class AppConfig {
     }
 }
 ```
+
 使用FactoryBean的方式, Spring会提供MongDb异常到 SpringDataAccessException的转换.
 
 ## The MongoDbFactory Interface
+
 虽然com.mongodb.MongoClient是MongoDB driver API的入口点,
 但是连接到特定MongoDB数据库实例需要其他信息, 例如数据库名称和可选的用户名和密码.
 使用该信息, 您可以获取com.mongodb.client.MongoDatabase 对象并访问数据库实例的所有功能.
@@ -80,12 +85,12 @@ public interface MongoDbFactory {
 
 主要有两个实现类对应新老API: SimpleMongoDbFactory(老), SimpleMongoClientDbFactory(新)
 
-
 ## MongoTemplate
+
 MongoTemplate 在org.springframework.data.mongodb.core 包中,
 是Spring对 MongDB 支持的 central 类. 提供了与数据库交互的丰富的功能集.
 
-这个 template 提供了便捷的操作来 create, update, delete, select 
+这个 template 提供了便捷的操作来 create, update, delete, select
 MongoDB Document (文档)对象, 并提供 domain 对象和 Document 之间的映射.
 
 > 注意:
@@ -103,10 +108,10 @@ MongoOperations 接口中定义的方法命名尽可能的接近 MongoDriver
 而不是 Document, 此外, MongoOperations 具有更棒的查询API.
 
 ## Methods for Saving and Inserting Documents
+
 MongoTemplate 有几种方便的方法来保存和插入对象.
 要对象转换进行更细粒度的控制, 可以使用MappingMongoConverter注册Spring Converter.
 如: Converter<Person, Document>, Converter<Document, Person>
-
 
 使用 save 操作最简单的方式是 save 一个 POJO.
 在这种情况下MongoDB Collection的名称由类的Simple Name确定.
@@ -125,8 +130,9 @@ mongoOperations.save(p);
 mongoOperations.save(p, "person");
 ```
 
-除了了在调用insert, save方法传入collectionName可以显式指定, 
+除了了在调用insert, save方法传入collectionName可以显式指定,
 通过@Document注解也可以指定目标Collection.
+
 ```java
 // 设置这个实体类映射的collection.
 @Document("pers")
@@ -134,6 +140,7 @@ public class Person() {
     ...
 }
 ```
+
 当然最高优先级是调用MongoTemplate.insert()方法时传入的值.
 
 save 和 insert 的API是一致的.
@@ -141,6 +148,7 @@ save 和 insert 的API是一致的.
 insert 会报错, 而 save 会覆盖那个文档.
 
 ## Updateing Documents in a Collection
+
 MongoDB 驱动提供了update第一个匹配项的方法和更新所有匹配项的方法,
 所以 MongoOperation 也提供了一样的逻辑和方法:
 updateFirst(Query, Update, ...), updateMulti(Query, Update, ...)
@@ -155,6 +163,7 @@ Account.class);
 ```
 
 ### Methods in the Update Class
+
 我们可以在 Update 类中使用一些"语法糖", 因为它的方法是链式的即返回的值是this.
 
 * Update addToSet(String key)
@@ -174,23 +183,22 @@ Account.class);
 * Update setOnInsert(String key, Object value)
 * Update unset(String key)
 
-
 ## Querying Documents in a Collection
+
 我们可以使用Query和Criteria类来表达我们的查询表达式,
 它们具有MongoDB运算符的镜像方法名称.例如 lt, lte, is等等.
 
 ## Query Distinct Values
 
 ## GeoSpatial Queries(地理空间查询)
-MongoDB 通过使用 $near, $within, $geoWithin $nearSphere 等运算符支持GeoSpatial查询.
-Criteria 类提供了特定于地理空间查询的方法, 
-还有些形状类(Box, Point, Cricle)与地理空间相关的Criteria方法结合使用.
 
+MongoDB 通过使用 $near, $within, $geoWithin $nearSphere 等运算符支持GeoSpatial查询.
+Criteria 类提供了特定于地理空间查询的方法,
+还有些形状类(Box, Point, Cricle)与地理空间相关的Criteria方法结合使用.
 
 ## Query by Example
 
 ## Map-Reduce Operations
-
 
 # MongDB Repositories
 

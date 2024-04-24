@@ -1,8 +1,11 @@
 类的层次结构hibernate表示
+
 # Table Per Hierarchy
+
 ![](img/Hi.PNG)
 一个类层次(一个继承树)一个表的情况下, hibernate 添加了一个鉴别列,
 用于记录指定对应的类型.使用 <discriminator/> 子元素指定此项
+
 ```xml
 <hibernate-mapping>
     <class name="com.wkunc.entity.Employee" table="employee" discriminator-value="emp">
@@ -23,6 +26,7 @@
     </class>
 </hibernate-mapping>
 ```
+
 使用<subclass/>指定子类
 ![](img/table.PNG)
 在这种情况下, hibernate 会将所有属性整合成一张表中的字段.
@@ -33,6 +37,7 @@
 类层次结构中的每一个类都对应一张表.
 id的生成策略不能使用native. 因为这三个类都是员工, 所以id需要连续,
 mysql自增主键很显然达不到要求. 所以将id交给hibernate来维护
+
 ```xml
 <hibernate-mapping>
     <class name="com.wkunc.employee.Employee" table="employee2">
@@ -55,6 +60,7 @@ mysql自增主键很显然达不到要求. 所以将id交给hibernate来维护
 
 ---
 还是一个类一张表但是,
+
 ```xml
 <hibernate-mapping>
     <class name="com.wkunc.employee.Employee" table="employee3">

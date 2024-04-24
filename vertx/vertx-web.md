@@ -1,5 +1,6 @@
 # Basic Vert.x-web concepts
-Router 包含0个或多个Routes. Router是Vert.x-Web的核心抽象, 
+
+Router 包含0个或多个Routes. Router是Vert.x-Web的核心抽象,
 
 一个Router接收一个Http请求并找到该请求的第一个匹配的Route, 然后将请求传递到该路由.
 

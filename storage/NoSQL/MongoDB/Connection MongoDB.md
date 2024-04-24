@@ -1,4 +1,5 @@
 # Connection MongoDB
+
 使用Driver驱动程序连接 MongoDB
 我们使用 mongodb-driver-sync, 它包含新的API.
 也可以使用 mongodb-java-driver, 它包含旧的API的同时添加了新的API.
@@ -14,7 +15,7 @@ MongoDB Driver 中的连接抽象是 MongoClient.
 MongoClient client1 = MongoClients.create();
 
 // 通过 connectionString 连接字符串来创建一个连接.
-// 格式接近JDBC的url. mongodb://host:port,host:port 
+// 格式接近JDBC的url. mongodb://host:port,host:port
 // 因为可以连接到集群,所以host可以填多个, port 可以不写,会用默认的
 MongoClient client2 = MongoClients.create("mongodb://host1");
 
@@ -31,8 +32,8 @@ MongoClient mongoClient2 = MongoClients.create(
 ```
 
 # 连接到 MongoDB 集群.
-还没学习MongoDB 集群.
 
+还没学习MongoDB 集群.
 
 # 连接选项
 

@@ -13,15 +13,16 @@ jdbc.drivers=foo.bah.Driver:wombat.sqlDriver:bad.taste.ourDriver
 
 *DriverManager*在JDBC4.0或者说Java1.6之后会使用 ServiceLoader spi机制自动加载驱动.
 
-
 主要使用方法:
+
 1. getConnection(String url) 和它的2个重载方法
 2. getDriver(String url)
 3. getDrivers() 在11后添加了一个 Stream\<Driver> drivers() 的方法.
 
-
 # init
+
 在DriverManager中的四个方法
+
 1. private static Connection getConnection()
 2. public static Stream<Driver> drivers()
 2. public static Enumeration<Driver> getDrivers()

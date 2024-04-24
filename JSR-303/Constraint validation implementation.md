@@ -6,6 +6,7 @@
 
 验证器实现 Constraintvalidator 接口.
 这个接口的定义意味着一个 约束注解 应该会有多个验证器来处理不同的类型上的验证逻辑.
+
 ```java
 // 给定类型T验证约束A的逻辑, 必须遵从以下规定:
 // 1. T 必须解析为非参数化类型
@@ -23,23 +24,32 @@ public interface ConstraintValidator<A extends Annotation, T> {
     boolean isValid(T value, ConstraintValidatorContext context);
 }
 ```
+
 A 代表这个验证器支持什么约束.
 T 代表这个验证器支持验证什么类型.
+
 ```java
+
 @Size(min = 1, max = 10)
 List<String> a;
 
-这个验证器支持验证Collection 上的 Size 约束的逻辑.
+这个验证器支持验证Collection 上的
+Size 约束的逻辑.
+
 public class SizeValidatorForCollection implements ConstraintValidator<Size, Collection> {
 
 }
 ```
+
 ## ConstraintValidatorContext
+
 传递给 isValid() 方法的 ConstraintValidatorContext 对象携带在在约束被验证的上下文中可用的信息和操作.
+
 ```java
 ```
 
 # ConstraintValidatorFactory
+
 ```java
 public interface ConstraintValidatorFactory {
 

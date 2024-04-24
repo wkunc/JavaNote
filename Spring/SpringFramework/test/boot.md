@@ -1,7 +1,9 @@
-# 
+#
+
 因为 @RunWith() 注解, 所以JUnit确定 SpringJunit4ClassRunner 作为这个测试类的Runner.
 
 然后调用其构造器.
+
 ```java
 public SpringJUnit4ClassRunner(Class<?> clazz) throws InitializationError {
     super(clazz);
@@ -17,12 +19,14 @@ protected TestContextManager createTestContextManager(Class<?> clazz) {
     return new TestContextManager(clazz);
 }
 ```
+
 调用 TestContextManager 的构造器.
 
 TestContextBootstrapper 是spring test的用来自定义的接口, 默认实现可以满足大部分需求.
 如果需要更改默认的 ContextLoader, 实现自定义的 TestContext 或 ContextCahce,
 扩充 ContextCustomizerFactory 和 TestExecutionListener 实现的默认集.
 可以实现这个接口以完成目的.
+
 ```java
 // 首先为传入的 测试类 确定使用的 TestContextBootstrapper.
 // 就是读取 @BootstrapWith 注解信息, 如果没有就使用默认的.
@@ -40,8 +44,10 @@ public TestContextManager(TestContextBootstrapper testContextBootstrapper) {
 ```
 
 # 默认的 TestContextBootstrapper 实现
+
 在TestContextManager的构造过程中调用了这个方法.
 主要调用 BuildMergedContextConfiguration() 方法生成对应的 Context 配置.
+
 ```java
 public TestContext buildTestContext() {
     return new DefaultTestContext(getBootstrapContext().getTestClass(), buildMergedContextConfiguration(),

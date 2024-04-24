@@ -1,4 +1,5 @@
 #Netty
+
 # AbstractUnsafe
 
 ```java
@@ -12,10 +13,10 @@ protected abstract class AbstractUnsafe implements Unsafe {
 }
 ```
 
-
 # Unsafe.connect()
 
 AbstractNioChannel.AbstractNioUnsafe
+
 ```java
 
         @Override
@@ -44,7 +45,7 @@ AbstractNioChannel.AbstractNioUnsafe
                 // PS:
                 // NIO的特性 connect() 方法不会阻塞线程.
                 // 如果直接返回了true说明连接成功了(tcp 握手完成了)
-                // 如果返回了 false 说明 tcp 握手流程没完成. 
+                // 如果返回了 false 说明 tcp 握手流程没完成.
                 // 此时需要监听 SelectionKey.OP_CONNECT 事件
                 // 并且需要手动调用 SocketChannel.finishConnect() 完成连接.
                 if (doConnect(remoteAddress, localAddress)) {

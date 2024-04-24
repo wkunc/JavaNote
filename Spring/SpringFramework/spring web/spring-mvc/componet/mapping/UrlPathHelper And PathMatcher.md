@@ -1,6 +1,8 @@
 # UrlPathHelper
+
 第一次是在 AbstractHandlerMapping 中见到,
 这个帮助类的目的是确定请求的路径. 以及对url进行编码操作.
+
 ```java
 public class UrlPathHelper {
 
@@ -27,6 +29,7 @@ public class UrlPathHelper {
 ```
 
 最常见的方法调用是
+
 ```java
 // 根据一个简单的逻辑判断应该返回怎么样的路径.
 // 首先如果是采用完全路径的话, 就调用 getPathWithinApplication() 方法.
@@ -51,7 +54,9 @@ public String getLookupPathForRequest(HttpServletRequest request) {
 ```
 
 # PathMatcher
+
 是一个策略接口, Spring 只提供了一个 AntPahtMatcher 实现 Ant 风格的路径匹配.
+
 ```java
 public interface PathMatcher {
 

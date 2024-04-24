@@ -1,7 +1,8 @@
 # WebSecurityConfigurerAdapter
-它是 Spring Security 提供的WebSecurityConfigurer实现类, 
+
+它是 Spring Security 提供的WebSecurityConfigurer实现类,
 它虽然是抽象类但是它没有抽象方法.
-Spring Security 提供的 WebSecurityConfiguration 类在调用 WebSecurity build() 
+Spring Security 提供的 WebSecurityConfiguration 类在调用 WebSecurity build()
 方法前会保证其被正确的配置(在没有被配置的情况下使用 new WebSecurityConfiguration() {} 的方式进行填充配置).
 
 ```java
@@ -21,9 +22,9 @@ public abstract class WebSecurityConfigurerAdapter implements
 		}
 	};
 
-    // 相当于一共有三个 AuthenticationManager, 主要使用 authenticationBuilder, 
+    // 相当于一共有三个 AuthenticationManager, 主要使用 authenticationBuilder,
     // 其他两个用来作为其构造的 AuthenticationManager 的 parentAuthenticationManager.
-    // 如果 config(auth) 方法被重写就使用 localConfigureAuthenticationBldr, 
+    // 如果 config(auth) 方法被重写就使用 localConfigureAuthenticationBldr,
     // 否则使用 AuthenticationConfiguration
 	private AuthenticationConfiguration authenticationConfiguration;
 	private AuthenticationManagerBuilder authenticationBuilder;
@@ -98,8 +99,8 @@ public void setAuthenticationConfiguration(
 }
 ```
 
-
 实现 WebSecurityConfigurer 方法
+
 ```java
 // 重点方法, 调用 getHttp() 获取一个配置好的 HttpSecurity, 并注册到WebSecurity中.
 public void init(final WebSecurity web) throws Exception {
@@ -119,6 +120,7 @@ public void configure(WebSecurity web) throws Exception {
 ```
 
 重点方法, 我们知道 new 一个HttpSecurity必须要有一个 AuthenticationManager.
+
 ```java
 protected final HttpSecurity getHttp() throws Exception {
     if (http != null) {
@@ -129,7 +131,7 @@ protected final HttpSecurity getHttp() throws Exception {
             .postProcess(new DefaultAuthenticationEventPublisher());
     localConfigureAuthenticationBldr.authenticationEventPublisher(eventPublisher);
 
-    // 重点, 确定 AuthenticationConfiguration 和 localConfigureAuthenticationBldr 
+    // 重点, 确定 AuthenticationConfiguration 和 localConfigureAuthenticationBldr
     // 哪一个的构造的AuthenticationManager成为parent
     AuthenticationManager authenticationManager = authenticationManager();
 
@@ -175,7 +177,7 @@ private Map<Class<? extends Object>, Object> createSharedObjects() {
     Map<Class<? extends Object>, Object> sharedObjects = new HashMap<Class<? extends Object>, Object>();
 
     sharedObjects.putAll(localConfigureAuthenticationBldr.getSharedObjects());
-    // 
+    //
     sharedObjects.put(UserDetailsService.class, userDetailsService());
 
     sharedObjects.put(ApplicationContext.class, context);

@@ -8,7 +8,7 @@ an object that executes submiited Runnable tasks.
 该接口提供了一种将 task 提交与每个任务的运行机制分离开的方式.
 
 也就是使用者不关心提交的task如何执行, 怎么执行, 何时执行.
-这些工作由不同的 Executor 实现. 
+这些工作由不同的 Executor 实现.
 
 ```java
 public interface Executor {
@@ -23,7 +23,6 @@ an Executor that provides methods to manage termination and methods that can
 produce a Future for tacking progress of one or more asynchronous tasks.
 
 一个提供了 管理终止 和 返回 Future 以追踪一个或多个异步任务的进度的方法的 Executor.
-
 
 ```java
 public interface ExecutorService extends Executor {
@@ -47,15 +46,15 @@ public interface ExecutorService extends Executor {
     <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
         throws InterruptedException;
 
-    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, 
+    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                     long timeout, TimeUnit unit) throws InterruptedException;
 
-    <T> T invokeAny(Collection<? extends Callable<T>> tasks) 
+    <T> T invokeAny(Collection<? extends Callable<T>> tasks)
         throws InterruptedException, ExecutionException;
 
 
     <T> T invokeAny(Collection<? extends Callable<T>> tasks,
-                    long timeout, TimeUnit unit) 
+                    long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException;
 
 }
@@ -67,7 +66,6 @@ provides default implementations of ExecutorService execution methods.
 
 提供 ExecutorService execution methods 的默认实现
 也就是没有实现 shutdown() 等终止服务的方法.
-
 
 ```java
 public abstract class AbstractExecutorService implements ExecutorService {
@@ -111,7 +109,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         if (ntasks = 0)
             throw new IllegalArgumentException();
         ArrayList<Future<T>> futures = new ArrayList<>(ntasks);
-        ExecutorCompletionService<T> ecs = 
+        ExecutorCompletionService<T> ecs =
             new ExecutorCompletionService<T>(this);
 
         try {
@@ -138,7 +136,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
                             throw new TimeoutException();
                         nanos = deadline - System.nanoTime();
                     }
-                    else 
+                    else
                         f = ecs.take();
                 }
                 if (f != null) {
@@ -163,7 +161,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
     }
 
 
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks) 
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
         throws InterruptedException, ExecutionException {
 
         try {
@@ -179,7 +177,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         throws InterruptedException, ExecutionException, TimeoutException {
         return doInvokeAny(tasks, true, unit.toNanos(timeout));
     }
-    
+
 
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
         throws InterruptedException {

@@ -1,4 +1,5 @@
 # Q&A
+
 开发中碰到过的疑问点
 
 ## 为何有时参数名没有正确解析
@@ -6,6 +7,7 @@
 java8 增加了编译参数 `-parameters` 可以让class中保留参数名, Spring, Mybatis等框架会用这个特性减少参数名映射时的申明工作量
 
 在java8之前需要用注解指定方法中的参数名, 否则在xml中就只能用`#{param1}`这样的参数了
+
 ```java
 Person listSimpleById(@Param("ids") String id);
 
@@ -15,16 +17,19 @@ Person listSimpleById(String id);
 
 异常情况, 单个 `Collection`类型参数的情况下.
 运行时会报错, 提示没有ids这个名字的参数
-> Parameter 'ids' not found. Available parameters are  \["collection", "list"\]
+> Parameter 'ids' not found. Available parameters are \["collection", "list"\]
+
 ```java
 List<Person> listSimpleByIds(List<String> ids);
 
 ```
+
 看起来`-parameters`失效了. 本质原因是Mybatis对单个参数的特殊处理.
 单个参数的情况下实际上mybatis是不case这个参数名的.
 
 `org.apache.ibatis.reflection.ParamNameResolver`
-```java 
+
+```java
   /**
    * <p>
    * A single non-special parameter is returned without a name.
@@ -60,6 +65,7 @@ List<Person> listSimpleByIds(List<String> ids);
 ```
 
 org.apache.ibatis.session.defaults.DefaultSqlSession
+
 ```java
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
@@ -92,6 +98,7 @@ org.apache.ibatis.session.defaults.DefaultSqlSession
 ```
 
 org.apache.ibatis.scripting.defaults.DefaultParameterHandler
+
 ```java
   @Override
   public void setParameters(PreparedStatement ps) {

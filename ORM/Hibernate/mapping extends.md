@@ -1,7 +1,10 @@
 # 映射继承关系
+
 * 每个具体类使用一张表并且使用默认的运行时多态行为
 * 每个具体类使用一张表但完全舍弃SQL架构的多态和继承关系, 将SQL UNION 查询用于运行时多态行为
+
 > 此时数据库中有一张 hibernate\_sequence 表用来存下标
+
 * 每个类层次结构使用一个表: 通过反规范化SQL架构来启用多态并且依赖基于行的区别来判定超类还是子类
 * 每个子类使用一个表: 将 is a(继承) 关系表示为 has a(外键)关系, 并使用 SQL JOIN 操作
 
@@ -60,7 +63,8 @@ public class CreditCard extends BillingDetails {
 }
 ```
 
-## Table per class 
+## Table per class
+
 表看起来和上面是一样的.
 JPA标准指定了 TABLE\_PER\_CLASS 是可选的, 所以并非所有的JPA实现都支持这个策略.
 
@@ -192,17 +196,17 @@ public class CreditCard extends BillingDetails {
 }
 ```
 
-## 混合继承策略 
-
-
+## 混合继承策略
 
 # 多态关联
 
 # 映射集合和实体关联
+
 重点是**@ElementCollecction** 注解
 这个注解用于**值类型**元素的集合
 映射 Set
 @CollectionTable 和 @Column 用来重命名
+
 ```java
 @Entity
 public class Item {
@@ -214,7 +218,6 @@ public class Item {
     protected Set<String> images = new HashSet<>();
 }
 ```
-
 
 ```java
 @Entity
@@ -231,7 +234,6 @@ public class Item {
 }
 ```
 
-
 ```java
 @Entity
 public class Item {
@@ -243,8 +245,8 @@ public class Item {
 }
 ```
 
-
 映射一个Map
+
 ```java
 @Entity
 public class Item {

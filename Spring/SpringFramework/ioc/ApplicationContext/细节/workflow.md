@@ -1,9 +1,12 @@
 # AnnotationApplication workflow
-Creating shared instance of singleton bean 'org.springframework.context.annotation.internalConfigurationAnnotationProcessor'
+
+Creating shared instance of singleton bean '
+org.springframework.context.annotation.internalConfigurationAnnotationProcessor'
 
 # AbstractApplicatoinContext
 
 AbstractApplicationContext 的 refresh() 方法定义了 Spring 容器启动时所执行的各项操作
+
 ```java
 @Override
 public void refresh() throws BeanException {
@@ -79,27 +82,36 @@ public void refresh() throws BeanException {
     }
 }
 ```
+
 步骤
+
 1.
+
 > 初始化 **BeanFactory** :根据配置文件实例化 BeanFactory, 在 obtainFreshBeanFactory()方法中
 > 首先调用 refreshBeanFactory()方法刷新 BeanFactory, 然后调用 getBeanFactory() 方法获取 BeanFactory,
 > 这两个方法都是由具体子类实现的. 在这一步里, Spring 将配置文件的信息装入容器的 Bean 定义注册表(BeanDefinitionRegistry)中
 > 但此时 Bean 还未初始化
 
 2.
+
 > 调用工厂后处理器: 根据反射机制从 BeanDefinitionRegistry 中找出所有实现了 BeanFactoryPostProcessor 接口的 Bean.
 > 并且调用 postProcessBeanFactory()接口方法
 
 3.
+
 > 注册 Bean 后处理器: 根据反射机制从 BeanDefinitionRegistry 中找出所有实现 BeanPostProcessor 接口的Bean,
 > 并将它们注册到容器 Bean 后处理器的注册表中.
 
 4.
+
 > 初始化消息源: 初始化容器的国际化消息资源
+
 5.
+
 > 初始化应用上下文事件
 
 # Bean 的生命周期
+
 1. InstantiationAwareBeanPostProcessor
 
 2. 通过构造器或工厂方法产生bean实例

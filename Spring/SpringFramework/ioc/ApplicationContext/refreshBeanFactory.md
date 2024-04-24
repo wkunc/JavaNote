@@ -1,4 +1,5 @@
 # refreshBeanFactory()
+
 AbstractApplicationContext 中的refresh()方法调用流程中的分支
 除了 obtaionFreshBeanFactory(), 其他都是大家基本一致的.
 而 obtaionFreshbeanFactory() 调用了
@@ -8,9 +9,10 @@ AbstractApplicationContext 中的refresh()方法调用流程中的分支
 AbstractRefreshableApplicationContext 和 GenericApplicationContext.
 
 # AbstractRefreshableApplicationContext
+
 这个类重点就是可以多次调用 refresh() 方法.
 所以它在 refreshBeanFactory() 中会销毁原来的 BeanFactory,
-创建新的BeanFactory. 
+创建新的BeanFactory.
 
 ```java
 protected final void refreshBeanFactory() throws BeansException {
@@ -35,12 +37,14 @@ protected final void refreshBeanFactory() throws BeansException {
     }
 }
 ```
+
 # GenericApplicationContext
+
 这个类和上面可刷新的ApplicationContext不同, 它是不可重复调用
 refresh() 方法.
 
 ```java
-// 这是一个final方法, 意味着子类无法重写这个方法, 
+// 这是一个final方法, 意味着子类无法重写这个方法,
 // 保证了子类不会重写这个方法从而变成可刷新的
 protected final void refreshBeanFactory() throws IllegalStateException {
     // 判断 refresh() 方法是否已经被调用.
@@ -51,9 +55,11 @@ protected final void refreshBeanFactory() throws IllegalStateException {
     this.beanFactory.setSerializationId(getId());
 }
 ```
+
 我们发现在这个实现中Context不可刷新意味着BeanFactory对象不会重新创建.
-那么它要在哪里创建呢? 
+那么它要在哪里创建呢?
 答案就是在构造器中就创建了一个永久和这个Context绑定的BeanFactory.
+
 ```java
 public GenericApplicationContext() {
     this.beanFactory = new DefaultListableBeanFactory();

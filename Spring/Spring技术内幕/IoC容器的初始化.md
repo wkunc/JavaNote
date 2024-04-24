@@ -1,4 +1,5 @@
 # IoC容器的初始化过程
+
 BeanDefinition 的Resource定位, 载入,和注册.
 
 Spring 把这三个过程分开, 并使用不同的模块来完成,
@@ -15,12 +16,14 @@ Spring 把这三个过程分开, 并使用不同的模块来完成,
 第三个过程是向 IoC 容器注册这些 BeanDefinition 的过程.
 
 ## BeanDefinition的Resource定位
+
 ```java
 ClassPathResource res = new ClassPathResource("bean.xml");
 DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
 reader.loadBeanDefinitions(res);
 ```
+
 以编程的方式使用*DefaultListableBeanFactory*时,
 首先定义一个*Resource*来定位容器使用的*BeanDefinition*.
 我们使用了ClassPathResource, 这意味着Spring会在类路径中去寻找以文件形式存在的BeanDefinition信息
@@ -33,17 +36,16 @@ Spring 通过 BeanDefinitionReader 来对这些信息进行处理.
 在ApplicationContext中Spring为我们提供了一系列加载不同Resource的读取器实现.
 而 DefaultListableBeanFactory 只是单纯的IoC容器实现, 需要为它配置特定的读取器才能完成这些功能.
 
-
 回到我们经常使用的 ApplicationContext 上来, 例如:
 FileSystemXmlApplicationContext, ClassPathXmlApplicationContext, XmlWebApplicationContext.
 简单的从类名上就看以看出它们提供哪些不同的Resource读入功能.
-
 
 下面我们分析常用的 ClassPathXmlApplicationContext 的实现, 看看它是怎样完成加载过程的.
 
 从类图很明显看出 ApplicationContext 的基类是 DefaultResourceLoader(是一个 ResourceLoader的实现)
 [](ClassPathXMLApplicationContext.PNG)
 所以 ClassPathXmlApplicationContext 通过继承就拥有了 ResourcLoader 读入Resourc定义的BeanDefinition的能力
+
 ```java
 public class FileSystemXmlApplicationContext extends AbstractXmlApplicationContext {
 	public FileSystemXmlApplicationContext() { }
@@ -76,7 +78,7 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 		}
 	}
     /*
-    * 这是应用于文件系统中 Resourc 的实现,通过构造一个 FileSystemResource来得到一个在文件系统中定位的BeanDefinion 
+    * 这是应用于文件系统中 Resourc 的实现,通过构造一个 FileSystemResource来得到一个在文件系统中定位的BeanDefinion
     * 这个 getResourceByPath()是在 BeanDefinitionReader 的 loadBeanDefintion 中调用的
     * loadBeanDefintion 采用了模板设计模式, 具体的实现其实由子类负责
     */
@@ -90,7 +92,6 @@ public class FileSystemXmlApplicationContext extends AbstractXmlApplicationConte
 
 }
 ```
-
 
 ----
 AbstractRefreshableApplicationContext 对容器的初始化
@@ -127,6 +128,7 @@ protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFacto
 ```
 
 AbstractXmlApplicationContext 中实现了loadBeanDefinitions() 方法
+
 ```java
 @Override
 protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) throws BeansException, IOException {
@@ -169,13 +171,17 @@ protected String[] getConfigLocations() {
 ```
 
 # BeanDefinitionReader
+
 AbstractBeanDefinitionReader中实现了基本过程, 所有的解析方法最终都会调用: 如下定义的方法, 而不同的类型的Resource解析有不同的子类实现.
 我们下面用 XmlBeanDefinitionReader 作为示范
+
 ```java
 	int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException;
 ```
+
 Application只提供资源而不负责加载, 而且有两种情况.
 reader.loadBeanDefinitions(configLoactions);
+
 ```java
 // 遍历这个可变参数, 足以加载StringPath的Resource
 public int loadBeanDefinitions(String... locations) throws BeanDefinitionStoreException {
@@ -230,7 +236,9 @@ public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualRe
 		}
 	}
 ```
+
 这里是xmlBeanDefintionReader中的具体实现
+
 ```java
 	public int loadBeanDefinitions(Resource resource) throws BeanDefinitionStoreException {
 		return loadBeanDefinitions(new EncodedResource(resource));
@@ -300,7 +308,9 @@ public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualRe
 		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}
 ```
+
 下面是 BeanDefinitionDocumentReader 解析过程的部分
+
 ```java
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
 		this.readerContext = readerContext;
@@ -344,8 +354,6 @@ public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualRe
 		this.delegate = parent;
 	}
 ```
-
-
 
 ```java
 @Override

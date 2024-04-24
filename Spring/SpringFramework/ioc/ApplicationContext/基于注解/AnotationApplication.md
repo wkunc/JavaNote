@@ -13,7 +13,6 @@ public void register(Class<?>... annotatedClasses) {
 }
 ```
 
-
 ## AnnotatedBeanDefinitionReader
 
 ```java
@@ -27,7 +26,7 @@ public void registerBean(Class<?> annotatedClass) {
 }
 
 // 所有的注册最终都会到这个方法.
-// annotatedClass : 传入的配置类, Supplier : 用来生成这个实例的工厂 可以为空, 
+// annotatedClass : 传入的配置类, Supplier : 用来生成这个实例的工厂 可以为空,
 // name : 显式指定的 beanName, 如果没有会调用 BeanNameGenerator 来生成一个默认名字.
 // definitionCustomizers: 一个自定义处理生成 BeanDefinition 的方法数组. 用来修改生成的 BeanDefinition, 可以为空
 <T> void doRegisterBean(Class<T> annotatedClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,

@@ -1,4 +1,5 @@
 # ApplciationContext
+
 ```java
 public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
 		MessageSource, ApplicationEventPublisher, ResourcePatternResolver {
@@ -21,6 +22,7 @@ public interface ApplicationContext extends EnvironmentCapable, ListableBeanFact
 # AbstractApplicationContext 源码分析
 
 字段分析
+
 ```java
 // 下面 5 个字段是用来实现 ApplicationContext 接口方法的.
 protected final Log logger = LogFactory.getLog(getClass());
@@ -71,8 +73,8 @@ private final Set<ApplicationListener<?>> applicationListeners = new LinkedHashS
 private Set<ApplicationEvent> earlyApplicationEvents;
 ```
 
-
 初始化
+
 ```java
 
 public abstract class AbstractApplicationContext extends DefaultResourceLoader
@@ -93,7 +95,6 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 }
 ```
 
-
 通过源码的阅读, 我们可以看到, AbstractApplication 负责实现和其他接口实现的委托.
 它将 MessageSource 接口方法委托给内部的实现对象.
 将 ApplicationEventPublisher 接口部分逻辑委托给 ApplicationEventMulticaster.
@@ -103,6 +104,7 @@ getBeanFactory() 方法, 而它如何实现 BeanFactory 系列接口的方法呢
 
 它内部就是通过 getBeanFactory() 方法获取BeanFactory对象, 然后委托给它.
 而它又没有实现这个方法, 也就是说子类负责 BeanFactory 对象的持有.
+
 ```java
 public Object getBean(String name) throws BeansException {
     assertBeanFactoryActive();
@@ -116,13 +118,8 @@ public <T> T getBean(String name, Class<T> requiredType) throws BeansException {
 // ....
 ```
 
-
-
-
-
-
-
 # 核心
+
 ```java
 public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
@@ -272,7 +269,7 @@ protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 protecetd void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) { }
 
 //5
-// 实例化并调用所有有注册的 BeanFactoryPostProcessor. 必须在单例对象创建前调用 
+// 实例化并调用所有有注册的 BeanFactoryPostProcessor. 必须在单例对象创建前调用
 protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
     PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
@@ -339,7 +336,7 @@ protected void initApplicationEventMulticaster() {
 protected void onRefresh() throws BeansException {
     // For subclasses: do nothing by default.
 }
-//10 
+//10
 protected void registerListeners() {
     // Register statically specified listeners first.
     for (ApplicationListener<?> listener : getApplicationListeners()) {

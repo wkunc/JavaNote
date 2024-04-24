@@ -1,15 +1,20 @@
 # SecurityBuilder
+
 ![](SecurityBuilder.png)
 
 一个负责创建泛型指定类型对象的Builder接口. (建造者模式)
+
 ```java
 public interface SecurityBuilder<O> {
     0 build() throws Exception;
 }
 ```
+
 # AbstractSecurityBuilder
+
 保证了对象只会被创建一次, 因为 build 方法只能被调用一次. 提供了一个 getObject() 方法可以在Builder构建后反复获取同一个构建的对象.
 但是没有明确的指明创建什么类型的对象, 泛型没有填. 把创建对象的逻辑委托给子类.
+
 ```java
 public abstract class AbstractSecurityBuilder<O> implements SecurityBuilder<O> {
 	private AtomicBoolean building = new AtomicBoolean();
@@ -35,14 +40,14 @@ public abstract class AbstractSecurityBuilder<O> implements SecurityBuilder<O> {
 }
 ```
 
-
 # AbstractConfiguredSecurityBuilder
+
 一个允许多个 SecurityConfigurer 接口的实现进行配置的builder. (还有 ObjectProcessor 接口)
 这个类的泛型需要两个, 一个是创建的目标对象 O, 一个是实现创建目标对象的Builder.
-这个泛型真的很难懂. 
+这个泛型真的很难懂.
 由于这个泛型的原因, 这个类的3个主要子类都又去implement SecurityBuilder 接口了.
 
-除了提供 SecurityConfigurer 接口的集成外, 
+除了提供 SecurityConfigurer 接口的集成外,
 还提供了一个迷你的IOC的功能, 由 Map\<Classs, Object> sharedObjects 实现.
 将一些需要共用的对象放置这个Map中.
 
@@ -66,10 +71,10 @@ public abstract class AbstractConfiguredSecurityBuilder<O, B extends SecurityBui
 
     // 一个系统内部的布尔标准, 我们无法修改, 也不应该修改.
     // 是否允许同一 SecurityConfigurer 配置多次, 会影响 apply() 时向 Map<Class, List<>>添加的行为.
-    // 如果为 false, 那么 Map<Class, List> 中的List永远只能有一个, 
+    // 如果为 false, 那么 Map<Class, List> 中的List永远只能有一个,
     // 后注册的SecurityConfigurer会覆盖之前注册的相同类型的SecurityConfigurer
     // 如果为 true, 那么就允许同一种SecurityConfigurer配置多次.
-    // 注意这个是被 final 修饰的, 意味着它在构造器中初始化后, 就不会改变. 
+    // 注意这个是被 final 修饰的, 意味着它在构造器中初始化后, 就不会改变.
     // WebSecurity 和 HttpSecurity 都是false, 而 AuthenticationManagerBuilder 是true
 	private final boolean allowConfigurersOfSameType;
 
@@ -93,11 +98,13 @@ public abstract class AbstractConfiguredSecurityBuilder<O, B extends SecurityBui
 ```
 
 实现父类方法 doBuild().
-当然这是一个模板方法, 只是定义如何执行build过程, 
+当然这是一个模板方法, 只是定义如何执行build过程,
 真正的build交给 performBuild()方法, 所有的子类都会去实现这个方法.
+
 1. 先初始化
 2. 进行配置
 3. 进行build
+
 ```java
 protected final O doBuild() throws Exception {
     synchronized (configurers) {
@@ -127,6 +134,7 @@ protected final O doBuild() throws Exception {
 ```
 
 除了提供一个模板方法实现 doBuild() 外还提供了一个 getOrBuild() 方法
+
 ```java
 public O getOrBuild() {
     if (isUnbuilt()) {
@@ -144,8 +152,8 @@ public O getOrBuild() {
 }
 ```
 
-
 ## 和SecurityConfigurer的集成
+
 下面是提供的和 SecurityConfigurer 接口实现集成的部分.
 主要是
 

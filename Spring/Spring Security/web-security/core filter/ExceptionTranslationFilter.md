@@ -1,9 +1,9 @@
 # ExceptionTranslationFilter
+
 负责检测抛出的任何 Spring Security 异常.
 此类异常通常是由 AbstractSecurityInterceptor(授权服务) 抛出.
 
 ExceptionTranslationFilter, 返回错误代码 403(经过认证, 但是没有足够的权限)
-
 
 ```java
 public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
@@ -102,11 +102,11 @@ private void handleSpringSecurityException(HttpServletRequest request,
 }
 ```
 
-
 ## AuthenticationEntryPoint
 
 被 ExceptionTranslationFilter 使用, commence(启动) an authentication scheme
 有多个实现, 分别用于启动不同的认证模式.
+
 1. BasicAuthenticationEntryPoint
 2. DigestAuthenticationEntryPoint
 3. Http403ForbiddenEntryPoint
@@ -122,6 +122,7 @@ public interface AuthenticationEntryPoint {
 ```
 
 ## AccessDeniedHandler
+
 如果用户登录了, 但是访问了一个没有权限的资源(权限不足).
 会抛出 AccesssDenidedException 访问拒绝异常.
 此时就会触发第二个策略 AccessDeniedHandler.
@@ -139,14 +140,16 @@ public interface AccessDeniedHandler {
 ```
 
 # ExceptionHandingConfigurer
+
 从默认配置看出, 默认情况下是使用 Http403ForbiddenEntryPoint(在抛出没有认证异常后, 发送403响应).
 而在使用中我们发现在没有触发没有认证异常后, 会重定向到loginPage.
 这是因为在启用FormLogin后, 其配置会影响使用的 AuthenticationEntryPoint.
 使其变成 LoginUrlAuthenticationEntryPoint (重定向到指定Url).
 
 * Shared Objects Created
-nothing
+  nothing
 * Shared Objects Used
+
 1. RequestCache
 2. AuthenticationEntryPoint
 

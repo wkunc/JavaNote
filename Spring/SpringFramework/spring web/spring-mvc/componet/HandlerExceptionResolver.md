@@ -13,6 +13,7 @@ public interface HandlerExceptionResolver {
 ```
 
 体现在DispastcherServlet的处理过程中就是
+
 ```java
 try {
     ModelAndView mv = null;
@@ -70,7 +71,7 @@ try {
     // 可以看到上面try块代码中执行了如下步骤:
     // 1. 路由到handler
     // 2. 确定合适HandlerAdapter
-    // 3. 前置拦截器 
+    // 3. 前置拦截器
     // 4. 调用handler方法
     // 5. 解决视图名
     // 6. 后置拦截器
@@ -89,8 +90,8 @@ catch (Throwable err) {
 }
 
 /**
-* 处理 handler 选择和 handler 的调用结果, 
-* 该结果可以是 ModelAndView 或要解析为 ModelAndView 的异常. 
+* 处理 handler 选择和 handler 的调用结果,
+* 该结果可以是 ModelAndView 或要解析为 ModelAndView 的异常.
 * 没有抛出异常就是 ModelAndView,
 * 如果抛出了异常就是利用异常处理程序将 Exception 变成 ModelAndView
 */

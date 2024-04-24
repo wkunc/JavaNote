@@ -18,7 +18,8 @@ interface EventExcutorGroup extends ScheduledExecutorService  {
 
 ## AbstractEventExecutorGroup
 
-将 `submit()`, `schedule()`, `scheduleAtFixedRate()`, `scheduleWithFixedDelay()`, `invokeAll()`, `invokeAny()` 等方法传递给 `next()` 方法获取的child EventExecutor 执行器去执行.
+将 `submit()`, `schedule()`, `scheduleAtFixedRate()`, `scheduleWithFixedDelay()`, `invokeAll()`, `invokeAny()`
+等方法传递给 `next()` 方法获取的child EventExecutor 执行器去执行.
 以及提供 `shutdownGracefully()` 的默认实现委托给另一个完整参数的 `shutdownGracefully()` 方法
 
 ``` java
@@ -55,7 +56,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     // nThreads 需要的线程数量
     // 内部的Executor
-    // EventExecutor选择器工厂. 
+    // EventExecutor选择器工厂.
     // 默认会根据线程数量返回不同的 Chooser (通用的和2的n次方版本)
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
                                             EventExecutorChooserFactory chooserFactory, Object... args) {
@@ -63,7 +64,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
         // 如果 executor 为null使用默认的 Executor.
         // 简单的使用给定的 ThreadFactory 创建线程然后start的Executor
-        // TODO DefaultThreadFactory, FastThreadLocalThread. 
+        // TODO DefaultThreadFactory, FastThreadLocalThread.
         if (executor == null) {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
@@ -73,7 +74,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
         // 循环创建每一个 EventExecutor
         // 如果某一个子 EventExecutor 创建失败了
-        // 通过调用 EventExecutor.shutdownGracefully() 关闭之前创建的 
+        // 通过调用 EventExecutor.shutdownGracefully() 关闭之前创建的
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
@@ -109,7 +110,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         chooser = chooserFactory.newChooser(children);
 
         // 创建子EventExector终止事件监听器.
-        // 终结后增加 terminatedChildren 计数器, 
+        // 终结后增加 terminatedChildren 计数器,
         // 当计数器和子EventExector数组长度一样相等时,
         // 意味着所有的Children都已经关闭了,
         // 将这个 EventExectoryGroup 的termainationFuture设置为true
@@ -150,8 +151,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 实现了 newChild() 方法 NioEventLoop 的初始化逻辑
 
 ``` java
-  // 最长的构造器, MultithreadEventExecutorGroup 声明的构造器只有3个明确参数, 
-  // 也就是这里的 nThreads, executor, chooserFactor. 
+  // 最长的构造器, MultithreadEventExecutorGroup 声明的构造器只有3个明确参数,
+  // 也就是这里的 nThreads, executor, chooserFactor.
   // 剩下的其他参数说明都是可变参数 Object... args的一部分, 也就是说会传递给 newChild() 方法
   public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
                          SelectorProvider selectorProvider,

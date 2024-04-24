@@ -1,4 +1,5 @@
 # ApplicationContexteAwareProcessor
+
 这个 BeanProcessor 负责实现各种 Aware 接口的自动注入.
 这个 processor 会在 Application 启动的 reflsh() 方法中的
 prepareBeanFactory() 方法中注册到BeanFactory

@@ -10,11 +10,11 @@
 8. AbstractAuthenticationProcessingFilter
 
 ## SecurityContextHolder
-Spring Security 认证模型的核心是 SecurityContextHolder. 
+
+Spring Security 认证模型的核心是 SecurityContextHolder.
 它包含 SecurityContext
 
 ![](securitycontextholder.png)
-
 
 Spring Security在SecurityContextHolder中存储用于通过认证的人员的详细信息.
 Spring Security并不关心如何填充SecurityContextHolder.
@@ -38,16 +38,16 @@ role 或者 scopes 是最常见的例子
 
 GrantedAuthoriity是授予 principal(主体)的权限, 此类权限通常是 role
 
-
 # AuthenticationManager
+
 负责处理一次 authentication request (认证请求).
 
 ```java
 public interface AuthenticationManager {
     /*
-    * 根据传入的 Authentication 对象, 进行验证, 
+    * 根据传入的 Authentication 对象, 进行验证,
     * 如果验证通过, 返回完整的 Authentication 对象(包含权限列表).
-    * 遵从以下约定: 
+    * 遵从以下约定:
     * 1. 如果一个被禁用的账号进行验证, 那么必须抛出 DisabledException 异常
     * 2. 如果一个被锁定的账号进行验证, 那么必须抛出 LockedException
     * 3. 如果用错误的凭证(密码)进行验证, 那么必须抛出 BadCredentialsException
@@ -57,7 +57,8 @@ public interface AuthenticationManager {
 }
 ```
 
-# ProviderManager 
+# ProviderManager
+
 Spring Security中的`AuthenticationManager`默认实现称为ProviderManager,
 它不负责处理身份验证请求本身.
 而是委托给内部的已配置的 `AuthenticationProvider` 列表.
@@ -68,36 +69,37 @@ Spring Security中的`AuthenticationManager`默认实现称为ProviderManager,
 例如: 一个AuthenticationProvider 可能可以验证 Username/Password, 而另一个可能可以验证SAML断言.
 这允许每个AuthenticationProvider进行非常特定的身份验证, 同时支持多种身份验证, 并且只公开一个AuthenticationManager bean.
 
-ProviderManager还允许配置可选的 parent AuthenticationManager, 
+ProviderManager还允许配置可选的 parent AuthenticationManager,
 如果当前没有可以执行的AuthenticationProvider, 就询问parent.
 
 这种设计的最大目的就是保证灵活性
 
-
-
 # AuthenticationProvider
-可以将多个 AuthenticationProvider 注入 ProviderManager . 
+
+可以将多个 AuthenticationProvider 注入 ProviderManager .
 每个AuthenticationProvider执行特定的身份验证类型.
 例如: DaoAuthenticationProvider 支持基于 username/password 形式的身份验证.
 而 JwtAuthenticationProvider 支持对JWT令牌的身份验证.
 
 处理身份验证请求的最常用方法是加载相应的UserDetails并检查加载密码与用户输入的密码是否一致.
-这是 DaoAuthenticationProvider 使用的方法. 
+这是 DaoAuthenticationProvider 使用的方法.
 加载的 UserDetails 对象特别是它包含的权限列表会在构建完全填充的 Authentication 对象时使用.
 
 Spring Security 提供了多个 AuthenticationProvider 实现来负责解析不同类型的 Authentication Token.
 ![](AuthenticationProvider.png)
-我们主要学习 DaoAuthenticationProvider 这个具体实现类, 
+我们主要学习 DaoAuthenticationProvider 这个具体实现类,
 它负责认证的请求类型是 UsernamePasswordAuthenticationToken 及子类
 
 # Authentication
+
 ![](authentication.png)
-从 java.security.Principal 继续而来, 代表一次认证请求成功后的 token. 
+从 java.security.Principal 继续而来, 代表一次认证请求成功后的 token.
 
 也就是说它是认证成功后返回的对象
 (AuthenticationManager.authentication()方法的返回值),
 但是它同时也被用于携带一次认证所需的信息
 (AuthenticationManager.authentication()方法的入参).
+
 ```java
 public interface Authentication extends Principal, Serializable {
 
@@ -105,7 +107,7 @@ public interface Authentication extends Principal, Serializable {
     // 当经过AuthenticationManager验证后应该时拥有一个完整的权限列表.
     // 重点: 实现应该确保对返回值的修改不会影响Authentication对象状态, 或使用不可修改的实例.
     // 如果返回的 Collection 是一个对象引用, 我们就可以向它添加或删除权限从而在运行时给主体赋予权限的能力.
-    // 这是不安全的, 可能会被利用这个操作赋予普通用户过大的权力. 
+    // 这是不安全的, 可能会被利用这个操作赋予普通用户过大的权力.
     // 所以要求修改返回值不会影响状态(说明返回值是一个副本集)或者返回值不可修改(这个没什么好说的Java集合提供的功能)
     //
     // 方便进行权限控制, 就是说如果一个方法, 路径需要某个权限才可以访问,
@@ -133,12 +135,10 @@ public interface Authentication extends Principal, Serializable {
 ```
 
 # Request Credentials with `AuthenticationEntryPoint`
+
 AuthenticationEntryPoint用于发送HTTP响应, 以从客户端请求凭据.
 
-
 # AbstractAuthenticationProcessingFilter
-
-
 
 # Authentication Mechanisms (认证机制)
 
@@ -152,9 +152,8 @@ AuthenticationEntryPoint用于发送HTTP响应, 以从客户端请求凭据.
 8. Pre-Authentication Scenarios
 9. X509 Authentication
 
-
-
 ### DaoAuthenticationProvider
+
 学习这个类之前需要先学习其父类AbstractUserDetailsAuthenticationProvider.
 这个抽象父类定义了如何与 UserDetails 交互, 但是没有定义如何加载UserDetails.
 该类负责响应 UsernamePasswordAuthenticationToken 类型的身份验证请求.
@@ -185,7 +184,7 @@ public abstract class AbstractUserDetailsAuthenticationProvider implements
 	protected boolean hideUserNotFoundExceptions = true;
 
     // 两个用于先后检查Token的接口实例, 是同一个接口的实习, 只是使用的先后不同说明字段名不同.
-    // 
+    //
 	private UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
 	private UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
@@ -193,10 +192,10 @@ public abstract class AbstractUserDetailsAuthenticationProvider implements
 }
 ```
 
-
 ## 具体实现
 
 所有具体类的抽象父类, 负责完成以下公有的功能.
+
 1. 保存权限列表
 2. 是否经过认证标志
 3. 保存details对象
@@ -204,6 +203,7 @@ public abstract class AbstractUserDetailsAuthenticationProvider implements
 5. 顺便实现了 CredentialsContainer 接口, 主要是考虑在认证完成后需要抹去具体的凭证信息(密码), 让密码信息持续存在系统中是不安全的.
 
 除去上面这些明显的功能实现, 还通过构造器限定了子类的初始化逻辑.
+
 ```java
 public abstract class AbstractAuthenticationToken implements Authentication,
 		CredentialsContainer {
@@ -253,9 +253,10 @@ public abstract class AbstractAuthenticationToken implements Authentication,
 
 实现抽象方法非常简单, 用两个Object 字段保存一下就可以了.
 主要是提供了两个构造器 : 一个用于构建认证请求, 一个用于构建通过认证后的 token.
-还有就是覆盖了父类的 setAuthenticated() 方法, 
+还有就是覆盖了父类的 setAuthenticated() 方法,
 这样没有人可以对一个没有认证的实例以调用方法 setAuthenticated(true) 的方式来将其标记为已认证,
 从而绕过AuthenticationManager 认证机制.
+
 ```java
 public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationToken {
 
@@ -275,7 +276,7 @@ public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationT
 	}
 
     // 构建一个完整的Authentication对象, 这个构造器只应该被 AuthenticationManager 调用.
-    // 这里只是说明正确的逻辑, 并没有什么措施来阻止我们调用. 
+    // 这里只是说明正确的逻辑, 并没有什么措施来阻止我们调用.
     // 后面我们可以看到其实 权限管理方面 并不再乎Authentication对象是怎么来的, 只在乎主体是否又对应权限.
 	public UsernamePasswordAuthenticationToken(Object principal, Object credentials,
 			Collection<? extends GrantedAuthority> authorities) {
@@ -313,23 +314,24 @@ public class UsernamePasswordAuthenticationToken extends AbstractAuthenticationT
 }
 ```
 
+## AuthenticationManager的实现.
 
-## AuthenticationManager的实现. 
 Spring Security中的默认实现称为ProviderManager, 它不负责处理身份验证请求本身,
 而是委托给已配置的 AuthenticationProvider 列表.
 每个验证提供者依次查询它们是否可以执行身份验证,
 每个提供程序将抛出异常或返回完全填充的 Authentication 对象.
 
 处理身份验证请求的最常用方法是加载相应的UserDetails并检查加载密码与用户输入的密码是否一致.
-这是 DaoAuthenticationProvider 使用的方法. 
+这是 DaoAuthenticationProvider 使用的方法.
 加载的 UserDetails 对象特别是它包含的权限列表会在构建完全填充的 Authentication 对象时使用.
 
 Spring Security 提供了多个 AuthenticationProvider 实现来负责解析不同类型的 Authentication Token.
 ![](AuthenticationProvider.png)
-我们主要学习 DaoAuthenticationProvider 这个具体实现类, 
+我们主要学习 DaoAuthenticationProvider 这个具体实现类,
 它负责认证的请求类型是 UsernamePasswordAuthenticationToken 及子类
 
 ### DaoAuthenticationProvider
+
 学习这个类之前需要先学习其父类AbstractUserDetailsAuthenticationProvider.
 这个抽象父类定义了如何与 UserDetails 交互, 但是没有定义如何加载UserDetails.
 该类负责响应 UsernamePasswordAuthenticationToken 类型的身份验证请求.
@@ -360,7 +362,7 @@ public abstract class AbstractUserDetailsAuthenticationProvider implements
 	protected boolean hideUserNotFoundExceptions = true;
 
     // 两个用于先后检查Token的接口实例, 是同一个接口的实习, 只是使用的先后不同说明字段名不同.
-    // 
+    //
 	private UserDetailsChecker preAuthenticationChecks = new DefaultPreAuthenticationChecks();
 	private UserDetailsChecker postAuthenticationChecks = new DefaultPostAuthenticationChecks();
 	private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
@@ -418,7 +420,7 @@ public Authentication authenticate(Authentication authentication)
     // 第一个检查是预先检查, 它会检查UserDetails中的 AccountNonLocked, Enable, AccountNoExpired 三个布尔值,
     // 确定是否要抛出对应异常, LockedException, DisabledException, AccountExpiredException.
     // 意味着如果UserDetails中的着三个信息是false的话, 就连密码匹配都没有走到.
-    // 第二个 additionalAuthenticationChecks() 方法是抽象方法, 交给子类实现, 
+    // 第二个 additionalAuthenticationChecks() 方法是抽象方法, 交给子类实现,
     // 子类在这个方法中进行了密码匹配工作匹配失败会抛出BadCredentialsException异常.
     try {
         preAuthenticationChecks.check(user);
@@ -447,7 +449,7 @@ public Authentication authenticate(Authentication authentication)
     // 如果凭证被标记为过期的, 即使上面的凭证匹配通过也没有用, 还是认证失败了.
     postAuthenticationChecks.check(user);
 
-    // 判断最后的结果是否是从存储库中获取的. 
+    // 判断最后的结果是否是从存储库中获取的.
     // 如果是那么会在缓存中保存一份方便重复认证.
     if (!cacheWasUsed) {
         this.userCache.putUserInCache(user);
@@ -480,10 +482,6 @@ protected Authentication createSuccessAuthentication(Object principal,
     return result;
 }
 ```
-
-
-
-
 
 ## 认证机制
 

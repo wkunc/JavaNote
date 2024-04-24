@@ -12,10 +12,8 @@ Conceptually an event has key, value, timestamp, and optional metadata headers
 * Event value: "made a payment of $200 to Bob"
 * Event timestamp: "Jun. 25,2020 at 2:06 p.m"
 
-
-
-
 # Topic and log
+
 Kafka的核心概念: 提供一串流式的记录--topic.
 
 Topic 就是数据主题, 是数据记录发布的地方, 可以用来区分业务系统.

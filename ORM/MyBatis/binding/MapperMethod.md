@@ -41,7 +41,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
             throw new BindingException("Unknown execution method for: " + command.getName());
     }
     if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
-    throw new BindingException("Mapper method '" + command.getName() 
+    throw new BindingException("Mapper method '" + command.getName()
         + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
 }
 return result;
@@ -50,6 +50,7 @@ return result;
 
 SqlCommand, 是MapperMethod的内部静态类, 用于标识对应的SQL语句的id.
 它在构造器中会解析出Mapper类对应方法对应的xml文件中的SQL语句
+
 ```java
 public SqlCoommand(Configuration configuration, Class<?> mapperInterface, Method method) {
     final String methodName = method.getName();
@@ -70,7 +71,7 @@ public SqlCoommand(Configuration configuration, Class<?> mapperInterface, Method
     }
 }
 
-private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName, 
+private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuartion configuration) {
     // 这个就是对应的方法应匹配的ID
     String statementId = mapperInterface.getName() + "." + methodName;
@@ -94,7 +95,9 @@ private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String 
     return null;
 }
 ```
+
 ParamNameResolver
+
 ```java
 public ParamNameResolver (Confgiuration config, Method method) {
     final Class<?>[] paramTypes = method.getParameterTypes();
@@ -128,10 +131,11 @@ public ParamNameResolver (Confgiuration config, Method method) {
 ```
 
 MethodSignature, 是对 方法签名的抽象
+
 ```java
     private final boolean returnsMany; // 返回值是否为 collection 类型或数组类型
     private final boolean returnsMap; // 返回值是否为 Map
-    private final boolean returnsVoid; // 返回值是否为 Void 
+    private final boolean returnsVoid; // 返回值是否为 Void
     private final boolean returnsCursor; // 返回值是否为 Cursor 类型
     private final Class<?> returnType; // 返回值类型
     private final String mapKey;       // 如果返回值为 Map, 则这个字段记录了为key的列名

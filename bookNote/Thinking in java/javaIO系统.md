@@ -1,10 +1,13 @@
 # File 类
- 虽然叫 File 但是它其实是文件和路径的抽象表示
+
+虽然叫 File 但是它其实是文件和路径的抽象表示
 
 所以它里面的方法可以分成, 为目录服务的 和 为文件服务的
 
 ## 静态方法
+
 FIle 类有三个静态方法, 其中有两个是方法重载
+
 ```java
 //返回文件系统的根(Root) 在 windows 上有多个, 在 Unix 类系统上只有一个 "/"
 //fs 变量是 java.io.FileSystem 的一个实例, 它是一个 abstract 类, fs 实质是一个子类,不同系统不一样
@@ -54,6 +57,7 @@ public static File createTempFile(String prefix, String suffix) throws IOExcepti
 ```
 
 ## 常见方法
+
 boolean createNewFile()
 boolean exists()
 String[] list()
@@ -63,12 +67,15 @@ File[] listFiles(FileFilter filter)
 File[] listFiles(FilenameFilter filter)
 
 ## 注意事项
+
 File 代表的文件或是目录路径是不一定存在, 有些方法是需要你的 File 类实例是存在才能正常工作
 
-比如: 
+比如:
+
 * long getFreeSpace() // 返回file所在分区的未分配空间
 
 # 18.8 标准I/O
+
 标准I/O这个术语参考的是Unix中 "程序所使用的单一信息流" 这个概念(在Windows和其他许多操作系统中也有相似的实现)
 
 程序的所有输入可以来自**标准输入**, 它的所有输入也可以发送到**标准输出**,已经所有错误可以发送到**标准错误**
@@ -76,6 +83,7 @@ File 代表的文件或是目录路径是不一定存在, 有些方法是需要�
 标准I/O的意义在于: 我们可以很容易地把程序串联起来, 一个程序的标准输出可以成为另一个程序的标准输入
 
 # 18.8.1 从标准输入中读取
+
 按照标准I/O模型, Java 提供了 System.in, System.out 和 System.err.
 
 System.out 和 System.err 已经被包装成 PrintStream(OutputStream的子类)
@@ -84,6 +92,7 @@ System.out 和 System.err 已经被包装成 PrintStream(OutputStream的子类)
 System.in 之前必须对其进行包装
 
 # 18.10 新I/O
+
 jdk1.4 的时候 java.nio.\* 引入了新的 JavaI/O 类库, 其目的在于提高速度, 旧I/O也已经用nio重新实现过了.
 
 速度的提高来自于所使用的结构更接近于操作系统执行I/O的方式: *通道* 和 *缓冲器*
@@ -91,6 +100,7 @@ jdk1.4 的时候 java.nio.\* 引入了新的 JavaI/O 类库, 其目的在于提�
 可以把通道看出煤矿, 缓冲器就是矿车, 我们只是和缓冲器交互.
 
 ## Buffer
+
 nio 中重要的抽象之一 Buffer 抽象类, 它有多个子类. 最核心的是 ByteBuffer.
 
 唯一直接的和通道交互的缓冲器是 ByteBuffer :可以存储未加工字节的缓冲器.
@@ -101,12 +111,11 @@ FileInputStream, FileOutputStream, 和 RandomAccessFile.
 这些都是字节操作流, 与底层的 nio 性质一致. Reader 和 Writer 这种字符模式类不能用于生产 Channel.
 但是 java.nio.channel.Channels 工具类提供了实用方法, 用以在通道中产生 *Reader* 和 *Writer*.
 
-
 # 内存映射文件
+
 内存映射文件允许我们创建和修改哪些因为太大而不能放入内存的文件.
 有了内存映射文件我们就可以完全把它当作非常大的数组来访问.
 这种方法大大简化了用于修改文件的代码.
-
 
 # 文件加锁
 

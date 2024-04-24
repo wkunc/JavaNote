@@ -1,7 +1,11 @@
 # Application
+
 ![](Application.PNG)
+
 # AbstractApplicationContext
+
 有三个 abstract (抽象)方法
+
 ```java
 //这两个是自己提供的
 protected abstract void refreshBeanFactory();
@@ -12,6 +16,7 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
 
 这里使用了模板方法, 将方法调用过程放在父类中, 子类实现这些方法的细节
 这个方法是核心方法, 第一次加载配置和以后的刷新配置都是经过这个方法
+
 ```java
     @Override
 	public void refresh() throws BeansException, IllegalStateException {
@@ -31,7 +36,7 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-                // 调用 BeanFactoryPostProcessor 
+                // 调用 BeanFactoryPostProcessor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -95,6 +100,7 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
         return beanFactory;
     }
 ```
+
 ```java
     protected final void refreshBeanFactory() throws BeanException {
         if (hasBeanFactory()) {
@@ -122,6 +128,7 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
 ```
 
 这里我们选择学习 AbstractXmlApplicationContext 中的 loadBeanDefinitions() 实现
+
 ```java
     protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) throws BeanException, IOException {
         // 创建一个 XmlBeanDefinitionReader
@@ -136,16 +143,16 @@ public abstract ConfigurableListableBeanFactory getBeanFactory();
     }
 ```
 
-
 # 子类
+
 GenericApplicationContext(通用的applicationcontext) 和
 AbstractRefreshableApplicationContext 继承并实现了 AbstractApplication
 
 Spring 在这里搞了两套实现
 
-
-AbstractRefreshableApplicationContext 实现了中的三个抽象方法, 
+AbstractRefreshableApplicationContext 实现了中的三个抽象方法,
 并且提供了一个加载配置的抽象方法
+
 ```java
 protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFactory);
 ```

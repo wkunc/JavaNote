@@ -1,19 +1,22 @@
 # databind
+
 jackson-databind 包依赖于另外两个包jackson-core 和 jackson-annotations.
 
 在Java对象和Json内容之间绑定(也称为映射)数据.
 
 也就是说给定Json内容的某种形式(比如说 Stream-of-Event)
-库可以构造等效的Java对象. 
+库可以构造等效的Java对象.
 相反它可以在给定Java对象的情况下编写Json内容.
 
 如果没有针对低级读写操作的要求, 请选择这种方式.
 这通常时Java程序员最自然的方法, 因为它是以对象为中心的.
 
 # Reading Object from Json
+
 相比较低级的Stream-of-event API, 对象绑定代码更加的简单.
 
 下面是几个example:
+
 ```java
 ObjectMapper mapper = new ObjectMapper();
 TwitterEntry entry = mapper.readValue(new File("..."));

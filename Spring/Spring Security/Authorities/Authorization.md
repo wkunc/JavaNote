@@ -7,7 +7,6 @@ Authentication(认证), 讨论所有的身份验证实现如何存储 GrantedAut
 GrantedAuthority 对象由 AuthenticationManager 插入到 Authentication对象
 并在以后作出授权决策时由 AccessDecisionManager 读取
 
-
 ## Pre-Invocation Handling
 
 Spring Security 提供了拦截器, 用于控制安全对象的访问, 例如方法调用或web请求.
@@ -25,7 +24,7 @@ public interface AccessDecisionManager {
     void decide(Authentication authentication, Object object,
             Collection<ConfigAttribute> configAttributes) throws AccessDeniedException,
             InsufficientAutheticationException;
-    
+
     boolean supports(ConfigAttribute attribute);
 
 
@@ -35,6 +34,7 @@ public interface AccessDecisionManager {
 ```
 
 ### Voting-Based AccessDecisionManager Implementations
+
 基于选票的 AccessDecisionManager 实现
 
 

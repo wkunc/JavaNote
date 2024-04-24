@@ -1,4 +1,5 @@
 # Git Tag
+
 Git 可以给历史中某一个提交打上标签, 以示重要. 人们会使用这个功能来标记发布节点
 
 Git 中的标签有两种主要类型: lightweight(轻量标签) 和 annotated(附注标签)
@@ -6,26 +7,37 @@ Git 中的标签有两种主要类型: lightweight(轻量标签) 和 annotated(�
 轻量标签像一个不会改变的分支 -它只是一个特定提交的引用
 
 附注标签更重量级, 它是存储在 Git 数据库中的一个完整对象
+
 ## 列出标签
+
 ```
 git tag
 ```
+
 这个命令以字母顺序列出标签
+
 ## 查看标签
+
 使用 git show 命令可以显示出标签的具体信息
 
 这里可以明显的观察到附注标签的信息比轻量标签的更多更完整
+
 ```
 git show [tagname]
 ```
+
 ## 创建标签
+
 1. 创建轻量标签
-git tag [tagname]
+   git tag [tagname]
+
 ```
 git tag v0.0.1
 ```
+
 2. 创建附注标签
-在运行 git tag 命令的时候使用 -a 选项
+   在运行 git tag 命令的时候使用 -a 选项
+
 ```
 git tag -a v1.4 -m 'tag message'
 ```

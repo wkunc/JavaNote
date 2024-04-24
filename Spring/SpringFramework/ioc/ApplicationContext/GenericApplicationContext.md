@@ -5,7 +5,7 @@
 
 实现BeanDefinitionRegistry接口, 以允许将任何 BeanDfinitionReader 应用于它.
 
-典型用法是通过 BeanDefinitionRegistry 接口注册各种bean定义, 
+典型用法是通过 BeanDefinitionRegistry 接口注册各种bean定义,
 然后调用 refresh() 以使用applicationContext语义初始化这些bean.
 
 与每次刷新创建新的内部BeanFactory实例的其他ApplicationContext相比,
@@ -13,6 +13,7 @@
 refresh() 方法只能调用一次.
 
 典型用法如下:
+
 ```java
    GenericApplicationContext ctx = new GenericApplicationContext();
 
@@ -23,7 +24,7 @@ refresh() 方法只能调用一次.
    propReader.loadBeanDefinitions(new ClassPathResource("otherBeans.properties"));
 
    ctx.refresh();
-  
+
    MyBean myBean = (MyBean) ctx.getBean("myBean");
 ```
 
@@ -57,6 +58,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 ```
 
 # refresh
+
 ```java
 public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
@@ -84,7 +86,7 @@ public void refresh() throws BeansException, IllegalStateException {
             // 像上面 prepareBeanFactory() 方法一样, 用来注册特殊的bean.
             postProcessBeanFactory(beanFactory);
 
-            // 实例化并调用所有的 BeanFactroyPostProcessor Bean. 
+            // 实例化并调用所有的 BeanFactroyPostProcessor Bean.
             // 这里其实有两步, 首先ApplicationContext支持编程式注册BeanFactoryProcessor实例.
             // addBeanFactoryPostProcessor().
             // 所以第一步是直接对内部的beanFactory使用直接注册的实例.

@@ -1,4 +1,5 @@
 # BeanFactoryPostProcessor
+
 ![](BeanFactoryPostProcessor)
 
 ```java
@@ -18,9 +19,9 @@ public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProc
 }
 ```
 
-
 # 如何和ApplicationContext结合.
-关于ApplicationContext何时调用这个接口实例, 
+
+关于ApplicationContext何时调用这个接口实例,
 请看 AbstractApplicationContext.refresh() 方法中的调用的
 invokeBeanFactoryPostProcessors(beanFactory)
 

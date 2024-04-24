@@ -1,6 +1,8 @@
 # CacheManager
+
 Spring 缓存抽象的核心(central cache manager SPI)
 允许获取指定名字的 Cache
+
 ```java
 public interface CacheManger {
     // 获取根据名字获取一个Cache对象. 就是我们缓存行为中的Key
@@ -23,6 +25,7 @@ Spring 为这个 CacheManager 提供了很多不同的实现.
 这个类实现了getCache()方法, 逻辑也很简单(基于map实现, 还给子类行为做了定义).
 如果没有获取到, 那么根据子类的设置可以进行创建也可以就返回null
 (通常我们会允许创建, 在初始化时就配置所有的缓存是不可能的).
+
 ```java
 public abstract class AbstractCacheManager implements CacheManager, InitializingBean {
 
@@ -141,6 +144,7 @@ public abstract class AbstractCacheManager implements CacheManager, Initializing
 ```
 
 RedisCacheManager 我个人比较常用的具体实现.
+
 ```java
 // 注意它不是直接继承上面说的AbstractCacheManager的, 它的父类就是之前提到负责为事务包装每个新Cache对象的实现
 public class RedisCacheManager extends AbstractTransactionSupportingCacheManager {
@@ -154,7 +158,7 @@ public class RedisCacheManager extends AbstractTransactionSupportingCacheManager
 
     // 一个私有的构造器, 下面还有多个公开的构造器
     // 还提供了Buidler类来更好创建这个对象.
-    // 不过这些构造器都需要一个 RedisCacheWriter 使用起来不是很方便, 
+    // 不过这些构造器都需要一个 RedisCacheWriter 使用起来不是很方便,
     // 然后Builder提供了从RedisConnectionFactory创建的操作
     // 还有提供了一些初始化配置的手段
 	private RedisCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration defaultCacheConfiguration,
@@ -171,7 +175,9 @@ public class RedisCacheManager extends AbstractTransactionSupportingCacheManager
 
 }
 ```
+
 不过内部的Builder很简单, 也不重要. 重要的是下面两个方法
+
 ```java
 // 实现AbstractCacheManager中的抽象方法, 会在Bean初始化后调用. 负责初始Cache的创建
 // 主要调用 createRedisCache() 方法

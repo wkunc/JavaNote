@@ -1,11 +1,12 @@
 # WebDataBinderFactory
+
 作为工厂主要功能就是可以创建 WebDataBinder,
 而InitBinderDataBinderFactory 提供了一个用方法修改创建出来的 DataBinder 的机会.
-
 
 主要在 RequestMappingHandlerAdapter.getDataBinderFactory方法调用
 
 继承结构...
+
 ```java
 public class InitBinderDataBinderFactory extends DefaultDataBinderFactory {
 
@@ -33,14 +34,14 @@ private WebDataBinderFactory getDataBinderFactory(HandlerMethod handlerMethod) t
     Set<Method> methods = this.initBinderCache.get(handlerType);
     // 如果是第一次调用的 控制器 时没有缓存, 需要查找.
     if (methods == null) {
-        // 查找 HandlerMethod 属于的控制器类中的 @InitBinder 方法. 
+        // 查找 HandlerMethod 属于的控制器类中的 @InitBinder 方法.
         // 并加入缓存, 以后调用这个控制器的任何 @RequestMapping 方法就不需要再查找了.
         methods = MethodIntrospector.selectMethods(handlerType, INIT_BINDER_METHODS);
         this.initBinderCache.put(handlerType, methods);
     }
     List<InvocableHandlerMethod> initBinderMethods = new ArrayList<>();
 
-    // 这里是查找全局的 @InitBinder 方法, 就是 @ControllerAdvice 类中的. 
+    // 这里是查找全局的 @InitBinder 方法, 就是 @ControllerAdvice 类中的.
     // 并为这些全局的 @InitBinder 方法调用 createInitBinderMethod() 方法.
     this.initBinderAdviceCache.forEach((clazz, methodSet) -> {
         if (clazz.isApplicableToBeanType(handlerType)) {

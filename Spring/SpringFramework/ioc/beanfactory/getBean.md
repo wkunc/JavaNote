@@ -1,8 +1,10 @@
 # getBean() 方法实现
+
 1. name 要获取的bean 的name
 2. requiredType 必须的类型
 3. args 用来创建bean实例的明确参数, 只会在create Bean实例时用到, 检索时不会应用.
 4. 是否进行类型检查.
+
 ```java
 protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
         @Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
@@ -67,10 +69,10 @@ protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredTy
 
         /*
         * 主要逻辑:
-        * 1. 获取对应的BeanDefinitionn, getMergedLocalBeanDefinition(beanName) 会根据beanName获取其定义, 
+        * 1. 获取对应的BeanDefinitionn, getMergedLocalBeanDefinition(beanName) 会根据beanName获取其定义,
         * 并且和对应的父定义进行合并如果有的话.
         *
-        * 2. 根据最终的BeanDefintion创建对象, 
+        * 2. 根据最终的BeanDefintion创建对象,
         *    2.1 首先时初始化其显式声明依赖的bean.
         *    2.2 创建Bean.
         *

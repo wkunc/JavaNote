@@ -41,6 +41,7 @@ protected LocaleContextResolver createLocaleContextResolver() {
 ```
 
 # DispatcherHandler 和 其组件
+
 ```java
 @Bean
 public DispatcherHandler webHandler() {
@@ -49,6 +50,7 @@ public DispatcherHandler webHandler() {
 ```
 
 默认配置了3个 HandlerMapping, 3个 HandlerAdapter, 和 4个 ResultHandler.
+
 ```java
 @Bean
 public RequestMappingHandlerMapping requestMappingHandlerMapping() {

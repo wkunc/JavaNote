@@ -1,8 +1,10 @@
 # VFS
+
 VFS 表示虚拟文件系统(Virtual File System), 它用来查找指定路径下的资源.
 VFS 是一个抽象类, MyBatis 中提供了JBoss6VFS 和 DefaultVFS 两个实现.
 
 VFS 的核心字段的含义如下:
+
 ```java
 public static final Class<?>[] IMPLEMENTATIONS = { JBoss6VFS.class, DefaultVFS.class };
 
@@ -10,7 +12,7 @@ public static final List<Class<? extends VFS>> USER_IMPLEMENTATIONS = new ArrayL
 ```
 
 ```java
-// 私有内部类, 
+// 私有内部类,
   private static class VFSHolder {
     static final VFS INSTANCE = createVFS();
 
@@ -58,6 +60,7 @@ list(URL, String) 方法负责查找指定的资源名称列表.
 该重载最终会调用 list(URL, String).
 
 DefaultVFS.list(URL, String)方法实现如下:
+
 ```java
 
 ```

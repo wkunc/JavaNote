@@ -25,14 +25,18 @@ public @interface EnableAutoConfiguration {
 ```
 
 ## @Import
+
 Spring import 机制可以用于导入配置
+
 * 配置类
 * ImportSelector 接口 返回String[], 包含需要导入的配置类的全名称
 * ImportBeanDefinitionRegistrar 接口
 * 普通组件
 
 ### AutoConfigurationImportSelector
+
 用 `SpringFactoriesLoader` 加载 `org.springframework.boot.autoconfigure.EnableAutoConfiguration` 项指定的配置类
+
 ```java
 
 	@Override

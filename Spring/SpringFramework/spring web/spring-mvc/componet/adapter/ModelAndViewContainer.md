@@ -1,12 +1,13 @@
 # ModelAndViewContainer
+
 在调用控制器方法的过程中记录由 HandlerMethodArgumentResolvers 和
 HandlerMethodReturnValueHandlers 做出的模型和视图相关的决策.
 
 简单的说就是保存视图和模型的容器, 还包括了相关的选项.
 如: setRequestHandled 可以指示已经处理请求不需要查看相关解析.
 
-在实例化时自动创建默认模型, 
-可以通过 setRedirectModel 提供备用模型实例以用于重定向场景. 
+在实例化时自动创建默认模型,
+可以通过 setRedirectModel 提供备用模型实例以用于重定向场景.
 
 ```java
 public class ModelAndViewContainer {
@@ -18,7 +19,7 @@ public class ModelAndViewContainer {
 	@Nullable
 	private Object view;
 
-    // 模型数据, 
+    // 模型数据,
 	private final ModelMap defaultModel = new BindingAwareModelMap();
 
     // 重定向模型数据, 故意不初始化的.
@@ -50,6 +51,7 @@ public class ModelAndViewContainer {
 两个Model是为了支持重定向,
 
 重点方法
+
 ```java
 public ModelMap getModel() {
     if (useDefaultModel()) {
@@ -67,4 +69,5 @@ private boolean userDefaultModel() {
     return (!this.redirectModelScenario || (this.redirectModel==null&&!this.ignoreDefaultModelOnRedirect))
 }
 ```
+
 虽然提供了直接gett default Model 的方法, 但是不建议在普通情况下使用.

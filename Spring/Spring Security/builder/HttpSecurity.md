@@ -1,4 +1,5 @@
 # HttpSecurity
+
 负责构建 SecurityFilterChain 的Builder.
 一个安全过滤器链由多个Filter组成.
 所以拥有一个 List\<Filter> 来存储构成链的Filter.
@@ -40,6 +41,7 @@ public final class HttpSecurity extends
 ```
 
 实现 Builder 方法, 非常简单, 就是利用内部的 Filter 集合在排序(确保Filter的执行顺序是非常重要的)后调用构造器.
+
 ```java
 @Override
 protected DefaultSecurityFilterChain performBuild() throws Exception {
@@ -49,8 +51,10 @@ protected DefaultSecurityFilterChain performBuild() throws Exception {
 ```
 
 # 配置方法
+
 SecurityFilterChain由两部分组成
-1. RequsetMathcer: 判断是否在请求上生效 
+
+1. RequsetMathcer: 判断是否在请求上生效
 2. List\<Filter>: 执行各项认为的Filter
 
 ## 配置Filter链的核心方法
@@ -111,10 +115,11 @@ public HttpSecurity addFilter(Filter filter) {
 
 方便配置方法, Spring Security 为不同的功能方面提供了大概 25 个左右的Filter.
 这些 Filter 都是由不同的 Configurer 对象构建并配置到 HttpSecurity 的List\<Filter>
+
 ```java
 // 和 AuthenticationBuilder 中的 apply() 方法类似, 只不过同一个配置, 只会添加一次.
-// 因为 AuthenticationBuilder 中的配置是用来添加 AuthenticationProvider 实现的, 
-// 允许有多个同类型的 AuthticationProvider, 因为即使都是 DaoAuthenticationPorvider 由于底层的数据存储不同, 
+// 因为 AuthenticationBuilder 中的配置是用来添加 AuthenticationProvider 实现的,
+// 允许有多个同类型的 AuthticationProvider, 因为即使都是 DaoAuthenticationPorvider 由于底层的数据存储不同,
 // 认证的返回也是不同的, 允许注册多个同类型的是为了构建更复杂的认证.
 
 // 而这个不允许重复注册的原因是, 一个Filter做的事不需要同样做两遍.
@@ -132,6 +137,7 @@ public <C> C getSharedObject(Class<C> sharedType) {
 ```
 
 利用上面方法实现的方便注册Filter方法.
+
 ```java
 public SessionManagementConfigurer<HttpSecurity> sessionManagement() throws Exception {
     return getOrApply(new SessionManagementConfigurer<>());
@@ -147,6 +153,7 @@ public SecurityContextConfigurer<HttpSecurity> securityContext() throws Exceptio
 ```
 
 ## 配置RequestMatcher的方法
+
 有两套, 一种简单是 requestMathcer() 简单的指定一下使用的RequestMatcher.(有三个基于这个方法的方便配置方法)
 复杂的: requestMathcer() 通过一系列添加方法, 可以组合多个 RequestMatcher 实现(), 实现复杂的是否匹配逻辑.
 

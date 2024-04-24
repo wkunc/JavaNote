@@ -1,4 +1,5 @@
 # Creating JSON from JAVA
+
 There are three ways to create JSON from JAVA:
 
 1. From a Java Object (The Same object can also be then used to read the JSON)
@@ -22,20 +23,24 @@ class Album {
     }
 }
 ```
+
 ## ObjecctMapper
+
 默认情况下, Jackson会使用 BeanSerializer 来序列化POJO.
 > 注意: Bean 的私有属性应该具有 getter, 或者属性应该是 public 的
 
 # Java 转 Json
+
 默认情况下, jackson 使用 java 字段名作为 json 属性名.
 也可以使用 jackson 提供的注解来改变其默认行为.
 如果无法直接获得POJO源码或者不希望Bean和 Jackson 注解绑定,
 jackson 提供了另一种方法. 使用 mapper 上的 setPropertyNamingStrategy() 改变命名策略
 
 对象中的数组或者List<?>都会被转化成 json [] 数组
-对象中的Map或者其他的对象类型都会被转换成 json {} 对象 
+对象中的Map或者其他的对象类型都会被转换成 json {} 对象
 
 ## 处理空值
+
 当Jackson发现需要序列化的对象中包含为Null的引用比如定义但是没有初始化的数组
 private String[] home; 它会将其序列化为 null
 如果它发现一个为Null的引用,但是它是一个空的数组或集合,
@@ -46,6 +51,7 @@ Jackson会将它序列化为 空数组对象 [],
 这样就可以让Jackson自动忽略**null引用**和**空数组(集合)**
 ``java
 mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
 ```
 
 # Tree Model
@@ -61,10 +67,10 @@ Parse JSON to Java using Streaming Jackson Parser
 
 # Annotation and Serialization
 
-* List Serialization :如何序列化时带上类型信息, 这样反序列化 List 的时候就可以根据类型信息创建对应的 Java 对象 
+* List Serialization :如何序列化时带上类型信息, 这样反序列化 List 的时候就可以根据类型信息创建对应的 Java 对象
 * Annotation and Dynamic beans :将json中的多于的信息放到一个 Map 中
 * Annotation Filters :自定义想要序列化哪些字段(即哪些字段应该被 ignore 不应该写入生成的 json)
-* Mix-in :  
+* Mix-in :
 * Polymorphic Behaviour
 
 ## Annotation

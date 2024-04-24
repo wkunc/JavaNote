@@ -1,5 +1,7 @@
 # Update Operations
-MongoDB 提供了以下方法来进行 update. 其实还有很多方法也可以用来更新. https://docs.mongodb.com/manual/reference/update-methods/
+
+MongoDB 提供了以下方法来进行 update.
+其实还有很多方法也可以用来更新. https://docs.mongodb.com/manual/reference/update-methods/
 db.collection.updateOne();
 db.collection.updateMany();
 db.collection.replaceOne(); // 替换
@@ -19,6 +21,7 @@ updateOne(
 ```
 
 # Update Behavior
+
 1. 无法改变 \_id 字段, 无论是update还是replace
 2. 所有的写操作都是原子性的. 所以update操作也是原子性的.
 3. MongoDB在写操作之后保留文档字段的顺序. 除了更新字段名的update操作.和2.6版本以下的MongoDB.
@@ -37,14 +40,14 @@ Fields
 |$mul| 将字段的值乘以指定的值.
 |$rename| 重命名字段
 |$set| 设置指定字段的值
-|$setOnInsert| 
+|$setOnInsert|
 |$unset| 从一个document中删除指定字段.
 
 Array
 Operators
 |Name| Description
 |----|------------|
-|$   |
+|$ |
 |$[] |
 |$[<identifier>]|
 |$addToSet| 添加一个元素到数组, 当且仅当set中不存在这个元素.

@@ -1,14 +1,17 @@
 # Address
+
 Address 表示消息传递的端点. 在配置中, 地址的名字通常是唯一的.
 一个地址上可能会有0个或多个 queue 以及路由类型(路由类型也可以有多个).
 
 # Queue
+
 一个Queue和一个地址关联. 每个Address可以有多个队列.
 一旦传入的消息与地址匹配, 消息被发送到其一个或多个队列.
 具体取决于配置的路由类型.
 可以将队列配置为自动创建和删除.
 
 # Routing Type
+
 路由类型确定如何将消息发送到与 Address 关联的队列.
 可以使用两种路由类型配置 Address.
 
@@ -23,12 +26,13 @@ Address 表示消息传递的端点. 在配置中, 地址的名字通常是唯�
 # Basic Configuration
 
 ## Point-to-Point Messaging
+
 p2p消息传递时一种常见情况, 其中生产者发送的消息只有一个消费者.
 例如, AMQP和JMS消息生成者和消费者可以使用p2p消息传递队列.
 为地址定义 AnyCast 路由类型, 以便队列以点对点方式接收消息.
 ![](addressing-model-p2p.png)
 
-当使用 AnyCast 路由类型的 Address 收到消息时, 
+当使用 AnyCast 路由类型的 Address 收到消息时,
 ActiveMQ 将找与该地址关联的队列, 并将消息路由到该地址.
 (生产者生产消息, 发送到对应地址的指定 Queue)
 
@@ -39,12 +43,14 @@ ActiveMQ 将找与该地址关联的队列, 并将消息路由到该地址.
 这种情况是标准情况, 一个地址上只有一个Queue.
 
 ## Pubslish-Subscribe Messaging
+
 在发布订阅模式中, 消息发送给订阅地址的每一个消费者.
 ![](addressing-model-pubsub.png)
 
 当客户端连接到 MultiCast 路由类型的地址时, 将自动为客户端创建订阅队列.
 
 ## Point-to-Point Address multiple Queues
+
 P2P中加入多个Queue
 实际上, 可以在具有 AnyCast 类型的 Address 上定义多个队列.
 当在这样的地址上接收消息时, 它们首先在地址定义的所有的队列中均匀分布.
@@ -53,5 +59,5 @@ P2P中加入多个Queue
 
 ![](addressing-model-p2p2.png)
 
-## 
+##
 

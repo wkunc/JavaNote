@@ -1,9 +1,10 @@
 # SingletonBeanRegistry
 
 为共享 Bean 实例定义注册表接口.
-注意这个接口提供了直接注册对象到IOC容器中的方法, 
+注意这个接口提供了直接注册对象到IOC容器中的方法,
 也意味着IOC容器不会控制这个对象的生命周期.
 IOC容器中的某些方法(查找判断之类的)不会理会这些注册进来的Bean
+
 ```java
 public interface SingletonBeanRegistry {
     // 注册一个 bean
@@ -27,7 +28,8 @@ public interface SingletonBeanRegistry {
 }
 ```
 
-## DefaultSingletonBeanRegistry 
+## DefaultSingletonBeanRegistry
+
 Spring提供了 DefaultSingletonBeanRegistry 实现了这个接口.
 
 共享 bean 实例的通用注册表, 实现 SingletonBeanRegistry 接口.
@@ -36,9 +38,10 @@ Spring提供了 DefaultSingletonBeanRegistry 实现了这个接口.
 
 可以注册bean之间的依赖关系以强制执行适当的关闭顺序.(ps: )
 该类主要用作org.springframework.beans.factory.BeanFactory实现的基类,
-分解了单例bean实例的公共管理.  以便以统一的方式公开其单例管理工具
+分解了单例bean实例的公共管理. 以便以统一的方式公开其单例管理工具
 
 ## 字段分析
+
 ```java
 // 继承 SimpleAliasRegistry 实现 SingletonBeanRegistry 接口
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
@@ -84,6 +87,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 ```
 
 ## 注册方法分析
+
 ```java
 // 主要执行注册前的判断, 如果给定的 beanName 已经有对应的 Bean 了就报异常. 没有被注册的情况下执行注册.
 @Override
@@ -110,7 +114,9 @@ protected void addSingleton(String beanName, Object singletonObject) {
     }
 }
 ```
+
 ## 获取方法
+
 ```java
 // 实现 SingletonRegistry 接口方法
 @Override
@@ -122,7 +128,7 @@ public Object getSingleton(String beanName) {
 // 按给定的 name 返回 raw 的被注册的单例对象, 检查已经实例化的单例和允许一个 早期引用,
 @Nullable
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
-    // 首先从缓存的对象中获取, 如果获取不到. 
+    // 首先从缓存的对象中获取, 如果获取不到.
     // 判断当前想要获取的单例 Bean 是否正在被创建(within the entire factory)
     Object singletonObject = this.singletonObjects.get(beanName);
 
@@ -132,7 +138,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
             // 从 earlySingletonObjects 中获取
             singletonObject = this.earlySingletonObjects.get(beanName);
 
-            // 如果没有获取到, 并且接受返回早期引用 
+            // 如果没有获取到, 并且接受返回早期引用
             if (singletonObject == null && allowEarlyReference) {
                 // 从 singletonnFactories 中获取对应的工厂, 从工厂获取,  并从移除对应工厂
                 ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
@@ -235,6 +241,7 @@ protected void afterSingletonCreation(String beanName) {
 ```
 
 # 注册销毁依赖
+
 之前提到这个SingletonBeanRegistry支持按给定顺序销毁 bean 对象.
 
 ```java
@@ -259,7 +266,7 @@ public void registerContainedBean(String containedBeanName, String containingBea
     registerDependentBean(containedBeanName, containingBeanName);
 }
 
-// 注册显式的销毁顺序, 
+// 注册显式的销毁顺序,
 public void registerDependentBean(String beanName, String dependentBeanName) {
     String canonicalName = canonicalName(beanName);
 

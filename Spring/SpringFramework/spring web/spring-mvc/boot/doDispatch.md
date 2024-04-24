@@ -1,5 +1,7 @@
 # 运作过程
+
 在 DispatcherServlet 中重写了 Servlet 规范定义的 doService() 方法
+
 ```java
 @Override
 protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -56,7 +58,6 @@ protected void doService(HttpServletRequest request, HttpServletResponse respons
 
 --------
 首先处理 multipart
-
 
 ```java
 protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -185,6 +186,7 @@ protected HttpServletRequest checkMultipart(HttpServletRequest request) throws M
 ```
 
 获取Handler执行链
+
 ```java
 protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
 	if (this.handlerMappings != null) {

@@ -1,6 +1,8 @@
 # TranSaction
+
 首先JDBC没有提供事务抽象, rollback(), commit()等方法都是在Connection中的
 所以事务抽象基本就是正确调用 Connection 上的方法
+
 ```java
 public interface Transaction {
 
@@ -13,7 +15,7 @@ public interface Transaction {
   void close() throws SQLException;
 
   Integer getTimeout() throws SQLException;
-  
+
 }
 ```
 
@@ -36,7 +38,9 @@ public class JdbcTransactionFactory implements TransactionFactory {
     }
 }
 ```
+
 简单分析下MyBatis的 JdbcTransaction
+
 ```java
 protected Connection connection;
 protected DataSource dataSource;

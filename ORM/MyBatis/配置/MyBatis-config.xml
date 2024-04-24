@@ -25,10 +25,10 @@
         事务管理器的配置（比如:type="JDBC"）。
         数据源的配置（比如:type="POOLED"）。
     -->
-	<mappers>
-		<mapper resource="mapping/userMapper.xml"/>
-		<mapper class="mapping.UserMapperI"/>
-	</mappers>
+    <mappers>
+        <mapper resource="mapping/userMapper.xml"/>
+        <mapper class="mapping.UserMapperI"/>
+    </mappers>
     <!--
     起了别名的javabean在sql映射文件xml中就可以用别名
     -->

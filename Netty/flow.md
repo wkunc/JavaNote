@@ -1,40 +1,45 @@
 #Netty
+
 # 事件顺序
 
-| 事件         | 描述                                                                                                                     |
-|--------------|--------------------------------------------------------------------------------------------------------------------------|
-| HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                                              |
-| Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                                             |
-| Connect      | 调用了Channel.connet() 方法进行连接                                                                                      |
-| Active       | Channel.isActive() 返回true 时调用                                                                                       |
+| 事件           | 描述                                                                                    |
+|--------------|---------------------------------------------------------------------------------------|
+| HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                          |
+| Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                     |
+| Connect      | 调用了Channel.connet() 方法进行连接                                                            |
+| Active       | Channel.isActive() 返回true 时调用                                                         |
 | Read         | Netty 默认开启autoRead, 所以 NIO 在连接后会注册read事件. EventLoop 发现channel准备read时, 调用对应的方法获取到字节时调用 |
-| ReadComplete |                                                                                                                          |
-| Inactive     |                                                                                                                          |
-| unRegistered | 将Channel和EventLoop分开, 会取消之前注册的事件也就是 SelectionKey.cancel() . 注意的是unRegistered不代表连接会被关闭      |
+| ReadComplete |                                                                                       |
+| Inactive     |                                                                                       |
+| unRegistered | 将Channel和EventLoop分开, 会取消之前注册的事件也就是 SelectionKey.cancel() . 注意的是unRegistered不代表连接会被关闭 |
 
-1.  pipeline.fireChannelRegistered();
+1. pipeline.fireChannelRegistered();
 
-> 1.  channel 与 IO线程(EventLoop) 绑定,
-> 2.  NIO执行 SocketChannel.register(selector, 0, this);
-> 3.  通知所有的 ChannelHandler.handlerAdded(ctx)
-> 4.  发送事件
+> 1. channel 与 IO线程(EventLoop) 绑定,
+> 2. NIO执行 SocketChannel.register(selector, 0, this);
+> 3. 通知所有的 ChannelHandler.handlerAdded(ctx)
+> 4. 发送事件
 
-2.  pipeline.fireChannelActive();
+2. pipeline.fireChannelActive();
 
-> 在 Registered 后, 判断 isActive(), firstRegistration 发送 channelActive 事件 
+> 在 Registered 后, 判断 isActive(), firstRegistration 发送 channelActive 事件
 > isActive() 对于NIOSocket 来说, ch.isOpen() && ch.isConnected();
 > 底层通道 open 并且已经建立连接时为激活状态. NIOServerSocket 则是 isOpen() && javaChannel().socket().isBound();
 > 底层通道 open 并且已经监听本地端口时为激活状态. Active 事件从 Head 开始传播. HeadContext 重写了 fireChannelActive();
 > 其他handler执行后, 会执行 readIfIsAutoRead() 方法(默认配置就是autoRead) 会调用 Channel.read() 方法.
-> 而 AbstractChannel 实现了 read() 调用 pipeline.read(), 然后是从tail开始调用.最后会到head中的 read() 方法 HeadContext.read() 调用了 unsafe.beginRead() 方法.
+> 而 AbstractChannel 实现了 read() 调用 pipeline.read(), 然后是从tail开始调用.最后会到head中的 read() 方法
+> HeadContext.read() 调用了 unsafe.beginRead() 方法.
 > AbstractUnsafe.read() 调用抽象方法 doBeginRead() 处理异常 AbstractNioChannel 实现了 doBeginRead() 方法,
-> 给关联的Channel 注册了 readInterestOp 字段的事件 (NioSocketChannel的构造器中初始化为 OPREAD) 此后NioEventLoop 的 run()的循环就可以获取到通道的 OPREAD 事件.
-> 在NioEventLoop中的可以找到对应事件的处理方法, OPREAD事件会调用 unsafe.read() NioByteUnsafe.read() 实现了从 javaChannel 中读取字节到 ByteBuf 的过程
+> 给关联的Channel 注册了 readInterestOp 字段的事件 (NioSocketChannel的构造器中初始化为 OPREAD) 此后NioEventLoop 的 run()
+> 的循环就可以获取到通道的 OPREAD 事件.
+> 在NioEventLoop中的可以找到对应事件的处理方法, OPREAD事件会调用 unsafe.read() NioByteUnsafe.read() 实现了从 javaChannel
+> 中读取字节到 ByteBuf 的过程
 
-3.  pipeline.fireChannelRead(byteBuf);
-4.  pipeline.fireChannelReadComplete();
+3. pipeline.fireChannelRead(byteBuf);
+4. pipeline.fireChannelReadComplete();
 
-> 在循环读取 javaChannel 中的可读字节到结束后(没有可读字节了) 结束循环, 发送readCompleted() 事件. 从 Head 开始 Head 向下传递事件, 并在其他handler结束后调用 readIfAutoRead().
+> 在循环读取 javaChannel 中的可读字节到结束后(没有可读字节了) 结束循环, 发送readCompleted() 事件. 从 Head 开始 Head
+> 向下传递事件, 并在其他handler结束后调用 readIfAutoRead().
 
 # BootStrap
 
@@ -54,15 +59,16 @@ private ChannelFutre doBind(final SocketAddress loaclAddress) {
 ```
 
 客户端的connect方法
+
 ``` java
 private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
   // 1. 用 ChnnelFactory 创建 Channel
-  // 2. 将指定到 ChannelHandler 放到 pipline 到末尾, 配置Channel选项 
-  // 3. 将Channel注册到指定到 EventLoopGroup 
+  // 2. 将指定到 ChannelHandler 放到 pipline 到末尾, 配置Channel选项
+  // 3. 将Channel注册到指定到 EventLoopGroup
   final ChannelFuture regFuture = initAndRegister();
   final Channel channel = regFuture.channel();
 
-  // 2. 保证在 regFuture 之后执行 doResolveAndConnect0(); 
+  // 2. 保证在 regFuture 之后执行 doResolveAndConnect0();
   // 如果此时 regFuture 未完成就注册一个 Listener, 在成功后调用 doResolveAndConnect0()
   if (regFuture.isDone()) {
     if (!regFuture.isSuccess()) {
@@ -244,7 +250,7 @@ protected abstract class AbstractUnsafe implements Unsafe {
             // 而这个 promise 上存在用户添加的ChannelFutureListener, 里可能有 fire event 动作. 需要保障所有handler都准备好了.
             pipeline.invokeHandlerAddedIfNeeded();
 
-            // 设置promise的成功结果 
+            // 设置promise的成功结果
             safeSetSuccess(promise);
             // 触发 registered 事件
             pipeline.fireChannelRegistered();
@@ -274,9 +280,11 @@ protected abstract class AbstractUnsafe implements Unsafe {
 ## Connect 流程
 
 [[Unsafe#Unsafe.connect()]]
+
 ## Read 流程
 
-默认情况下 autoRead 为true, active 事件中会调用beginRead() 方法 Nio模式下就会去注册对read事件的监听. NioEventLoop 循环中获取到channel准备好read时就会触发NioUnsafe.read()方法
+默认情况下 autoRead 为true, active 事件中会调用beginRead() 方法 Nio模式下就会去注册对read事件的监听. NioEventLoop
+循环中获取到channel准备好read时就会触发NioUnsafe.read()方法
 
 ``` java
 // AbstractNioByteChannel.NioByteUnsafe
@@ -348,8 +356,10 @@ public final void read() {
   }
 }
 ```
+
 AbstractUnsafe.java
-``` java 
+
+``` java
 @Override
 public RecvByteBufAllocator.Handle recvBufAllocHandle() {
   if (recvHandle == null) {
@@ -359,7 +369,8 @@ public RecvByteBufAllocator.Handle recvBufAllocHandle() {
 }
 ```
 
-`DefaultChannelConfig` 的构造器中指定了默认的采用  [[RecvByteBuffAllocator#AdaptiveRecvByteBufAllocator|AdaptiveRecvByteBufAllocator]]
+`DefaultChannelConfig`
+的构造器中指定了默认的采用  [[RecvByteBuffAllocator#AdaptiveRecvByteBufAllocator|AdaptiveRecvByteBufAllocator]]
 
 ``` java
 public DefaultChannelConfig(Channel channel) {
@@ -386,71 +397,75 @@ private void setRecvByteBufAllocator(RecvByteBufAllocator allocator, ChannelMeta
 ## Write 流程
 
 ### `write(msg, promise)`
+
 write 作为出站事件从经过的handler顺序是 tail -> head
 
 ```java
 // io.netty.channel.AbstractChannel 定义的通用实现
-@Override  
-public ChannelFuture write(Object msg, ChannelPromise promise) {  
-    return pipeline.write(msg, promise);  
+@Override
+public ChannelFuture write(Object msg, ChannelPromise promise) {
+    return pipeline.write(msg, promise);
 }
 ```
 
 所以在`DefaultChannelPipeline.HeadContext`上实现了write方法, 转发给`unsafe.write()`
+
 ```java
 @Override
-public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {  
-    unsafe.write(msg, promise);  
+public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+    unsafe.write(msg, promise);
 }
 ```
-`AbstractUnsafe.write()`实现了写逻辑的大致逻辑. 
+
+`AbstractUnsafe.write()`实现了写逻辑的大致逻辑.
 其实就是调用[[ChannelOutboundBuffer#`addMessage()`]]将 `Object msg` 添加待写入的链表中
+
 ```java
-@Override  
-public final void write(Object msg, ChannelPromise promise) {  
-    assertEventLoop();  
-  
+@Override
+public final void write(Object msg, ChannelPromise promise) {
+    assertEventLoop();
+
     // 每个Unsafe在init阶段就拥有了outboundBuffer.
     // 只有调用 shutdownOutput() 或者 close() 时将 outboundBuffer 设置为null
     // 所以只要 outboundBuffer == null 就可以拒绝写入了(channel 已经关闭了输出流或者已经关闭了)
-    ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;  
-    if (outboundBuffer == null) {  
-        try {  
-            // release message now to prevent resource-leak  
-            ReferenceCountUtil.release(msg);  
-        } finally {  
-            // If the outboundBuffer is null we know the channel was closed and so  
+    ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
+    if (outboundBuffer == null) {
+        try {
+            // release message now to prevent resource-leak
+            ReferenceCountUtil.release(msg);
+        } finally {
+            // If the outboundBuffer is null we know the channel was closed and so
             // need to fail the future right away. If it is not null the handling of the rest
             // will be done in flush0()
             // See https://github.com/netty/netty/issues/2362
-            safeSetFailure(promise,  
-                    newClosedChannelException(initialCloseCause, "write(Object, ChannelPromise)"));  
-        }  
-        return;  
-    }  
-  
-    int size;  
-    try {  
+            safeSetFailure(promise,
+                    newClosedChannelException(initialCloseCause, "write(Object, ChannelPromise)"));
+        }
+        return;
+    }
+
+    int size;
+    try {
         // 子类实现消息的过滤, 比如:
         // NioByteChannel 支持 ByteBuf 或者 Fegion
         // NioDatagramChannel 支持 DatagramPacket  ByteBuf AddressedEnvelope
         // 而xxxServerChannel没有写入事件, 所以方法直接抛出 UnsupportedOperationException
-        msg = filterOutboundMessage(msg);  
-        // 确定msg对象的大小, 
-        size = pipeline.estimatorHandle().size(msg);  
-        if (size < 0) {  
-            size = 0;  
-        }  
-    } catch (Throwable t) {  
-        try {  
-            ReferenceCountUtil.release(msg);  
-        } finally {  
-            safeSetFailure(promise, t);  
-        }  
-        return;  
-    }  
-  
-    outboundBuffer.addMessage(msg, size, promise);  
+        msg = filterOutboundMessage(msg);
+        // 确定msg对象的大小,
+        size = pipeline.estimatorHandle().size(msg);
+        if (size < 0) {
+            size = 0;
+        }
+    } catch (Throwable t) {
+        try {
+            ReferenceCountUtil.release(msg);
+        } finally {
+            safeSetFailure(promise, t);
+        }
+        return;
+    }
+
+    outboundBuffer.addMessage(msg, size, promise);
 }
 ```
 
@@ -548,8 +563,10 @@ protected void doWrite(ChannelOutboundBuffer in) throws Exception {
 如果消息没有完整写入channel(ps: channel写满了), 返回 `ChannleUtils.WRITE_STATUS_SNDBUF_FULL` 也就是 `Integer.MAX_VALUE`
 这样外面的循环条件 `writeSpinCount > 0` 就会被打破
 并且 writeSpinCount 一定是个负数, 就会调用 `incomplateWrite(true)` 去设置 `NioChannel` 上的 `Opwrite`.
-`NioEventLoop`在监听到write事件会最后会调用到上面到 `doWrite()` 再次开始写入, 后续逻辑一样直到将等待到消息都写入 channel.
+`NioEventLoop`在监听到write事件会最后会调用到上面到 `doWrite()` 再次开始写入, 后续逻辑一样直到将等待到消息都写入
+channel.
 此时 writeSpinCount > 0 成立. 调用 `incomplateWrite(false)`
+
 ``` java
 // 如果写入完成返回1, 如果entry没有写完chnnel就返回了, 返回
 private int doWriteInternal(ChannelOutboundBuffer in, Object msg) throws Exception {
@@ -596,9 +613,11 @@ private int doWriteInternal(ChannelOutboundBuffer in, Object msg) throws Excepti
 目前发现只有调用方会触发close事件 调用 channel.close() 或者 channelContext.close() 触发
 
 channel.closeFuture()上添加的listener会在调用doClose()方法时被调用
-实际上在调用 javachannel().close()方法之前 然后调用fireChannelInactiveAndDeregister(). 
-而fireChannelInactiveAndDeregister()方法先调 doDeregister() 方法完成了实际上的取消注册动作然后 fireChannelInactive(), fireChannelUnregistered()
+实际上在调用 javachannel().close()方法之前 然后调用fireChannelInactiveAndDeregister().
+而fireChannelInactiveAndDeregister()方法先调 doDeregister() 方法完成了实际上的取消注册动作然后 fireChannelInactive(),
+fireChannelUnregistered()
 
 在HeadContenxt.channelUnregistered()里最后会将handler按照顺序删除,并通知handler.
 
-主动调用 `channel.close()` `channelContext.close()` 方法, 执行流程和上面一样.但是有close()事件. 并且也不是在 `read` 过程中发现并调用close()
+主动调用 `channel.close()` `channelContext.close()` 方法, 执行流程和上面一样.但是有close()事件. 并且也不是在 `read`
+过程中发现并调用close()

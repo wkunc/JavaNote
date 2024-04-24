@@ -1,11 +1,13 @@
 # AbstractAuthenticationProcessingFilter
+
 负责登陆验证过程的 filter, 需要确保 authenticationManager 属性正确设置.
 提供了 authentication (认证的基本过程):
+
 1. 判断是否需要认证, 就是当前 request 访问的url 是否与 requiresAuthenticationRequestMatcher 匹配.
 2. 如果匹配就进行调用 attemptAuthentication() 抽象方法执行验证.
 3. 验证成功, 生成的Authentication对象放入当前线程的 SecuriteyContext 中.
 4. 然后调用配置的 AuthenticationSucccessHandler, 在成功认证(登陆)后重定向到适当目标. (有一个默认实现的)
-5. 如果登录身份验证失败, 就调用 AuthenticationFailureHandler, 
+5. 如果登录身份验证失败, 就调用 AuthenticationFailureHandler,
 
 为子类实现提供方便.
 
@@ -53,6 +55,7 @@ public abstract class AbstractAuthenticationProcessingFilter extends GenericFilt
 ```
 
 实现的Filter方法
+
 ```java
 public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
         throws IOException, ServletException {
@@ -111,7 +114,6 @@ public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 
 # UsernamePasswordAuthenticationFilter
 
+#
 
-
-# 
 讲完了执行原理, 接下来看Spring Security提供的配置过程.

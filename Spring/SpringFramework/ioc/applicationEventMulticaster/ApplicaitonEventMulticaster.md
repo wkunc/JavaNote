@@ -1,6 +1,5 @@
 # ApplicationEventMulticaster(事件多路广播)
 
-
 ```java
 public interface ApplicationEventMulticaster {
 

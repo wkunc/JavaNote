@@ -1,4 +1,5 @@
 # PlatformTranscationManager
+
 ```java
 public interface PlatformTransactionManager {
     TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException;
@@ -18,10 +19,11 @@ public interface TransactionStatus extends SavepointManager, Flushable {
     boolean isCompleted();
 }
 ```
+
 # 声明式事务
 
-
 # Programmatic Transaction Management(编程使用事务)
+
 1. Transaction Template
 2. PlatformTransactionManager
 

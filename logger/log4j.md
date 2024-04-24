@@ -1,12 +1,13 @@
 # 整体逻辑
+
 首先确定使用的实现(通过属性文件指定和SPI注册)
 getLogger()方法会调用 getContext() 方法.
 内部会使用确定的 LoggerContextFactory 实例创建Context.
 使用获得的Context来创建Logger.
 LoggerContextFactory 中创建Context的又是一个 ContextSelector.
 
-
 # LogManager
+
 ```java
 public class LogManager {
     // 没有成员变量, 只有一些静态的常量
@@ -26,17 +27,18 @@ public class LogManager {
 1. 根据 log4j2.component.properties 文件中的 log4j2.loggerContextFactory 属性值确定指定的 LoggerContextFactory 实现类.
 2. 用SPI机制加载 Provider 实现类和 MTA-INF/log4j-provider.properties 确定.
 3. 如果上面都失败的话就使用 SimpleLoggerContextFactory.
+
 ```java
 // 加载逻辑都在static加载块中
 // 主要目的是: 初始化 factory 字段, Log4jContextFactory.
 // 具体步骤为 :
-// 1. 检测 log4j2.component.properties 文件中的 log4j2.loggerContextFactory 指定的实现类. 
+// 1. 检测 log4j2.component.properties 文件中的 log4j2.loggerContextFactory 指定的实现类.
 // 如果有指定的实现, 那么尝试加载Class, 然后通过默认构造器实例化.(所以说这里要 LoggerContextFactory 接口的实现类必须有无参构造器)
 // 如果上面没有指定, 或者说在尝试初始化指定的实现类失败了, 那么继续执行.
 // 2. 使用ProviderUtil来进行加载Provider接口的实例, ProviderUtil是一个懒加载的单例.
 //    会在第一次初始化时会使用JDK的SPI机制加载Provider.class的实现.
 //    (然后log4j-core包中就有一个对应SPI文件, 里面指定了实现类 Log4jContextFactory)
-// 
+//
 // 3. 如果这样都加载失败了(说明log4j-core不在classpath中, 也没有第三方实现).
 //    那么会使用一个 SimpleLoggerContextFactory(log4j-api自带的简单实现) 作为最后的选择.
 static {
@@ -70,7 +72,7 @@ static {
                 }
             }
             // 如果上面的代码执行完, 有三种情况, 一没有对应的实现类map为空, 二只找到一个实现类, 三找到多个实现类.
-            // 如果是空, 就使用 SimpleLoggerContextFactory. 
+            // 如果是空, 就使用 SimpleLoggerContextFactory.
             // 另外两种都会调用 treemap.getlastkey(). 只不过多个实现类的情况会生成一条warn级别的日志, 表示找到哪些实现最后使用了哪个.
             if (factories.isEmpty()) {
                 LOGGER.error("Log4j2 could not find a logging implementation. "
@@ -98,7 +100,6 @@ static {
 }
 ```
 
-
 ---
 获取Logger的逻辑
 一共提供了10个方法来获取Logger对象.
@@ -106,8 +107,9 @@ static {
 
 主要研究// 1号类型.
 使用 getContext() 获取 LoggerContext
+
 ```java
-//1 
+//1
 // 用给定的 class 对象的全限定名 返回一个 Logger 对象
 public static Logger getLogger(final Class<?> clazz) {
     final Class<?> cls = callerClass(clazz);
@@ -152,6 +154,7 @@ public static getRootLogger() {
 ```
 
 getContext()
+
 ```java
 // 获取current LoggerContext. 这个Context可能不是用于为调用类创建Logger的Context(这个Conxtext可能不为Logger对象).
 public static LoggerContext getContext() {
@@ -258,7 +261,9 @@ protected static LoggerContext getContext(final String fqcn, final ClassLoader l
 ```
 
 # LoggerContextFactory
+
 看得出来这个工厂应会负责LoggerContext的创建和缓存工作.
+
 ```java
 public interface LoggerContextFactory {
 
@@ -271,7 +276,9 @@ public interface LoggerContextFactory {
 ```
 
 # LoggerContext
+
 这个应该负责Logger的创建和缓存, 上面的Factory在创建时会要求提供配置参数. 所以是否是一个Context一个配置呢?
+
 ```java
 public interface LoggerContext {
 
@@ -291,11 +298,10 @@ public interface LoggerContext {
 
 先看api包中提供的简单实现, 内部字段大部分是配置信息.
 重点是 LoggerRegistry 字段, 它是存储Logger的地方.
-它的结构不是简单的Map\<String, Logger\>, 
+它的结构不是简单的Map\<String, Logger\>,
 由于LoggerContext提供了两个getLogger(String name, MessageFactory factory)方法.
 所以它内部的存储方式是 Map\<String, Map\<String, Logger>>.
 第一个String是传入的 MessageFactory的名字, 然后是根据传入的 name 获取对应的Logger.
-
 
 ```java
 public class SimpleLoggerContext implements LoggerContext {

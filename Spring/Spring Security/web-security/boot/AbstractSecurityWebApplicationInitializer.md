@@ -1,5 +1,7 @@
 # AbstractSecurityWebApplicationInitializer
+
 这个类实现了 WebApplicationinitializer 接口
+
 ```java
 public abstract class AbstractSecurityWebApplicationInitializer
 		implements WebApplicationInitializer {

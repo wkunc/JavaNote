@@ -1,4 +1,5 @@
 # 2.Spring Cloud Commons:Common Abstractions
+
 Service discovery, load balancing and circuit breakers 等模式的通用抽象层
 可以由所有Spring Cloud client 使用, 而与实现无关
 
@@ -7,19 +8,15 @@ Service discovery, load balancing and circuit breakers 等模式的通用抽象�
 Spring Cloud Commons 提供了`@EnableDiscoveryClient` Annotation.
 这将查找具有META-INF/spring.factories 的DiscoveryClient和ReactiveDiscoveryClient接口实现.
 
-
 DiscoveryClient 实现的包括 Spring Cloud Netfix Eureka, Spring Cloud Consul Discovery
 Spring Cloud Zookeeper Discover.
 
-
 ### Health Indicator (健康指示符)
+
 Commons create a Spring Boot HealthIndicator that DiscoveryClient implementations can
 participate in by implementing DiscoverHelthIndicator.
 
-
-
 ### Ordering DiscoverClient instances
-
 
 ### SimpleDiscoveryClient
 

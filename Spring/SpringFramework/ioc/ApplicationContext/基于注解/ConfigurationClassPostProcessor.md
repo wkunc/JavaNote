@@ -1,10 +1,12 @@
 # ConfigurationClassPostProcessor
-这个类是一个 BeanDefinitionRegistryPostProcessor 也就是一个 BeanFactoryPostProcessor. 
+
+这个类是一个 BeanDefinitionRegistryPostProcessor 也就是一个 BeanFactoryPostProcessor.
 会在模板方法 refresh() 中的 invokeBeanFactoryPostProcessor() 方法中被调用.(此时BeanFactory只有BeanDefinfition, 没有实例)
 它就是想在此时扫描所有的BeanDefinition, 找出@Configuration 注解
 
-当然, 我们也没有显式的注册过这个 BeanFactoryPostProcessor. 它是我们在使用各种基于注解的Context时自动注册的, 
+当然, 我们也没有显式的注册过这个 BeanFactoryPostProcessor. 它是我们在使用各种基于注解的Context时自动注册的,
 在具体的说就是基于注解的Context在初始化其内部的AnnotationBeanDefinitionReader时注册的.
+
 ```java
 
 // 实现PostProcessor接口, 主要调用了 processConfigBeanDefinition() 指向主要逻辑
@@ -25,10 +27,10 @@ public void postProcessBeanDefinitionRegistry (BeanDefinitionRegistry registry) 
     processConfigBeanDefinitions(registry);
 }
 
-// 1. 查找出所有的候选的 BeanDefinition 
+// 1. 查找出所有的候选的 BeanDefinition
 //(不是很懂哪些是符合条件的, 也可以简单看成找出目前注册的BeanDefintion中被@Configuration注解的)
 // 2. 给这些BeanDefinition进行排序操作, 就是处理@Order注解
-// 3. 
+// 3.
 public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
     List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
     String[] candidateNames = registry.getBeanDefinitionNames();
@@ -144,7 +146,6 @@ public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 
 ```
 
-
 # ConfigurationClassParser
 
 ```java
@@ -174,7 +175,6 @@ public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 		this.deferredImportSelectorHandler.process();
 	}
 ```
-
 
 ```java
 	protected void processConfigurationClass(ConfigurationClass configClass) throws IOException {

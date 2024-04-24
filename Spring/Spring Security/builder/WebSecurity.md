@@ -1,23 +1,23 @@
 # WebSecurity
+
 这个最简单的子类, 没有涉及到额外的接口.
 它继承了 AbstractConfiguredSecurityBuilder 类并填上了泛型是 Filter, 代表它是一个创建 Filter 的Builder.
 然后它还实现了 SecurityBuilder\<Filter\>, 这样它就符合 AbstractConfiguredSecurityBuilder 的第二个泛型要求.
-
 
 它将 HttpSecurity 和 AuthenticationManager 联合起来.
 
 它是负责构建Boot流程中的 FilterChainProxy 对象.
 构建这个FilterChainProxy需要 SecurityFilterChain 对象,
 而HttpSecurity就是负责构建 SecurityFilterChain 的Builder.
-构建一个HttpSecurity需要还需要 AuthenticationManager, 
+构建一个HttpSecurity需要还需要 AuthenticationManager,
 而 @EnanbleGlobalAuthentication 注解会在IOC中注册一个 AuthenticationManagerBuilder 和 ObjectProcessor.
 
-通过阅读WebSecurity的源码我们会发现, 
+通过阅读WebSecurity的源码我们会发现,
 这个类没有直接使用 HttpSecurity 和 AuthenticationManagerBuilder.
 而在Spring提供的配置类中我们可以找到这个Builder的使用方式.
 
 ```java
-public final class WebSecurity 
+public final class WebSecurity
         extends AbstractConfiguredSecurityBuilder<Filter, WebSecurity>
         implements SecurityBuilder<Filter>, ApplicationContextAware {
 
@@ -25,7 +25,7 @@ public final class WebSecurity
 
 	private final List<RequestMatcher> ignoredRequests = new ArrayList<>();
 
-    // 就是 HttpSecurity 
+    // 就是 HttpSecurity
 	private final List<SecurityBuilder<? extends SecurityFilterChain>> securityFilterChainBuilders = new ArrayList<SecurityBuilder<? extends SecurityFilterChain>>();
 
 	private IgnoredRequestConfigurer ignoredRequestRegistry;
@@ -48,9 +48,9 @@ public final class WebSecurity
 		public void run() {
 		}
 	};
-            
 
-    // 构造器, 不允许重复配置 
+
+    // 构造器, 不允许重复配置
 	public WebSecurity(ObjectPostProcessor<Object> objectPostProcessor) {
 		super(objectPostProcessor);
 	}
@@ -146,15 +146,14 @@ protected Filter performBuild() throws Exception {
 }
 ```
 
-
 # 总结
 
 如果光看这个 WebSecurity builder 并没有什么特殊, 没有人使用的Builder是不完整的.
 
-
 这个配置类也是非常的简单.
 首先利用Spring IOC功能注入所有的 WebSecurityConfigurer 实例,
-其实就是找到 WebSecurityAdapter 的实现类(当然我们也可以不继承这个提供的适配器, 自己实现SecurityConfigurer来达到配置WebSecurity的目的) 
+其实就是找到 WebSecurityAdapter 的实现类(当然我们也可以不继承这个提供的适配器,
+自己实现SecurityConfigurer来达到配置WebSecurity的目的)
 会在方法中 new WebSecurity()
 
 ```java

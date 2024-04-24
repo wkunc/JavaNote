@@ -1,4 +1,5 @@
 # LifecycleProcessor
+
 ```java
 public interface Lifecycle {
     void start();
@@ -6,12 +7,14 @@ public interface Lifecycle {
     boolean isRunning();
 }
 ```
+
 ```java
 public interface LifecycleProcessor extends Lifecycle {
     void onRefresh();
     void onClose();
 }
 ```
+
 ```java
 public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactoryAware {
     private final Log logger = LogFactory.getLog(getClass());

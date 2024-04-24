@@ -1,5 +1,7 @@
 # JunitCore
+
 研究执行过程
+
 ```java
 // 门面接口.
 public static void main(String... args) {
@@ -8,7 +10,7 @@ public static void main(String... args) {
 }
 
 // 对传入的 args 进行解析.
-// 并生成一个Request, 它是一次测试的抽象. 相当于一次运行JUnit的动作. 
+// 并生成一个Request, 它是一次测试的抽象. 相当于一次运行JUnit的动作.
 Result runMain(JUnitSystem system, String... args) {
     system.out().print("JUnit version " + Version.id());
 
@@ -43,6 +45,7 @@ public Result run(Runner runner) {
 ```
 
 # JUnitCommandLineParseResult
+
 这个类负责参数的解析, 它会将解析结果填充到它内部的三个ArrayList中.
 
 然后根据解析结果生成本次*测试*的抽象描述*Request*对象
@@ -50,12 +53,13 @@ public Result run(Runner runner) {
 private final List<String> filterSpecs = new ArrayList<>();
 private final List<Class<?>> classes = new ArrayList<>();
 private final List<Throwable> parserErrors = new ArrayList<>();
+
 ```java
 public static JUnitCommandLineParseResult parse(String[] args) {
     JUnitCommandLineParseResult result = new JUnitCommandLineParseResult();
     result.parseArgs(args);
 }
-// 解析参数, 分为两步. 
+// 解析参数, 分为两步.
 // 第一步: parseOptions() 方法提取 filter 参数.
 // 第二步: parseParameter() 方法提取 parseOptions() 方法返回的String[] 填充Class;
 private void parseArgs(String[] args) {
@@ -74,7 +78,7 @@ String[] parseOptions(String... args) {
                 String filterSpec;
                 if (arg.equals("--filter") {
                     ++i;
-                    
+
                     if (i < args.length) {
                         filterSpec = args[i];
                     } else {
@@ -87,7 +91,7 @@ String[] parseOptions(String... args) {
                 filterSpecs.add(filterSpec);
             } else {
                 parserErrors.add(new CommandLineParserError("JUnit kons noting about the " + arg + " option"));
-            } 
+            }
         } else {
             return copyArray(args, i, args.length);
         }
@@ -129,12 +133,14 @@ public Request createRequest(Computer computer) {
 ```
 
 # Request
+
 Request 表示一次将要运行的 tests.
 本体一个 abstract 类. 提供了非常多的 static 方法来生成子类.
 ![](Request.PNG)
 FilterRequest 和 SortingRequest就是个包装器, 功能实现也比较简单.
 ClassRequest 核心就是一个Class对象罢了.
 内部的Runner是由AllDefaultPossibilitiesBuilder创建.
+
 ```java
 public class ClassRequest extends Request {
     private final Object runnerLock = new Object();

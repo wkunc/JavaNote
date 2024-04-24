@@ -1,4 +1,5 @@
 # HttpServletBean
+
 ```java
 public final void init() throws ServletException {
     PropertyValues pvs = new ServletConfigPropertyValues(getServletConfig()), this.requiredProperties);
@@ -23,6 +24,7 @@ public final void init() throws ServletException {
 ```
 
 # FrameworkServlet
+
 ```java
 @Override
 protected final void initServletBean() throws ServletException {
@@ -117,6 +119,7 @@ protected WebApplicationContext initWebApplicationContext() {
 ```
 
 # DispatcherServlet
+
 ```java
 @Override
 protected void onRefresh(ApplicationContext context) {
@@ -141,7 +144,7 @@ protected void initStartegies(ApplicationContext context) {
     // 异常处理器
     initHandlerExceptionResolvers(context);
     // 翻译器, 当使用 @Controller 处理请求,
-    // 但是 handler 方法没有明确指明 viewName. 
+    // 但是 handler 方法没有明确指明 viewName.
     // 通过这个翻译器会将请求的文件扩展名去除作为viewName
     intiRequestToViewNameTranslator(context);
     // 视图解析器
