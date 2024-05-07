@@ -1,4 +1,4 @@
-# TODO 奇怪的Class No tFound
+# 奇怪的Class No tFound
 
 起因: 底层库修改了依赖版本, 导致其代码中使用的类的确不存在与当前项目的依赖中.
 
@@ -118,7 +118,20 @@ public java.util.concurrent.ThreadPoolExecutor cec.demo.A.test()
 和`(r, executor) -> { throw new CecException("xxl-job, EmbedServer bizThreadPool is EXHAUSTED!"); }`
 两个lambda表达式.
 
+然后根据lambda实现, 在生成的静态方法可能在初始化时被调用封装成`CellSite`.
+所以调用到了 `new CecException()` 构造器所以触发了类加载导致`ClassNotFoundException`
+
+> [lambda表达式如何工作的](https://blogs.oracle.com/javamagazine/post/behind-the-scenes-how-do-lambda-expressions-really-work-in-java)
+> [理解invokedynamic](https://blogs.oracle.com/javamagazine/post/understanding-java-method-invocation-with-invokedynamic)
+
+
 ## 总结
 
--XX:TieredStopAtLevel=1 -noverify
-IDEA启动和jar包启动行为不同的关键参数
+根据上面分析发现使用lambda的写法,一定会触发ClassNotFoundException.
+匿名内部类的写法不会触发, 只有执行到具体匿名内部类方法逻辑才会触发ClassNotFoundException
+通过命令行手动执行 java 命令确实符合总结的规律.
+但是通过IDEA执行是不会触发的. 所以估计应该是IDEA的运行命令参数不同.
+
+比较后可以重点说明两个参数
+1. -XX:TieredStopAtLevel=1 这个是限制JIT的优化等级.
+2. -noverify 关闭类加载中的校验过程, 这个是导致问题的的罪魁祸首
