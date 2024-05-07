@@ -1,8 +1,12 @@
-# JavaNote
 
-自己平时学习时记录的笔记, 比较散乱.
+## 碰到的奇怪问题
 
-很多是开了一个坑, 看了部分源码, 但是没有记录的空白.
+[mybatis 单个集合参数名称解析失效问题](./ORM/MyBatis/QA.md)
+[mysql批量插入保存blob对象时报错, 以及批量插入原理](./storage/mysql/QA.md)
+[spring ioc 循环依赖两种情况](./Spring/SpringFramework/ioc/circularDependency.md)
 
-主要内容基本都集中在Spring文件夹下.
-里面记录我对Spring家族的学习.
+## Netty 学习
+
+[Netty 初始化流程](./Netty/flow.md)
+[Netty Issues](./Netty/other.md)
+[Thread 状态](Thread.md)
