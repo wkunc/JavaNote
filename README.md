@@ -1,5 +1,8 @@
 # 目录
 
+## 有用的问题
+[flatmapSequential() flatMap() concatMap()的区别](https://stackoverflow.com/questions/71971062/whats-the-difference-between-flatmap-flatmapsequential-and-concatmap-in-project)
+
 ## 特殊的扩展
 [自定义SpringBoot的yml解析](./Spring/Spring Boot/自定义yml解析.md)
 
