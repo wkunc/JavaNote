@@ -24,7 +24,7 @@
       - *elevator
 ```
 
-经过查找, 发现yml原始语法中就有merge key相关语法, 以及引用标签语法
+经过查找, 发现`yml`原始语法中就有`merge key`相关语法, 以及引用标签语法
 
 ```yml
   aca:
@@ -51,62 +51,64 @@
 ## 翻阅SpringBoot使用的yaml解析库, 找到扩展点
 
 通过yaml的tag语法, 可以实现自定义的标签解析
-所以我们定于
 
 ```java
-    private class OriginTrackingConstructor extends Constructor {
+// OriginTrackingConstructor 是SpringBoot的自己写的, 用于标记属性来源与哪个文件
+private class OriginTrackingConstructor extends Constructor {
 
-        public OriginTrackingConstructor() {
-            this.yamlConstructors.put(new Tag("!flatten"), new FlattenConstruct());
+    public OriginTrackingConstructor() {
+        // 注册自定义的标签解析逻辑
+        this.yamlConstructors.put(new Tag("!flatten"), new FlattenConstruct());
+    }
+
+    @Override
+    protected Object constructObject(Node node) {
+        if (node instanceof ScalarNode) {
+            if (!(node instanceof KeyScalarNode)) {
+                return constructTrackedObject(node, super.constructObject(node));
+            }
         }
+        else if (node instanceof MappingNode) {
+            replaceMappingNodeKeys((MappingNode) node);
+        }
+        return super.constructObject(node);
+    }
+
+    private void replaceMappingNodeKeys(MappingNode node) {
+        node.setValue(node.getValue().stream().map(KeyScalarNode::get).collect(Collectors.toList()));
+    }
+
+    private Object constructTrackedObject(Node node, Object value) {
+        Origin origin = getOrigin(node);
+        return OriginTrackedValue.of(getValue(value), origin);
+    }
+
+    private Object getValue(Object value) {
+        return (value != null) ? value : "";
+    }
+
+    private Origin getOrigin(Node node) {
+        Mark mark = node.getStartMark();
+        TextResourceOrigin.Location location = new TextResourceOrigin.Location(mark.getLine(), mark.getColumn());
+        return new TextResourceOrigin(MyYamlProcessor.this.resource, location);
+    }
+
+    // 内部类, 实现自定义标签的解析
+    // 写的比较简单粗暴, 没有做到合理的错误提示, 来应各种情况
+    private class FlattenConstruct extends AbstractConstruct {
 
         @Override
-        protected Object constructObject(Node node) {
-            if (node instanceof ScalarNode) {
-                if (!(node instanceof KeyScalarNode)) {
-                    return constructTrackedObject(node, super.constructObject(node));
-                }
-            }
-            else if (node instanceof MappingNode) {
-                replaceMappingNodeKeys((MappingNode) node);
-            }
-            return super.constructObject(node);
+        public Object construct(Node node) {
+            SequenceNode node1 = (SequenceNode) node;
+            Collection<Object> r = new ArrayList<>();
+            node1.getValue().forEach(e -> {
+                constructSequenceStep2((SequenceNode) e, r);
+            });
+            return r;
         }
-
-        private void replaceMappingNodeKeys(MappingNode node) {
-            node.setValue(node.getValue().stream().map(KeyScalarNode::get).collect(Collectors.toList()));
-        }
-
-        private Object constructTrackedObject(Node node, Object value) {
-            Origin origin = getOrigin(node);
-            return OriginTrackedValue.of(getValue(value), origin);
-        }
-
-        private Object getValue(Object value) {
-            return (value != null) ? value : "";
-        }
-
-        private Origin getOrigin(Node node) {
-            Mark mark = node.getStartMark();
-            TextResourceOrigin.Location location = new TextResourceOrigin.Location(mark.getLine(), mark.getColumn());
-            return new TextResourceOrigin(MyYamlProcessor.this.resource, location);
-        }
-
-        // 写的比较简单粗暴, 没有做到合理的错误提示, 来应各种情况
-        private class FlattenConstruct extends AbstractConstruct {
-
-            @Override
-            public Object construct(Node node) {
-                SequenceNode node1 = (SequenceNode) node;
-                Collection<Object> r = new ArrayList<>();
-                node1.getValue().forEach(e -> {
-                    constructSequenceStep2((SequenceNode) e, r);
-                });
-                return r;
-            }
-        }
-
     }
+
+}
 ```
 
 ## 如何替换SpringBoot的yml解析

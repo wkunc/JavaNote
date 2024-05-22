@@ -1,5 +1,8 @@
 # 目录
 
+## 特殊的扩展
+[自定义SpringBoot的yml解析](./Spring/Spring Boot/自定义yml解析.md)
+
 ## 碰到的奇怪问题
 
 [mybatis 单个集合参数名称解析失效问题](./ORM/MyBatis/QA.md)
@@ -15,4 +18,4 @@
 
 # 简单说明
 文章主要采用markdown格式维护, 使用`Obsidian`作为整理关联文章的工具
-所以用到了特殊的语法
+所以部分地方用到了特殊的语法
