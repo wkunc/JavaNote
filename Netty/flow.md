@@ -1,17 +1,17 @@
-#Netty
+# Netty
 
 # 事件顺序
 
-| 事件           | 描述                                                                                    |
-|--------------|---------------------------------------------------------------------------------------|
-| HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                          |
-| Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                     |
-| Connect      | 调用了Channel.connet() 方法进行连接                                                            |
-| Active       | Channel.isActive() 返回true 时调用                                                         |
+| 事件         | 描述                                                                                                                     |
+|--------------|--------------------------------------------------------------------------------------------------------------------------|
+| HandleAdd    | handler 添加到channel上, 通常来说比 Registered 事件更早触发                                                              |
+| Registered   | Channel和对应的EventLoop进行绑定, 即调用 EventLoop.registr()                                                             |
+| Connect      | 调用了Channel.connet() 方法进行连接                                                                                      |
+| Active       | Channel.isActive() 返回true 时调用                                                                                       |
 | Read         | Netty 默认开启autoRead, 所以 NIO 在连接后会注册read事件. EventLoop 发现channel准备read时, 调用对应的方法获取到字节时调用 |
-| ReadComplete |                                                                                       |
-| Inactive     |                                                                                       |
-| unRegistered | 将Channel和EventLoop分开, 会取消之前注册的事件也就是 SelectionKey.cancel() . 注意的是unRegistered不代表连接会被关闭 |
+| ReadComplete |                                                                                                                          |
+| Inactive     |                                                                                                                          |
+| unRegistered | 将Channel和EventLoop分开, 会取消之前注册的事件也就是 SelectionKey.cancel() . 注意的是unRegistered不代表连接会被关闭      |
 
 1. pipeline.fireChannelRegistered();
 

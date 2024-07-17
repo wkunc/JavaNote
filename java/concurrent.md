@@ -19,9 +19,6 @@ public interface Executor {
 
 # ExecutorService
 
-an Executor that provides methods to manage termination and methods that can
-produce a Future for tacking progress of one or more asynchronous tasks.
-
 一个提供了 管理终止 和 返回 Future 以追踪一个或多个异步任务的进度的方法的 Executor.
 
 ```java
@@ -205,7 +202,6 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
     }
 
-
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                         long timeout, TimeUnit unit) throws InterruptedException {
         if (tasks == null)
@@ -220,8 +216,6 @@ public abstract class AbstractExecutorService implements ExecutorService {
         }
 
     }
-
-
 
 }
 ```
