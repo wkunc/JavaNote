@@ -257,7 +257,7 @@ private void doStartThread() {
 protected abstract void run();
 ```
 
-## DefaultEventLoop.run()
+### DefaultEventLoop.run()
 
 可以看到 run 方法的实现非常简单.
 
@@ -283,7 +283,7 @@ protected void run() {
 }
 ```
 
-## NioEventLoop.run()
+### NioEventLoop.run()
 
 ```java
 public final class NioEventLoop extends SingleThreadEventLoop {
@@ -423,6 +423,79 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
         }
     }
+```
+
+### 优雅的关闭
+
+EventLoop.state 有五个状态, `not started`,`started` `shutting down`,`shutdown`,`terminated`
+
+```java
+private static final int ST_NOT_STARTED = 1;
+private static final int ST_STARTED = 2;
+private static final int ST_SHUTTING_DOWN = 3;
+private static final int ST_SHUTDOWN = 4;
+private static final int ST_TERMINATED = 5;
+
+@Override
+public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    ObjectUtil.checkPositiveOrZero(quietPeriod, "quietPeriod");
+    if (timeout < quietPeriod) {
+        throw new IllegalArgumentException(
+                "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
+    }
+    ObjectUtil.checkNotNull(unit, "unit");
+
+    // 如果当前已经是进入关闭流程/已经关闭了, 就直接返回
+    if (isShuttingDown()) {
+        return terminationFuture();
+    }
+
+    boolean inEventLoop = inEventLoop();
+    boolean wakeup;
+    int oldState;
+    for (;;) {
+        // 防止被并发调用, 此时有两个线程执行了最后的状态更新.
+        // 只有一个线程可以更新成功, 修改失败的线程将在这个if处结束.
+        if (isShuttingDown()) {
+            return terminationFuture();
+        }
+        int newState;
+        wakeup = true;
+        oldState = state;
+        // 如果是在eventLoop线程中调用的shutdownGracefully()
+        if (inEventLoop) {
+            newState = ST_SHUTTING_DOWN;
+        } else {
+            switch (oldState) {
+                case ST_NOT_STARTED:
+                case ST_STARTED:
+                    newState = ST_SHUTTING_DOWN;
+                    break;
+                default:
+                    newState = oldState;
+                    wakeup = false;
+            }
+        }
+        if (STATE_UPDATER.compareAndSet(this, oldState, newState)) {
+            break;
+        }
+    }
+    gracefulShutdownQuietPeriod = unit.toNanos(quietPeriod);
+    gracefulShutdownTimeout = unit.toNanos(timeout);
+
+    if (ensureThreadStarted(oldState)) {
+        return terminationFuture;
+    }
+
+    if (wakeup) {
+        taskQueue.offer(WAKEUP_TASK);
+        if (!addTaskWakesUp) {
+            wakeup(inEventLoop);
+        }
+    }
+
+    return terminationFuture();
+}
 ```
 
 ### netty对于key处理过程的优化
